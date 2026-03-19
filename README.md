@@ -112,7 +112,13 @@ logging:
 - 默认大小限制：100MB
 - 进行文件名合法性、路径遍历与内容类型校验
 
-## 构建可执行文件（可选）
+## 构建
+
+```bash
+build.bat
+```
+
+或手动构建：
 
 ```bash
 go build -o bin/server.exe ./cmd/server/main.go
