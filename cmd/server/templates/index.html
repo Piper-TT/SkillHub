@@ -1,0 +1,2732 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillHub - AI Skills 社区</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-1: #2563eb;
+            --brand-2: #4f46e5;
+            --brand-3: #7c3aed;
+            --text-main: #0f172a;
+            --text-secondary: #475569;
+            --surface: rgba(255, 255, 255, 0.88);
+            --border-soft: rgba(148, 163, 184, 0.2);
+            --shadow-soft: 0 16px 40px rgba(37, 99, 235, 0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background:
+                radial-gradient(1200px 500px at 10% -10%, rgba(59, 130, 246, 0.18), transparent 60%),
+                radial-gradient(900px 420px at 90% -12%, rgba(139, 92, 246, 0.16), transparent 58%),
+                linear-gradient(180deg, #f8fbff 0%, #f5f7ff 50%, #f8fafc 100%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 32px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-brand {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .navbar-brand img {
+            height: 28px;
+        }
+
+        .navbar-nav {
+            display: flex;
+            gap: 24px;
+        }
+
+        .navbar-nav a {
+            text-decoration: none;
+            color: #475569;
+            font-size: 15px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .navbar-nav a:hover, .navbar-nav a.active {
+            color: #2563eb;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+            position: relative;
+        }
+
+        .container::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at top left, rgba(99, 102, 241, 0.03) 0%, transparent 50%),
+                        radial-gradient(ellipse at bottom right, rgba(236, 72, 153, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 30%, #ede9fe 60%, #fce7f3 100%);
+            border-radius: 20px;
+            padding: 48px 40px;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 60%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 50%;
+            height: 150%;
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.06) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            flex: 1;
+            max-width: 520px;
+            z-index: 1;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 16px;
+            font-size: 12px;
+            color: #3b82f6;
+            margin-bottom: 16px;
+        }
+
+        .hero-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.2;
+            margin-bottom: 12px;
+        }
+
+        .hero-title .highlight {
+            color: #3b82f6;
+        }
+
+        .hero-subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .hero-subtitle strong {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .hero-btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .hero-btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+            color: #fff;
+            border: none;
+        }
+
+        .hero-btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+        }
+
+        .hero-btn-secondary {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+
+        .hero-btn-secondary:hover {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+
+        .hero-cards {
+            flex: 0 0 300px;
+            position: relative;
+            height: 300px;
+            z-index: 1;
+        }
+
+        .hero-card {
+            position: absolute;
+            width: 260px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .hero-card:nth-child(1) {
+            top: 0;
+            right: 0;
+            z-index: 3;
+            animation: float1 4s ease-in-out infinite;
+        }
+
+        .hero-card:nth-child(2) {
+            top: 40px;
+            right: 20px;
+            z-index: 2;
+            animation: float2 4s ease-in-out infinite 0.5s;
+        }
+
+        .hero-card:nth-child(3) {
+            top: 80px;
+            right: 40px;
+            z-index: 1;
+            animation: float3 4s ease-in-out infinite 1s;
+        }
+
+        .hero-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .hero-card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .hero-card-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .hero-card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .hero-card-category {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .hero-card-desc {
+            font-size: 12px;
+            color: #6b7280;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .hero-card-input {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .hero-card-input span {
+            flex: 1;
+        }
+
+        @keyframes float1 {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes float2 {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        @keyframes float3 {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        /* Install Box */
+        .install-box {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid rgba(229, 231, 235, 0.8);
+            border-radius: 16px;
+            padding: 24px 28px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+
+        .install-label {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+
+        .install-code {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-bottom: 16px;
+        }
+
+        .install-code code {
+            flex: 1;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            color: #374151;
+            word-break: break-all;
+        }
+
+        .install-code button {
+            padding: 8px 18px;
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .install-code button:hover {
+            background: #2563eb;
+        }
+
+        .install-badges {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+        }
+
+        .install-badges span {
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .install-badges .badge-icon {
+            font-size: 14px;
+        }
+
+        .badge-verified { color: #f59e0b; }
+        .badge-fast { color: #3b82f6; }
+        .badge-safe { color: #10b981; }
+
+        /* Section */
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 6px;
+        }
+
+        .section-desc {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+
+        .section-desc strong {
+            color: #3b82f6;
+        }
+
+        /* Skills List */
+        .skills-list {
+            background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(243, 244, 246, 0.6);
+        }
+
+        .skill-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(243, 244, 246, 0.6);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .skill-item:last-child {
+            border-bottom: none;
+        }
+
+        .skill-item:hover {
+            background: linear-gradient(90deg, rgba(241, 245, 249, 0.5) 0%, rgba(248, 250, 252, 0.3) 100%);
+        }
+
+        .skill-rank-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .skill-rank-badge.rank-1 { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); }
+        .skill-rank-badge.rank-2 { background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%); }
+        .skill-rank-badge.rank-3 { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); }
+        .skill-rank-badge.rank-other { background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); }
+
+        .skill-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .skill-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .skill-header-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 4px;
+        }
+
+        .skill-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .skill-category-tag {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .skill-category-tag.cat-dev { background: #dcfce7; color: #16a34a; }
+        .skill-category-tag.cat-ai { background: #dbeafe; color: #2563eb; }
+        .skill-category-tag.cat-media { background: #fce7f3; color: #db2777; }
+        .skill-category-tag.cat-office { background: #fef3c7; color: #d97706; }
+        .skill-category-tag.cat-security { background: #fee2e2; color: #dc2626; }
+        .skill-category-tag.cat-data { background: #e0e7ff; color: #4f46e5; }
+        .skill-category-tag.cat-doc { background: #f3e8ff; color: #9333ea; }
+        .skill-category-tag.cat-search { background: #cffafe; color: #0891b2; }
+        .skill-category-tag.cat-other { background: #f3f4f6; color: #4b5563; }
+
+        .skill-description {
+            font-size: 13px;
+            color: #6b7280;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .skill-stats {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+            flex-shrink: 0;
+        }
+
+        .skill-stats-primary {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .skill-stats-primary .arrow {
+            color: #10b981;
+            font-size: 12px;
+        }
+
+        .skill-stats-secondary {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        /* Category Filter Buttons */
+        .category-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .category-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 14px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid rgba(229, 231, 235, 0.6);
+            border-radius: 18px;
+            font-size: 12px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .category-btn:hover {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .category-btn.active {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .category-btn-icon {
+            font-size: 14px;
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 8px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .sort-select {
+            padding: 8px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 13px;
+            background: #fff;
+            min-width: 110px;
+            cursor: pointer;
+        }
+
+        .upload-btn {
+            padding: 8px 18px;
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .upload-btn:hover {
+            background: #2563eb;
+        }
+
+        /* Skills Grid */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+        }
+
+        .skill-card {
+            background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+            border: 1px solid rgba(229, 231, 235, 0.6);
+            border-radius: 10px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .skill-card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            border-color: rgba(99, 102, 241, 0.2);
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+        }
+
+        .skill-card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .skill-card-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .skill-card-title-wrap {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .skill-card-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #111827;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .skill-card-version {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .skill-card-desc {
+            font-size: 12px;
+            color: #6b7280;
+            line-height: 1.5;
+            margin-bottom: 10px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .skill-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 10px;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .skill-card-stats {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .skill-card-stats span {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .skill-card-category {
+            font-size: 10px;
+            padding: 2px 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            color: #6b7280;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 16px;
+            font-size: 13px;
+        }
+
+        .pagination button {
+            padding: 5px 10px;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .pagination button:hover {
+            background: #f9fafb;
+        }
+
+        .pagination button.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: #fff;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination input {
+            width: 45px;
+            padding: 5px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .pagination span {
+            color: #6b7280;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding-top: 32px;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 32px;
+        }
+
+        .footer h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .footer p {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f3f4f6;
+            border-radius: 6px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        form {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .file-upload {
+            position: relative;
+            border: 2px dashed #e5e7eb;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .file-upload:hover {
+            border-color: #3b82f6;
+        }
+
+        .file-upload input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-upload-text {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .file-upload-text small {
+            display: block;
+            margin-top: 4px;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .file-name {
+            margin-top: 8px;
+            color: #3b82f6;
+            font-size: 14px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: none;
+        }
+
+        /* Skill Detail */
+        .skill-detail {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .skill-detail-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 600;
+            color: #fff;
+            margin: 0 auto 16px;
+        }
+
+        .skill-detail h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .skill-detail .skill-category {
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        .skill-detail .skill-description {
+            white-space: normal;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .skill-detail-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .skill-detail-stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .skill-detail-stat-label {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .btn-download {
+            width: 100%;
+            padding: 12px;
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .btn-download:hover {
+            background: #2563eb;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            padding: 12px 24px;
+            background: #111827;
+            color: #fff;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: transform 0.3s;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success {
+            background: #059669;
+        }
+
+        .toast.error {
+            background: #dc2626;
+        }
+
+        .loading {
+            padding: 40px;
+            text-align: center;
+            color: #9ca3af;
+        }
+
+        /* Animation Styles */
+        .hero-section {
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        .hero-badge {
+            opacity: 0;
+            animation: fadeInUp 0.6s ease 0.2s forwards;
+        }
+
+        .hero-title {
+            opacity: 0;
+            animation: fadeInUp 0.6s ease 0.3s forwards;
+        }
+
+        .hero-subtitle {
+            opacity: 0;
+            animation: fadeInUp 0.6s ease 0.4s forwards;
+        }
+
+        .hero-buttons {
+            opacity: 0;
+            animation: fadeInUp 0.6s ease 0.5s forwards;
+        }
+
+        .hero-cards {
+            opacity: 0;
+            animation: fadeIn 0.8s ease 0.6s forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .install-box {
+            opacity: 0;
+            animation: fadeInUp 0.8s ease 0.9s forwards;
+        }
+
+        .section {
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        .section:nth-of-type(1) {
+            animation-delay: 0.8s;
+        }
+
+        .section:nth-of-type(2) {
+            animation-delay: 1.1s;
+        }
+
+        /* TOP 50 Section */
+        #top50 {
+            background: linear-gradient(180deg, rgba(241, 245, 249, 0.5) 0%, rgba(248, 250, 252, 0.8) 100%);
+            margin: 0 -24px;
+            padding: 28px 24px;
+            border-radius: 0;
+        }
+
+        /* Upload Section */
+        #upload {
+            margin: 32px 0;
+        }
+
+        .upload-card-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .upload-card {
+            background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+            border-radius: 12px;
+            padding: 20px;
+            flex: 1;
+            min-width: 300px;
+            max-width: 500px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(243, 244, 246, 0.8);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+        }
+
+        .upload-card:hover {
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+            border-color: #e5e7eb;
+        }
+
+        .upload-card-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #dbeafe 0%, #ede9fe 50%, #fce7f3 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 14px;
+        }
+
+        .upload-card-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .upload-card-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #f9fafb;
+            transition: all 0.2s;
+        }
+
+        .upload-card-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: #fff;
+        }
+
+        .upload-card-select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #f9fafb;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 14px;
+        }
+
+        .upload-card-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background-color: #fff;
+        }
+
+        .upload-card-textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #f9fafb;
+            resize: vertical;
+            min-height: 60px;
+            font-family: inherit;
+        }
+
+        .upload-card-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: #fff;
+        }
+
+        .upload-file-zone {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fafafa;
+        }
+
+        .upload-file-zone:hover {
+            border-color: #3b82f6;
+            background: #f0f9ff;
+        }
+
+        .upload-file-zone.dragover {
+            border-color: #3b82f6;
+            background: #dbeafe;
+        }
+
+        .upload-file-zone input[type="file"] {
+            display: none;
+        }
+
+        .upload-file-text {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .upload-file-text strong {
+            color: #3b82f6;
+        }
+
+        .upload-card-btn {
+            width: 100%;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .upload-card-btn:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 50%, #7c3aed 100%);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .upload-card-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .upload-card-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .upload-card-row .upload-card-input {
+            flex: 1;
+        }
+
+        /* Stats Card */
+        .stats-card {
+            background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+            border-radius: 12px;
+            padding: 20px;
+            width: 260px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(243, 244, 246, 0.8);
+        }
+
+        .stats-card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stats-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .stats-item:last-child {
+            border-bottom: none;
+        }
+
+        .stats-item-label {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .stats-item-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .stats-item-value.highlight {
+            color: #3b82f6;
+        }
+
+        /* Explore Section */
+        #explore {
+            background: linear-gradient(180deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.5) 100%);
+            margin: 32px -24px 0;
+            padding: 28px 24px;
+            border-radius: 0;
+        }
+
+        .counter {
+            display: inline-block;
+            min-width: 60px;
+        }
+
+        .counter.animate {
+            animation: countPulse 0.3s ease;
+        }
+
+        @keyframes countPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .typewriter {
+            overflow: hidden;
+            border-right: 2px solid #3b82f6;
+            white-space: nowrap;
+            animation: blink 0.7s step-end infinite;
+        }
+
+        @keyframes blink {
+            from, to { border-color: transparent }
+            50% { border-color: #3b82f6 }
+        }
+
+        .skill-item {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        .skill-item.visible {
+            animation: slideIn 0.4s ease forwards;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* TOP 50 Pagination */
+        .top50-pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .page-dot {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #fff;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-dot:hover {
+            background: #f0f9ff;
+            color: #3b82f6;
+        }
+
+        .page-dot.active {
+            background: #3b82f6;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        @media (max-width: 1024px) {
+            .skills-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .hero-section {
+                flex-direction: column;
+                text-align: center;
+                padding: 40px 32px;
+            }
+
+            .hero-content {
+                max-width: 100%;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+            .hero-cards {
+                flex: none;
+                width: 100%;
+                max-width: 320px;
+                height: 280px;
+                margin-top: 32px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 32px 16px;
+            }
+
+            .skill-item {
+                grid-template-columns: 24px 32px 1fr;
+                gap: 12px;
+            }
+
+            .skill-stats {
+                grid-column: 1 / -1;
+                justify-content: flex-start;
+                padding-left: 68px;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .hero-title {
+                font-size: 28px;
+            }
+
+            .hero-subtitle {
+                font-size: 14px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+            }
+
+            .hero-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .hero-cards {
+                display: none;
+            }
+
+            .skills-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .category-filters {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                padding-bottom: 8px;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .category-btn {
+                flex-shrink: 0;
+            }
+
+            .upload-card-container {
+                flex-direction: column;
+            }
+
+            .upload-card, .stats-card {
+                max-width: 100%;
+                width: 100%;
+            }
+        }
+        :root {
+            --brand-1: #2563eb;
+            --brand-2: #4f46e5;
+            --brand-3: #7c3aed;
+            --text-main: #0f172a;
+            --text-secondary: #475569;
+            --surface: rgba(255, 255, 255, 0.88);
+            --border-soft: rgba(148, 163, 184, 0.2);
+            --shadow-soft: 0 16px 40px rgba(37, 99, 235, 0.12);
+        }
+
+        body {
+            background:
+                radial-gradient(1200px 500px at 10% -10%, rgba(59, 130, 246, 0.18), transparent 60%),
+                radial-gradient(900px 420px at 90% -12%, rgba(139, 92, 246, 0.16), transparent 58%),
+                linear-gradient(180deg, #f8fbff 0%, #f5f7ff 50%, #f8fafc 100%);
+            color: var(--text-main);
+        }
+
+        .container {
+            max-width: 1180px;
+            padding-top: 28px;
+            padding-bottom: 72px;
+        }
+
+        .topbar {
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            border: 1px solid var(--border-soft);
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 6px 24px rgba(30, 64, 175, 0.08);
+            font-size: 13px;
+            color: #334155;
+        }
+
+        .topbar strong {
+            color: #1d4ed8;
+        }
+
+        .hero-section {
+            border-radius: 28px;
+            padding: 56px 48px;
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            box-shadow: var(--shadow-soft);
+            background:
+                radial-gradient(circle at 100% 0%, rgba(236, 72, 153, 0.14), transparent 46%),
+                radial-gradient(circle at 0% 100%, rgba(14, 165, 233, 0.14), transparent 42%),
+                linear-gradient(135deg, #eff6ff 0%, #eef2ff 42%, #f5f3ff 100%);
+        }
+
+        .hero-title {
+            font-size: 52px;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+            color: #0f172a;
+        }
+
+        .highlight {
+            background: linear-gradient(90deg, var(--brand-1), var(--brand-3));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .hero-subtitle {
+            max-width: 620px;
+            color: var(--text-secondary);
+            font-size: 17px;
+            line-height: 1.8;
+        }
+
+        .hero-btn {
+            border-radius: 12px;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        .hero-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(59, 130, 246, 0.2);
+        }
+
+        .hero-btn-primary {
+            background: linear-gradient(90deg, var(--brand-1), var(--brand-2));
+        }
+
+        .hero-btn-secondary {
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            background: rgba(255, 255, 255, 0.82);
+            color: #1e3a8a;
+        }
+
+        .hero-cards {
+            width: 360px;
+        }
+
+        .hero-card {
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 10px 28px rgba(99, 102, 241, 0.12);
+        }
+
+        .install-box,
+        .section,
+        .footer {
+            border-radius: 20px;
+            border: 1px solid var(--border-soft);
+            background: var(--surface);
+            box-shadow: 0 12px 36px rgba(15, 23, 42, 0.06);
+            backdrop-filter: blur(8px);
+        }
+
+        #top50,
+        #upload,
+        #explore {
+            margin-top: 22px;
+        }
+
+        .section {
+            padding: 30px 26px;
+        }
+
+        .section h2 {
+            font-size: 29px;
+            letter-spacing: -0.02em;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .section-desc {
+            color: #64748b;
+            margin-bottom: 20px;
+        }
+
+        .skill-item,
+        .skill-card {
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.2s ease;
+        }
+
+        .skill-item:hover,
+        .skill-card:hover {
+            border-color: rgba(99, 102, 241, 0.35);
+            box-shadow: 0 12px 28px rgba(79, 70, 229, 0.14);
+            transform: translateY(-2px);
+        }
+
+        .skill-icon,
+        .skill-card-icon {
+            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35), 0 8px 18px rgba(15, 23, 42, 0.2);
+        }
+
+        .skill-category-tag,
+        .skill-card-category,
+        .skill-category {
+            border-radius: 999px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            background: rgba(99, 102, 241, 0.08);
+            color: #4338ca;
+        }
+
+        .category-filters {
+            margin-bottom: 12px;
+        }
+
+        .category-btn {
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            background: rgba(255, 255, 255, 0.75);
+            border-radius: 999px;
+            transition: all 0.2s ease;
+        }
+
+        .category-btn.active,
+        .category-btn:hover {
+            background: linear-gradient(90deg, rgba(37, 99, 235, 0.12), rgba(139, 92, 246, 0.12));
+            border-color: rgba(79, 70, 229, 0.34);
+            color: #312e81;
+        }
+
+        .search-input,
+        .sort-select,
+        .upload-card-input,
+        .upload-card-select,
+        .upload-card-textarea {
+            border-radius: 10px;
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        .search-input:focus,
+        .sort-select:focus,
+        .upload-card-input:focus,
+        .upload-card-select:focus,
+        .upload-card-textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.14);
+        }
+
+        .upload-card-btn,
+        .btn-download {
+            border-radius: 10px;
+            font-weight: 600;
+            background: linear-gradient(90deg, var(--brand-1), var(--brand-3));
+        }
+
+        .upload-file-zone {
+            border-radius: 12px;
+            border: 1.5px dashed rgba(79, 70, 229, 0.35);
+            background: rgba(99, 102, 241, 0.04);
+        }
+
+        .stats-card {
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.94));
+        }
+
+        .pagination button,
+        .top50-pagination button {
+            border-radius: 10px;
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        .pagination button.active,
+        .top50-pagination button.active {
+            background: linear-gradient(90deg, var(--brand-1), var(--brand-2));
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .footer {
+            padding: 28px;
+            margin-top: 24px;
+            text-align: center;
+        }
+
+        .footer h3 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 1024px) {
+            .topbar {
+                border-radius: 14px;
+                display: block;
+                line-height: 1.7;
+            }
+
+            .hero-section {
+                padding: 42px 30px;
+            }
+
+            .hero-title {
+                font-size: 38px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <span style="font-size: 24px;">🚀</span> SkillHub
+        </a>
+        <div class="navbar-nav">
+            <a href="/" class="active">首页</a>
+            <a href="#explore">探索 Skills</a>
+            <a href="https://github.com/tencent/skillhub" target="_blank">GitHub</a>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="topbar">
+            <span>✨ 专为中国用户优化的 Skills 社区体验</span>
+            <strong>官方精选 · 高速下载 · 安全审计</strong>
+        </div>
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span>🚀</span>
+                    <span>官方精选推荐</span>
+                </div>
+                <h1 class="hero-title">装上这个 <span class="highlight">Skill</span>，<br>解锁 AI 超能力</h1>
+                <p class="hero-subtitle">精选推荐，高速下载体验，轻松查找 ClawHub <strong id="totalSkills">2.2万+</strong> 个 AI Skills</p>
+                <div class="hero-buttons">
+                    <a href="#top50" class="hero-btn hero-btn-primary">查看 TOP50 技能</a>
+                    <a href="#upload" class="hero-btn hero-btn-secondary">上传 Skill</a>
+                </div>
+            </div>
+            <div class="hero-cards" id="heroCards">
+                <!-- Cards will be dynamically inserted -->
+            </div>
+        </section>
+
+        <!-- Install Box -->
+        <div class="install-box">
+            <div class="install-label">将此提示发送给你的Agent，安装 SkillHub CLI 并优先使用加速源</div>
+            <div class="install-code">
+                <code id="installCode">根据 https://skillhub-1388575217.cos.ap-guangzhou.myqcloud.com/install/skillhub.md 安装 SkillHub CLI，并优先采用 SkillHub 加速安装技能</code>
+                <button onclick="copyInstallCode()">复制</button>
+            </div>
+            <div class="install-badges">
+                <span><span class="badge-icon badge-verified">★</span> 官方认证推荐</span>
+                <span><span class="badge-icon badge-fast">⚡</span> 加速下载</span>
+                <span><span class="badge-icon badge-safe">✓</span> 安全审计</span>
+            </div>
+        </div>
+
+        <!-- TOP 50 -->
+        <section class="section" id="top50">
+            <h2>精选 TOP 50 AI Skills 榜单</h2>
+            <p class="section-desc">从 ClawHub 生态中精选最值得安装的 50 个 AI Skills，国内高速镜像，一键加速安装。</p>
+            <div class="skills-list" id="top50List"></div>
+            <div class="top50-pagination" id="top50Pagination"></div>
+        </section>
+
+        <!-- Upload Section -->
+        <section class="section" id="upload">
+            <h2>上传 Skill</h2>
+            <p class="section-desc">分享你的 Skill 到社区，让更多人使用你的创作</p>
+
+            <div class="upload-card-container">
+                <!-- Upload Card -->
+                <div class="upload-card">
+                    <div class="upload-card-icon">📤</div>
+                    <form class="upload-card-form" id="uploadCardForm" onsubmit="handleCardUpload(event)">
+                        <div class="upload-card-row">
+                            <input type="text" id="cardSkillName" class="upload-card-input" placeholder="Skill 名称" required>
+                            <input type="text" id="cardSkillIcon" class="upload-card-input" placeholder="图标" maxlength="2" style="max-width: 80px; text-align: center;">
+                        </div>
+
+                        <select id="cardSkillCategory" class="upload-card-select" required>
+                            <option value="">选择分类</option>
+                            <option value="开发工具">💻 开发工具</option>
+                            <option value="多媒体">🎨 多媒体</option>
+                            <option value="办公协同">📊 办公协同</option>
+                            <option value="安全工具">🔒 安全工具</option>
+                            <option value="数据管理">📁 数据管理</option>
+                            <option value="文档处理">📄 文档处理</option>
+                            <option value="信息处理">🔍 信息处理</option>
+                            <option value="AI智能">🤖 AI智能</option>
+                            <option value="其他">📦 其他</option>
+                        </select>
+
+                        <textarea id="cardSkillDesc" class="upload-card-textarea" placeholder="简单描述你的 Skill 功能..." rows="2"></textarea>
+
+                        <div class="upload-file-zone" id="cardFileZone" onclick="document.getElementById('cardSkillFile').click()">
+                            <input type="file" id="cardSkillFile" accept=".zip,.tar.gz,.tgz,.json,.md" required>
+                            <div class="upload-file-text">
+                                <strong>点击选择文件</strong> 或拖拽到此处
+                            </div>
+                        </div>
+                        <div id="cardFileName" style="font-size: 12px; color: #6b7280; text-align: center; margin-top: 4px;"></div>
+
+                        <button type="submit" class="upload-card-btn" id="cardUploadBtn">
+                            <span>📤</span>
+                            <span>上传</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Stats Card -->
+                <div class="stats-card">
+                    <div class="stats-card-title">
+                        <span>📊</span>
+                        <span>社区统计</span>
+                    </div>
+                    <div class="stats-item">
+                        <span class="stats-item-label">📦 总 Skills</span>
+                        <span class="stats-item-value highlight" id="statsTotalSkills">--</span>
+                    </div>
+                    <div class="stats-item">
+                        <span class="stats-item-label">📥 总下载量</span>
+                        <span class="stats-item-value" id="statsTotalDownloads">--</span>
+                    </div>
+                    <div class="stats-item">
+                        <span class="stats-item-label">📂 分类数</span>
+                        <span class="stats-item-value" id="statsCategories">--</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Explore -->
+        <section class="section" id="explore">
+            <h2>探索全部技能</h2>
+            <p class="section-desc">收录 ClawHub 生态共 <strong id="exploreTotal">2.2万</strong> 个Skills，快速发现你需要的AI Skills</p>
+
+            <!-- Category Filter Buttons -->
+            <div class="category-filters" id="categoryFilters"></div>
+
+            <div class="filters">
+                <input type="text" id="searchInput" placeholder="搜索技能名称、描述..." class="search-input">
+                <select id="sortSelect" class="sort-select">
+                    <option value="default">综合排序</option>
+                    <option value="downloads">下载量</option>
+                    <option value="rating">评分</option>
+                    <option value="name">名称</option>
+                </select>
+            </div>
+
+            <div class="skills-grid" id="exploreGrid"></div>
+            <div class="pagination" id="pagination"></div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <h3>关于 SkillHub</h3>
+            <p>官方精选推荐 50 个 Skills，支持高速下载体验，轻松查找 ClawHub 2.2 万个 AI Skills。</p>
+        </footer>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>上传 Skill</h2>
+                <button class="modal-close" onclick="closeUploadModal()">&times;</button>
+            </div>
+            <form id="uploadForm" onsubmit="handleUpload(event)">
+                <div class="form-group">
+                    <label>Skill 名称 *</label>
+                    <input type="text" id="skillName" required placeholder="输入 Skill 名称">
+                </div>
+                <div class="form-group">
+                    <label>图标 (单个字符)</label>
+                    <input type="text" id="skillIcon" maxlength="2" placeholder="如: G">
+                </div>
+                <div class="form-group">
+                    <label>分类 *</label>
+                    <select id="skillCategory" required>
+                        <option value="">选择分类</option>
+                        <option value="开发工具">开发工具</option>
+                        <option value="多媒体">多媒体</option>
+                        <option value="办公协同">办公协同</option>
+                        <option value="安全工具">安全工具</option>
+                        <option value="数据管理">数据管理</option>
+                        <option value="文档处理">文档处理</option>
+                        <option value="信息处理">信息处理</option>
+                        <option value="搜索研究">搜索研究</option>
+                        <option value="数据可视化">数据可视化</option>
+                        <option value="浏览器自动化">浏览器自动化</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <textarea id="skillDescription" rows="3" placeholder="输入 Skill 描述"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Skill 文件 *</label>
+                    <div class="file-upload" id="fileDropZone">
+                        <input type="file" id="skillFile" required accept=".zip,.tar.gz,.tgz,.json,.md">
+                        <div class="file-upload-text">
+                            <span>📁 点击选择文件或拖拽到此处</span>
+                            <small>支持 .zip, .tar.gz, .json, .md 格式</small>
+                        </div>
+                        <div class="file-name" id="fileName"></div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeUploadModal()">取消</button>
+                    <button type="submit" class="btn btn-primary" id="uploadSubmit">📤 上传</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Skill Detail Modal -->
+    <div class="modal" id="skillModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="skillModalTitle">Skill 详情</h2>
+                <button class="modal-close" onclick="closeSkillModal()">&times;</button>
+            </div>
+            <div class="skill-detail" id="skillDetail"></div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // State
+        const state = {
+            top50: [],
+            top50Page: 1,
+            top50PerPage: 8,
+            allSkills: [],
+            categories: {},
+            currentPage: 1,
+            perPage: 12,
+            totalSkills: 0,
+            selectedCategory: '',
+            searchQuery: '',
+            sortBy: 'default'
+        };
+
+        // Category icons mapping
+        const categoryIcons = {
+            '开发工具': '💻',
+            '多媒体': '🎨',
+            '办公协同': '📊',
+            '安全工具': '🔒',
+            '数据管理': '📁',
+            '文档处理': '📄',
+            '信息处理': '🔍',
+            '搜索研究': '🔎',
+            '数据可视化': '📈',
+            '浏览器自动化': '🌐',
+            'AI智能': '🤖',
+            '其他': '📦'
+        };
+
+        // Color palette for skill icons
+        const iconColors = [
+            '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981',
+            '#06b6d4', '#6366f1', '#f43f5e', '#84cc16', '#14b8a6'
+        ];
+
+        function getIconColor(name) {
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) {
+                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return iconColors[Math.abs(hash) % iconColors.length];
+        }
+
+        // ===== Animation Functions =====
+
+        // Counter animation
+        function animateCounter(element, target, duration = 1500) {
+            const start = 0;
+            const startTime = performance.now();
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // Easing function
+                const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+                const current = Math.floor(start + (target - start) * easeOutQuart);
+
+                element.textContent = formatNumber(current);
+                element.classList.add('animate');
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    element.classList.remove('animate');
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        // Typewriter effect
+        function typeWriter(element, text, speed = 50, callback = null) {
+            element.textContent = '';
+            element.classList.add('typewriter');
+            let i = 0;
+
+            function type() {
+                if (i < text.length) {
+                    element.textContent += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                } else {
+                    setTimeout(() => {
+                        element.classList.remove('typewriter');
+                        if (callback) callback();
+                    }, 500);
+                }
+            }
+
+            type();
+        }
+
+        // Staggered reveal for list items
+        function revealItems(container) {
+            const items = container.querySelectorAll('.skill-item');
+            items.forEach((item, index) => {
+                setTimeout(() => {
+                    item.classList.add('visible');
+                }, index * 50);
+            });
+        }
+
+        // Format number
+        function formatNumber(num) {
+            if (num >= 10000) {
+                return (num / 10000).toFixed(1) + '万';
+            }
+            return num.toLocaleString();
+        }
+
+        // Get category tag class
+        function getCategoryTagClass(category) {
+            const categoryMap = {
+                '开发工具': 'cat-dev',
+                'AI智能': 'cat-ai',
+                '多媒体': 'cat-media',
+                '办公协同': 'cat-office',
+                '安全工具': 'cat-security',
+                '数据管理': 'cat-data',
+                '文档处理': 'cat-doc',
+                '信息处理': 'cat-search',
+                '搜索研究': 'cat-search',
+                '数据可视化': 'cat-data',
+                '浏览器自动化': 'cat-dev'
+            };
+            return categoryMap[category] || 'cat-other';
+        }
+
+        // Create skill item
+        function createSkillItem(skill, showRank = false) {
+            const item = document.createElement('div');
+            item.className = 'skill-item';
+            item.onclick = () => showSkillDetail(skill);
+
+            // Determine rank badge class
+            let rankBadgeClass = 'rank-other';
+            if (skill.rank === 1) rankBadgeClass = 'rank-1';
+            else if (skill.rank === 2) rankBadgeClass = 'rank-2';
+            else if (skill.rank === 3) rankBadgeClass = 'rank-3';
+
+            const iconColor = getIconColor(skill.name);
+            const icon = skill.icon || skill.name.charAt(0).toUpperCase();
+            const categoryTagClass = getCategoryTagClass(skill.category);
+
+            item.innerHTML = `
+                ${showRank ? `<div class="skill-rank-badge ${rankBadgeClass}">${skill.rank}</div>` : ''}
+                <div class="skill-icon" style="background: ${iconColor}">${icon}</div>
+                <div class="skill-content">
+                    <div class="skill-header-row">
+                        <span class="skill-name">${skill.name}</span>
+                        <span class="skill-category-tag ${categoryTagClass}">${skill.category}</span>
+                    </div>
+                    <p class="skill-description">${skill.description}</p>
+                </div>
+                <div class="skill-stats">
+                    <div class="skill-stats-primary">
+                        <span class="arrow">↑</span>
+                        ${formatNumber(skill.downloads)}
+                    </div>
+                    <div class="skill-stats-secondary">★ ${skill.rating || 5.0}</div>
+                </div>
+            `;
+
+            return item;
+        }
+
+        // Show skill detail
+        function showSkillDetail(skill) {
+            const modal = document.getElementById('skillModal');
+            document.getElementById('skillModalTitle').textContent = skill.name;
+            document.getElementById('skillDetail').innerHTML = `
+                <div class="skill-detail-icon">${skill.icon || skill.name.charAt(0)}</div>
+                <h3>${skill.name}</h3>
+                <span class="skill-category">${skill.category}</span>
+                <p class="skill-description">${skill.description}</p>
+                <div class="skill-detail-stats">
+                    <div>
+                        <div class="skill-detail-stat-value">${formatNumber(skill.downloads)}</div>
+                        <div class="skill-detail-stat-label">下载量</div>
+                    </div>
+                    <div>
+                        <div class="skill-detail-stat-value">${skill.rating}</div>
+                        <div class="skill-detail-stat-label">评分</div>
+                    </div>
+                </div>
+                <button class="btn-download" onclick="downloadSkill(${skill.id})">📥 下载 Skill</button>
+            `;
+            modal.classList.add('active');
+        }
+
+        function closeSkillModal() {
+            document.getElementById('skillModal').classList.remove('active');
+        }
+
+        function downloadSkill(id) {
+            window.location.href = `/api/skills/${id}/download`;
+            showToast('开始下载...', 'success');
+        }
+
+        function openUploadModal() {
+            document.getElementById('uploadModal').classList.add('active');
+            document.getElementById('uploadForm').reset();
+            document.getElementById('fileName').textContent = '';
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadModal').classList.remove('active');
+        }
+
+        function copyInstallCode() {
+            const code = document.getElementById('installCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('已复制到剪贴板', 'success');
+            });
+        }
+
+        document.getElementById('skillFile')?.addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name;
+            if (fileName) {
+                document.getElementById('fileName').textContent = '已选择: ' + fileName;
+            }
+        });
+
+        async function handleUpload(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('uploadSubmit');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '上传中...';
+
+            const formData = new FormData();
+            formData.append('name', document.getElementById('skillName').value);
+            formData.append('icon', document.getElementById('skillIcon').value);
+            formData.append('category', document.getElementById('skillCategory').value);
+            formData.append('description', document.getElementById('skillDescription').value);
+            formData.append('file', document.getElementById('skillFile').files[0]);
+
+            try {
+                const response = await fetch('/api/skills/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('上传成功！', 'success');
+                    closeUploadModal();
+                    loadTop50();
+                    loadAllSkills();
+                    loadCategories();
+                } else {
+                    showToast(result.message || '上传失败', 'error');
+                }
+            } catch (error) {
+                showToast('上传失败: ' + error.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '📤 上传';
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function renderTop50() {
+            const list = document.getElementById('top50List');
+            list.innerHTML = '';
+            if (state.top50.length === 0) {
+                list.innerHTML = '<div class="loading">暂无数据</div>';
+                document.getElementById('top50Pagination').innerHTML = '';
+                return;
+            }
+
+            // Calculate pagination
+            const start = (state.top50Page - 1) * state.top50PerPage;
+            const end = Math.min(start + state.top50PerPage, state.top50.length);
+            const pageSkills = state.top50.slice(start, end);
+
+            pageSkills.forEach(skill => list.appendChild(createSkillItem(skill, true)));
+            revealItems(list);
+            renderTop50Pagination();
+        }
+
+        function renderTop50Pagination() {
+            const totalPages = Math.ceil(state.top50.length / state.top50PerPage);
+            const pagination = document.getElementById('top50Pagination');
+
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<button class="page-dot ${i === state.top50Page ? 'active' : ''}" onclick="changeTop50Page(${i})">${i}</button>`;
+            }
+
+            pagination.innerHTML = html;
+        }
+
+        function changeTop50Page(page) {
+            state.top50Page = page;
+            renderTop50();
+            // Scroll to top of TOP 50 section
+            document.getElementById('top50List').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Create skill card for grid
+        function createSkillCard(skill) {
+            const card = document.createElement('div');
+            card.className = 'skill-card';
+            card.onclick = () => showSkillDetail(skill);
+
+            const iconColor = getIconColor(skill.name);
+            const icon = skill.icon || skill.name.charAt(0).toUpperCase();
+            const version = skill.version || 'v1.0.0';
+
+            card.innerHTML = `
+                <div class="skill-card-header">
+                    <div class="skill-card-icon" style="background: ${iconColor}">${icon}</div>
+                    <div class="skill-card-title-wrap">
+                        <div class="skill-card-name">${skill.name}</div>
+                        <div class="skill-card-version">${version}</div>
+                    </div>
+                </div>
+                <p class="skill-card-desc">${skill.description}</p>
+                <div class="skill-card-footer">
+                    <div class="skill-card-stats">
+                        <span>⭐ ${skill.rating || 5.0}</span>
+                        <span>📥 ${formatNumber(skill.downloads)}</span>
+                    </div>
+                    <span class="skill-card-category">${skill.category}</span>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Render category filter buttons
+        function renderCategoryFilters() {
+            const container = document.getElementById('categoryFilters');
+            if (!container) return;
+
+            // Add "全部" button first
+            let html = `<button class="category-btn ${state.selectedCategory === '' ? 'active' : ''}" onclick="selectCategory('')">
+                <span class="category-btn-icon">📦</span>
+                <span>全部</span>
+            </button>`;
+
+            // Add category buttons with icons
+            Object.keys(state.categories).sort().forEach(cat => {
+                const icon = categoryIcons[cat] || '📦';
+                const count = state.categories[cat];
+                html += `<button class="category-btn ${state.selectedCategory === cat ? 'active' : ''}" onclick="selectCategory('${cat}')">
+                    <span class="category-btn-icon">${icon}</span>
+                    <span>${cat}</span>
+                </button>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function selectCategory(category) {
+            state.selectedCategory = category;
+            state.currentPage = 1;
+            renderCategoryFilters();
+            loadAllSkills();
+        }
+
+        function renderExplore() {
+            const grid = document.getElementById('exploreGrid');
+            grid.innerHTML = '';
+            if (state.allSkills.length === 0) {
+                grid.innerHTML = '<div class="loading" style="grid-column: 1/-1">暂无数据</div>';
+                return;
+            }
+
+            // Sort skills if needed
+            let skills = [...state.allSkills];
+            if (state.sortBy === 'downloads') {
+                skills.sort((a, b) => b.downloads - a.downloads);
+            } else if (state.sortBy === 'rating') {
+                skills.sort((a, b) => b.rating - a.rating);
+            } else if (state.sortBy === 'name') {
+                skills.sort((a, b) => a.name.localeCompare(b.name));
+            }
+
+            skills.forEach(skill => grid.appendChild(createSkillCard(skill)));
+
+            // Animate cards
+            setTimeout(() => {
+                const cards = grid.querySelectorAll('.skill-card');
+                cards.forEach((card, index) => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        card.style.transition = 'all 0.3s ease';
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, index * 50);
+                });
+            }, 50);
+        }
+
+        function renderPagination() {
+            const totalPages = Math.ceil(state.totalSkills / state.perPage);
+            const pagination = document.getElementById('pagination');
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = `<button onclick="changePage(${state.currentPage - 1})" ${state.currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
+            const start = Math.max(1, state.currentPage - 2);
+            const end = Math.min(totalPages, state.currentPage + 2);
+
+            if (start > 1) {
+                html += `<button onclick="changePage(1)">1</button>`;
+                if (start > 2) html += `<span>...</span>`;
+            }
+
+            for (let i = start; i <= end; i++) {
+                html += `<button class="${i === state.currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+            }
+
+            if (end < totalPages) {
+                if (end < totalPages - 1) html += `<span>...</span>`;
+                html += `<button onclick="changePage(${totalPages})">${totalPages}</button>`;
+            }
+
+            html += `<button onclick="changePage(${state.currentPage + 1})" ${state.currentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
+            html += `<span style="margin-left:12px">跳至</span><input type="number" min="1" max="${totalPages}" value="${state.currentPage}" onchange="changePage(parseInt(this.value))"><span>页</span>`;
+
+            pagination.innerHTML = html;
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(state.totalSkills / state.perPage);
+            if (page < 1 || page > totalPages) return;
+            state.currentPage = page;
+            loadAllSkills();
+        }
+
+        async function loadTop50() {
+            try {
+                document.getElementById('top50List').innerHTML = '<div class="loading">加载中...</div>';
+                const response = await fetch('/api/top50');
+                const data = await response.json();
+                state.top50 = data.skills || [];
+                renderTop50();
+                renderHeroCards(); // Render hero cards after loading top50
+            } catch (error) {
+                document.getElementById('top50List').innerHTML = '<div class="loading">加载失败</div>';
+            }
+        }
+
+        async function loadAllSkills() {
+            try {
+                const grid = document.getElementById('exploreGrid');
+                if (grid) grid.innerHTML = '<div class="loading" style="grid-column: 1/-1">加载中...</div>';
+                const params = new URLSearchParams({ page: state.currentPage, per_page: state.perPage });
+                if (state.selectedCategory) params.append('category', state.selectedCategory);
+                if (state.searchQuery) params.append('search', state.searchQuery);
+
+                const response = await fetch(`/api/skills?${params}`);
+                const data = await response.json();
+                state.allSkills = data.skills || [];
+                state.totalSkills = data.total || 0;
+
+                // Animate the counter
+                const exploreTotal = document.getElementById('exploreTotal');
+                if (exploreTotal) animateCounter(exploreTotal, data.total, 1000);
+
+                renderExplore();
+                renderPagination();
+            } catch (error) {
+                const grid = document.getElementById('exploreGrid');
+                if (grid) grid.innerHTML = '<div class="loading" style="grid-column: 1/-1">加载失败</div>';
+            }
+        }
+
+        async function loadCategories() {
+            try {
+                const response = await fetch('/api/categories');
+                const categories = await response.json();
+                state.categories = categories;
+                renderCategoryFilters();
+            } catch (error) {
+                console.error('Failed to load categories:', error);
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+
+                // Animate the main counter
+                const totalSkills = document.getElementById('totalSkills');
+                animateCounter(totalSkills, stats.total_skills, 2000);
+
+                // Update stats card
+                const statsTotalSkills = document.getElementById('statsTotalSkills');
+                const statsTotalDownloads = document.getElementById('statsTotalDownloads');
+                const statsCategories = document.getElementById('statsCategories');
+
+                if (statsTotalSkills) animateCounter(statsTotalSkills, stats.total_skills, 1500);
+                if (statsTotalDownloads) animateCounter(statsTotalDownloads, stats.total_downloads, 1500);
+                if (statsCategories) animateCounter(statsCategories, stats.categories, 1000);
+
+                // Load recent uploads
+                loadRecentUploads();
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        async function loadRecentUploads() {
+            try {
+                const response = await fetch('/api/skills?per_page=5');
+                const data = await response.json();
+                const container = document.getElementById('recentUploadsList');
+                if (!container || !data.skills) return;
+
+                container.innerHTML = data.skills.slice(0, 5).map(skill => `
+                    <div class="recent-upload-item">
+                        <div class="recent-upload-icon">${skill.icon || skill.name.charAt(0)}</div>
+                        <div class="recent-upload-name">${skill.name}</div>
+                        <div class="recent-upload-time">${skill.category}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load recent uploads:', error);
+            }
+        }
+
+        // Card upload form handling
+        async function handleCardUpload(e) {
+            e.preventDefault();
+            const btn = document.getElementById('cardUploadBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳</span><span>上传中...</span>';
+
+            const formData = new FormData();
+            formData.append('name', document.getElementById('cardSkillName').value);
+            formData.append('icon', document.getElementById('cardSkillIcon').value);
+            formData.append('category', document.getElementById('cardSkillCategory').value);
+            formData.append('description', document.getElementById('cardSkillDesc').value);
+            formData.append('file', document.getElementById('cardSkillFile').files[0]);
+
+            try {
+                const response = await fetch('/api/skills/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('上传成功！', 'success');
+                    document.getElementById('uploadCardForm').reset();
+                    document.getElementById('cardFileName').textContent = '';
+                    loadTop50();
+                    loadStats();
+                } else {
+                    showToast(result.message || '上传失败', 'error');
+                }
+            } catch (error) {
+                showToast('上传失败: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span>📤</span><span>上传 Skill</span>';
+            }
+        }
+
+        // File drop zone handling
+        function initFileDropZone() {
+            const zone = document.getElementById('cardFileZone');
+            const fileInput = document.getElementById('cardSkillFile');
+            const fileNameDisplay = document.getElementById('cardFileName');
+
+            if (!zone) return;
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                zone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                zone.addEventListener(eventName, () => zone.classList.add('dragover'));
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                zone.addEventListener(eventName, () => zone.classList.remove('dragover'));
+            });
+
+            zone.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    fileNameDisplay.textContent = '已选择: ' + files[0].name;
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files[0]) {
+                    fileNameDisplay.textContent = '已选择: ' + e.target.files[0].name;
+                }
+            });
+        }
+
+        // Initialize hero animations
+        function initHeroAnimations() {
+            // Typewriter effect is now handled by CSS animations
+        }
+
+        // Render hero cards
+        function renderHeroCards() {
+            const container = document.getElementById('heroCards');
+            if (!container || state.top50.length === 0) return;
+
+            // Get first 3 skills for hero cards
+            const heroSkills = state.top50.slice(0, 3);
+            const colors = ['#3b82f6', '#8b5cf6', '#10b981'];
+
+            let html = '';
+            heroSkills.forEach((skill, index) => {
+                const icon = skill.icon || skill.name.charAt(0).toUpperCase();
+                html += `
+                    <div class="hero-card">
+                        <div class="hero-card-header">
+                            <div class="hero-card-icon" style="background: ${colors[index]}">${icon}</div>
+                            <div>
+                                <div class="hero-card-title">${skill.name}</div>
+                                <div class="hero-card-category">${skill.category}</div>
+                            </div>
+                        </div>
+                        <p class="hero-card-desc">${skill.description}</p>
+                        <div class="hero-card-input">
+                            <span>🔍 请输入关键词</span>
+                            <button style="padding: 4px 12px; background: #3b82f6; color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">查看</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        document.getElementById('searchInput')?.addEventListener('input', debounce((e) => {
+            state.searchQuery = e.target.value;
+            state.currentPage = 1;
+            loadAllSkills();
+        }, 300));
+
+        document.getElementById('sortSelect')?.addEventListener('change', (e) => {
+            state.sortBy = e.target.value;
+            renderExplore();
+        });
+
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.classList.remove('active');
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Start hero animations
+            initHeroAnimations();
+
+            // Init file drop zone
+            initFileDropZone();
+
+            // Load data
+            loadTop50();
+            loadAllSkills();
+            loadCategories();
+            loadStats();
+        });
+    </script>
+</body>
+</html>

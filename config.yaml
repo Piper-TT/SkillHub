@@ -1,0 +1,19 @@
+server:
+  port: 8081
+  upload_dir: ./uploads
+  max_upload_size: 104857600  # 100MB
+
+database:
+  type: sqlite
+  path: ./skills.db
+
+security:
+  allowed_extensions:
+    - .zip
+    - .tar.gz
+    - .tgz
+  max_filename_length: 255
+
+logging:
+  level: info
+  format: console  # console or json
