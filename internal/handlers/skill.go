@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"skillhub/internal/middleware"
@@ -8,6 +9,7 @@ import (
 	"skillhub/internal/service"
 	"skillhub/internal/utils"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -186,7 +188,22 @@ func (h *SkillHandler) DownloadSkill(c *gin.Context) {
 
 	filePath, err := h.svc.DownloadSkill(id)
 	if err != nil {
-		utils.NotFound(c, err.Error())
+		// 检查是否包含 ClawHub 直接链接
+		errMsg := err.Error()
+		if strings.Contains(errMsg, "clawhub.ai") {
+			// 返回 JSON 包含直接链接
+			skill, _ := h.svc.GetSkillByID(id)
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"code":         503,
+				"message":      "ClawHub rate limit reached, please use direct link",
+				"direct_url":   fmt.Sprintf("https://clawhub.ai/api/v1/download?slug=%s", skill.Slug),
+				"install_cmd":  fmt.Sprintf("npx clawhub@latest install %s", skill.Slug),
+				"skill_name":   skill.Name,
+				"retry_later":  "Local cache will be available after first successful download",
+			})
+			return
+		}
+		utils.NotFound(c, errMsg)
 		return
 	}
 

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"skillhub/internal/models"
 	"skillhub/internal/repository"
 	"skillhub/internal/service"
+	"strings"
 	"syscall"
 	"time"
 
@@ -191,7 +193,138 @@ func initDatabase(cfg *config.Config) (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to migrate database: %w", err)
 	}
 
+	// 初始化种子数据
+	if err := seedData(db); err != nil {
+		return nil, fmt.Errorf("failed to seed data: %w", err)
+	}
+
 	return db, nil
+}
+
+// seedData 初始化种子数据 (从 JSON 文件加载)
+func seedData(db *gorm.DB) error {
+	var count int64
+	db.Model(&models.Skill{}).Count(&count)
+	if count > 0 {
+		return nil // 已有数据，跳过
+	}
+
+	// 从 JSON 文件读取技能数据
+	skills, err := loadSkillsFromJSON()
+	if err != nil {
+		return err
+	}
+
+	return db.Create(&skills).Error
+}
+
+// loadSkillsFromJSON 从 JSON 文件加载技能数据
+func loadSkillsFromJSON() ([]models.Skill, error) {
+	// 尝试多个可能的路径
+	paths := []string{
+		"internal/data/skills.json",
+		"./internal/data/skills.json",
+		filepath.Join(getWorkDir(), "internal/data/skills.json"),
+	}
+
+	var data []byte
+	var err error
+
+	for _, path := range paths {
+		data, err = os.ReadFile(path)
+		if err == nil {
+			break
+		}
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to read skills.json: %w", err)
+	}
+
+	// 解析 JSON
+	var jsonSkills []struct {
+		Slug    string  `json:"slug"`
+		Name    string  `json:"name"`
+		Summary string  `json:"summary"`
+		Score   float64 `json:"score"`
+	}
+
+	if err := json.Unmarshal(data, &jsonSkills); err != nil {
+		return nil, fmt.Errorf("failed to parse skills.json: %w", err)
+	}
+
+	// 转换为 Skill 模型
+	skills := make([]models.Skill, 0, len(jsonSkills))
+	icons := []string{"🤖", "⚡", "🚀", "💡", "🔧", "📦", "🎯", "💻", "🔥", "⭐", "🌟", "💎", "🎨", "📊", "🔐", "📱", "🌐", "🔍", "📝", "🛠️"}
+
+	for i, js := range jsonSkills {
+		category := categorizeSkill(js.Name, js.Summary)
+		icon := icons[len(js.Name)%len(icons)]
+		downloads := 50000 - (i * 30)
+		if downloads < 1000 {
+			downloads = 1000
+		}
+		rating := 5
+		if i >= 50 {
+			rating = 4
+		}
+		if i >= 200 {
+			rating = 3
+		}
+
+		skills = append(skills, models.Skill{
+			Name:        js.Name,
+			Slug:        js.Slug,
+			Icon:        icon,
+			Category:    category,
+			Description: js.Summary,
+			Downloads:   downloads,
+			Rating:      rating,
+			Verified:    i < 200,
+			Accelerated: true,
+			Safe:        true,
+		})
+	}
+
+	return skills, nil
+}
+
+// categorizeSkill 根据名称和摘要分类技能
+func categorizeSkill(name, summary string) string {
+	text := strings.ToLower(name + " " + summary)
+
+	if strings.Contains(text, "agent") || strings.Contains(text, "ai ") || strings.Contains(text, "智能") || strings.Contains(text, "llm") {
+		return "AI智能"
+	}
+	if strings.Contains(text, "code") || strings.Contains(text, "dev") || strings.Contains(text, "开发") || strings.Contains(text, "git") || strings.Contains(text, "编程") {
+		return "开发工具"
+	}
+	if strings.Contains(text, "browser") || strings.Contains(text, "web") || strings.Contains(text, "scrape") || strings.Contains(text, "浏览器") {
+		return "浏览器自动化"
+	}
+	if strings.Contains(text, "security") || strings.Contains(text, "audit") || strings.Contains(text, "安全") || strings.Contains(text, "shield") {
+		return "安全工具"
+	}
+	if strings.Contains(text, "data") || strings.Contains(text, "database") || strings.Contains(text, "数据") || strings.Contains(text, "memory") {
+		return "数据管理"
+	}
+	if strings.Contains(text, "doc") || strings.Contains(text, "file") || strings.Contains(text, "文档") || strings.Contains(text, "pdf") {
+		return "文档处理"
+	}
+	if strings.Contains(text, "search") || strings.Contains(text, "信息") || strings.Contains(text, "query") {
+		return "信息处理"
+	}
+	if strings.Contains(text, "email") || strings.Contains(text, "chat") || strings.Contains(text, "办公") || strings.Contains(text, "slack") || strings.Contains(text, "discord") {
+		return "办公协同"
+	}
+	if strings.Contains(text, "image") || strings.Contains(text, "video") || strings.Contains(text, "media") || strings.Contains(text, "多媒体") {
+		return "多媒体"
+	}
+	if strings.Contains(text, "claude") || strings.Contains(text, "cursor") || strings.Contains(text, "copilot") {
+		return "编程助手"
+	}
+
+	return "其他"
 }
 
 func printBanner(port int) {

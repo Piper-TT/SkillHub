@@ -83,10 +83,32 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1180px;
             margin: 0 auto;
-            padding: 40px 24px;
+            padding: 32px 24px 72px;
             position: relative;
+        }
+
+        /* Topbar */
+        .topbar {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 12px 20px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 20px rgba(30, 64, 175, 0.06);
+            font-size: 13px;
+            color: #475569;
+        }
+
+        .topbar strong {
+            color: #2563eb;
+            font-weight: 600;
         }
 
         .container::before {
@@ -104,8 +126,8 @@
 
         /* Hero Section */
         .hero-section {
-            background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 30%, #ede9fe 60%, #fce7f3 100%);
-            border-radius: 20px;
+            background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 40%, #f5f3ff 100%);
+            border-radius: 24px;
             padding: 48px 40px;
             margin-bottom: 32px;
             display: flex;
@@ -114,6 +136,8 @@
             gap: 40px;
             position: relative;
             overflow: hidden;
+            border: 1px solid rgba(99, 102, 241, 0.12);
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.1);
         }
 
         .hero-section::before {
@@ -157,26 +181,31 @@
         }
 
         .hero-title {
-            font-size: 36px;
+            font-size: 42px;
             font-weight: 700;
-            color: #111827;
+            color: #0f172a;
             line-height: 1.2;
             margin-bottom: 12px;
+            letter-spacing: -0.02em;
         }
 
         .hero-title .highlight {
-            color: #3b82f6;
+            background: linear-gradient(90deg, #2563eb, #7c3aed);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
         }
 
         .hero-subtitle {
-            font-size: 14px;
-            color: #6b7280;
+            font-size: 15px;
+            color: #475569;
             margin-bottom: 20px;
-            line-height: 1.6;
+            line-height: 1.7;
+            max-width: 540px;
         }
 
         .hero-subtitle strong {
-            color: #3b82f6;
+            color: #2563eb;
             font-weight: 600;
         }
 
@@ -186,40 +215,41 @@
         }
 
         .hero-btn {
-            padding: 10px 20px;
-            border-radius: 6px;
+            padding: 12px 24px;
+            border-radius: 10px;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
         }
 
         .hero-btn-primary {
-            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
             color: #fff;
             border: none;
         }
 
         .hero-btn-primary:hover {
-            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+            background: linear-gradient(135deg, #1d4ed8 0%, #4338ca 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
         }
 
         .hero-btn-secondary {
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            color: #3b82f6;
-            border: 1px solid rgba(59, 130, 246, 0.4);
+            background: rgba(255, 255, 255, 0.9);
+            color: #2563eb;
+            border: 1px solid rgba(59, 130, 246, 0.3);
         }
 
         .hero-btn-secondary:hover {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+            background: #f0f9ff;
+            border-color: rgba(59, 130, 246, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.12);
         }
 
         .hero-cards {
@@ -232,10 +262,11 @@
         .hero-card {
             position: absolute;
             width: 260px;
-            background: #fff;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 14px;
             padding: 16px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(148, 163, 184, 0.2);
             transition: all 0.3s ease;
         }
 
@@ -334,29 +365,31 @@
 
         /* Install Box */
         .install-box {
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            border: 1px solid rgba(229, 231, 235, 0.8);
-            border-radius: 16px;
-            padding: 24px 28px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            border-radius: 20px;
+            padding: 28px 32px;
             margin-bottom: 32px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            backdrop-filter: blur(8px);
         }
 
         .install-label {
             font-size: 13px;
             color: #6b7280;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
+            font-weight: 500;
         }
 
         .install-code {
             display: flex;
             align-items: center;
             gap: 12px;
-            background: #f8fafc;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 14px 18px;
-            margin-bottom: 16px;
+            background: rgba(248, 250, 252, 0.9);
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 18px;
         }
 
         .install-code code {
@@ -365,35 +398,41 @@
             font-size: 12px;
             color: #374151;
             word-break: break-all;
+            line-height: 1.5;
         }
 
         .install-code button {
-            padding: 8px 18px;
-            background: #3b82f6;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
             color: #fff;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 13px;
             cursor: pointer;
             white-space: nowrap;
-            font-weight: 500;
+            font-weight: 600;
+            transition: all 0.2s ease;
         }
 
         .install-code button:hover {
-            background: #2563eb;
+            background: linear-gradient(135deg, #1d4ed8 0%, #4338ca 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
         }
 
         .install-badges {
             display: flex;
-            gap: 20px;
+            gap: 24px;
             font-size: 13px;
+            flex-wrap: wrap;
         }
 
         .install-badges span {
-            color: #6b7280;
+            color: #475569;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
+            font-weight: 500;
         }
 
         .install-badges .badge-icon {
@@ -401,25 +440,33 @@
         }
 
         .badge-verified { color: #f59e0b; }
-        .badge-fast { color: #3b82f6; }
+        .badge-fast { color: #2563eb; }
         .badge-safe { color: #10b981; }
 
         /* Section */
         .section {
-            margin-bottom: 40px;
+            margin-bottom: 32px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 32px;
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            backdrop-filter: blur(8px);
         }
 
         .section h2 {
-            font-size: 18px;
-            font-weight: 600;
-            color: #111827;
-            margin-bottom: 6px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+            letter-spacing: -0.01em;
         }
 
         .section-desc {
-            font-size: 13px;
+            font-size: 14px;
             color: #6b7280;
             margin-bottom: 20px;
+            line-height: 1.6;
         }
 
         .section-desc strong {
@@ -428,53 +475,72 @@
 
         /* Skills List */
         .skills-list {
-            background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+            background: rgba(255, 255, 255, 0.9);
             border-radius: 14px;
             overflow: hidden;
-            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
-            border: 1px solid rgba(243, 244, 246, 0.6);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(229, 231, 235, 0.4);
         }
 
         .skill-item {
             display: flex;
             align-items: center;
-            gap: 14px;
-            padding: 14px 18px;
+            gap: 16px;
+            padding: 16px 20px;
             border-bottom: 1px solid rgba(243, 244, 246, 0.6);
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
+            position: relative;
+            background: rgba(255, 255, 255, 0.8);
         }
 
         .skill-item:last-child {
             border-bottom: none;
         }
 
+        .skill-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, var(--brand-1), var(--brand-2));
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
         .skill-item:hover {
-            background: linear-gradient(90deg, rgba(241, 245, 249, 0.5) 0%, rgba(248, 250, 252, 0.3) 100%);
+            background: linear-gradient(90deg, rgba(241, 245, 249, 0.6) 0%, rgba(248, 250, 252, 0.4) 100%);
+        }
+
+        .skill-item:hover::before {
+            opacity: 1;
         }
 
         .skill-rank-badge {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 13px;
-            font-weight: 600;
+            font-size: 14px;
+            font-weight: 700;
             color: #fff;
             flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
         .skill-rank-badge.rank-1 { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); }
-        .skill-rank-badge.rank-2 { background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%); }
-        .skill-rank-badge.rank-3 { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); }
+        .skill-rank-badge.rank-2 { background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%); }
+        .skill-rank-badge.rank-3 { background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%); }
         .skill-rank-badge.rank-other { background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); }
 
         .skill-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -482,6 +548,7 @@
             font-weight: 600;
             color: #fff;
             flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
         }
 
         .skill-content {
@@ -499,26 +566,26 @@
         .skill-name {
             font-size: 15px;
             font-weight: 600;
-            color: #111827;
+            color: #1f2937;
         }
 
         .skill-category-tag {
             display: inline-block;
-            padding: 2px 10px;
-            border-radius: 12px;
+            padding: 3px 10px;
+            border-radius: 20px;
             font-size: 11px;
             font-weight: 500;
         }
 
-        .skill-category-tag.cat-dev { background: #dcfce7; color: #16a34a; }
-        .skill-category-tag.cat-ai { background: #dbeafe; color: #2563eb; }
-        .skill-category-tag.cat-media { background: #fce7f3; color: #db2777; }
-        .skill-category-tag.cat-office { background: #fef3c7; color: #d97706; }
-        .skill-category-tag.cat-security { background: #fee2e2; color: #dc2626; }
-        .skill-category-tag.cat-data { background: #e0e7ff; color: #4f46e5; }
-        .skill-category-tag.cat-doc { background: #f3e8ff; color: #9333ea; }
-        .skill-category-tag.cat-search { background: #cffafe; color: #0891b2; }
-        .skill-category-tag.cat-other { background: #f3f4f6; color: #4b5563; }
+        .skill-category-tag.cat-dev { background: rgba(34, 197, 94, 0.12); color: #16a34a; }
+        .skill-category-tag.cat-ai { background: rgba(59, 130, 246, 0.12); color: #2563eb; }
+        .skill-category-tag.cat-media { background: rgba(236, 72, 153, 0.12); color: #db2777; }
+        .skill-category-tag.cat-office { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+        .skill-category-tag.cat-security { background: rgba(239, 68, 68, 0.12); color: #dc2626; }
+        .skill-category-tag.cat-data { background: rgba(99, 102, 241, 0.12); color: #4f46e5; }
+        .skill-category-tag.cat-doc { background: rgba(168, 85, 247, 0.12); color: #9333ea; }
+        .skill-category-tag.cat-search { background: rgba(6, 182, 212, 0.12); color: #0891b2; }
+        .skill-category-tag.cat-other { background: rgba(107, 114, 128, 0.12); color: #4b5563; }
 
         .skill-description {
             font-size: 13px;
@@ -532,14 +599,14 @@
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            gap: 2px;
+            gap: 4px;
             flex-shrink: 0;
         }
 
         .skill-stats-primary {
-            font-size: 16px;
-            font-weight: 600;
-            color: #111827;
+            font-size: 17px;
+            font-weight: 700;
+            color: #1f2937;
             display: flex;
             align-items: center;
             gap: 4px;
@@ -547,12 +614,13 @@
 
         .skill-stats-primary .arrow {
             color: #10b981;
-            font-size: 12px;
+            font-size: 14px;
         }
 
         .skill-stats-secondary {
             font-size: 12px;
             color: #9ca3af;
+            font-weight: 500;
         }
 
         /* Category Filter Buttons */
@@ -560,32 +628,34 @@
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin-bottom: 14px;
+            margin-bottom: 16px;
         }
 
         .category-btn {
             display: flex;
             align-items: center;
-            gap: 5px;
-            padding: 6px 14px;
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            border: 1px solid rgba(229, 231, 235, 0.6);
-            border-radius: 18px;
-            font-size: 12px;
-            color: #6b7280;
+            gap: 6px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            border-radius: 999px;
+            font-size: 13px;
+            color: #475569;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
+            font-weight: 500;
         }
 
         .category-btn:hover {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            background: #f0f9ff;
             border-color: rgba(59, 130, 246, 0.3);
+            color: #2563eb;
         }
 
         .category-btn.active {
             background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
             border-color: #3b82f6;
-            color: #3b82f6;
+            color: #1d4ed8;
         }
 
         .category-btn-icon {
@@ -595,31 +665,41 @@
         /* Filters */
         .filters {
             display: flex;
-            gap: 10px;
-            margin-bottom: 16px;
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
         .search-input {
             flex: 1;
-            padding: 8px 14px;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            font-size: 13px;
+            padding: 10px 16px;
+            border: 1px solid rgba(229, 231, 235, 0.6);
+            border-radius: 10px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.95);
+            transition: all 0.2s;
         }
 
         .search-input:focus {
             outline: none;
-            border-color: #3b82f6;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
         .sort-select {
-            padding: 8px 14px;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            font-size: 13px;
-            background: #fff;
-            min-width: 110px;
+            padding: 10px 16px;
+            border: 1px solid rgba(229, 231, 235, 0.6);
+            border-radius: 10px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.95);
+            min-width: 120px;
             cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sort-select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
         .upload-btn {
@@ -639,46 +719,68 @@
         /* Skills Grid */
         .skills-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 14px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            align-items: stretch;
         }
 
         .skill-card {
-            background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-            border: 1px solid rgba(229, 231, 235, 0.6);
-            border-radius: 10px;
-            padding: 14px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            border-radius: 14px;
+            padding: 18px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
+            height: 100%;
+            min-height: 160px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(4px);
+        }
+
+        .skill-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--brand-1), var(--brand-2), var(--brand-3));
+            opacity: 0;
+            transition: opacity 0.25s ease;
         }
 
         .skill-card:hover {
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-            border-color: rgba(99, 102, 241, 0.2);
-            transform: translateY(-2px);
-            background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+            box-shadow: 0 12px 32px rgba(99, 102, 241, 0.15);
+            border-color: rgba(99, 102, 241, 0.25);
+            transform: translateY(-4px);
+        }
+
+        .skill-card:hover::before {
+            opacity: 1;
         }
 
         .skill-card-header {
             display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            margin-bottom: 10px;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
         }
 
         .skill-card-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 600;
             color: #fff;
             flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .skill-card-title-wrap {
@@ -687,10 +789,10 @@
         }
 
         .skill-card-name {
-            font-size: 14px;
-            font-weight: 500;
-            color: #111827;
-            margin-bottom: 2px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 3px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -699,13 +801,14 @@
         .skill-card-version {
             font-size: 11px;
             color: #9ca3af;
+            font-weight: 400;
         }
 
         .skill-card-desc {
-            font-size: 12px;
+            font-size: 13px;
             color: #6b7280;
-            line-height: 1.5;
-            margin-bottom: 10px;
+            line-height: 1.6;
+            margin-bottom: 12px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
@@ -717,30 +820,34 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding-top: 10px;
-            border-top: 1px solid #f3f4f6;
+            padding-top: 12px;
+            border-top: 1px solid rgba(243, 244, 246, 0.8);
+            margin-top: auto;
         }
 
         .skill-card-stats {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 11px;
+            gap: 14px;
+            font-size: 12px;
             color: #9ca3af;
         }
 
         .skill-card-stats span {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 3px;
+            gap: 4px;
+            white-space: nowrap;
+            font-weight: 500;
         }
 
         .skill-card-category {
-            font-size: 10px;
-            padding: 2px 8px;
-            background: #f3f4f6;
-            border-radius: 4px;
-            color: #6b7280;
+            font-size: 11px;
+            padding: 4px 10px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border-radius: 20px;
+            color: #6366f1;
+            font-weight: 500;
         }
 
         /* Pagination */
@@ -748,26 +855,29 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 5px;
-            margin-top: 16px;
+            gap: 6px;
+            margin-top: 20px;
             font-size: 13px;
         }
 
         .pagination button {
-            padding: 5px 10px;
-            border: 1px solid #e5e7eb;
-            background: #fff;
-            border-radius: 4px;
+            padding: 8px 14px;
+            border: 1px solid rgba(229, 231, 235, 0.6);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
             cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
         }
 
         .pagination button:hover {
-            background: #f9fafb;
+            background: #f0f9ff;
+            border-color: rgba(59, 130, 246, 0.3);
         }
 
         .pagination button.active {
-            background: #3b82f6;
-            border-color: #3b82f6;
+            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+            border-color: transparent;
             color: #fff;
         }
 
@@ -777,10 +887,10 @@
         }
 
         .pagination input {
-            width: 45px;
-            padding: 5px;
-            border: 1px solid #e5e7eb;
-            border-radius: 4px;
+            width: 50px;
+            padding: 8px;
+            border: 1px solid rgba(229, 231, 235, 0.6);
+            border-radius: 8px;
             text-align: center;
             font-size: 13px;
         }
@@ -792,20 +902,27 @@
         /* Footer */
         .footer {
             text-align: center;
-            padding-top: 32px;
-            border-top: 1px solid #e5e7eb;
-            margin-top: 32px;
+            padding: 28px 32px;
+            border-top: 1px solid rgba(229, 231, 235, 0.5);
+            margin-top: 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            backdrop-filter: blur(8px);
         }
 
         .footer h3 {
-            font-size: 15px;
+            font-size: 18px;
             font-weight: 600;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            color: #1f2937;
         }
 
         .footer p {
-            font-size: 13px;
+            font-size: 14px;
             color: #6b7280;
+            line-height: 1.6;
         }
 
         /* Modal */
@@ -979,6 +1096,108 @@
             font-weight: 600;
             color: #fff;
             margin: 0 auto 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .skill-detail h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+
+        .skill-detail .skill-category-tag {
+            display: inline-block;
+            margin-bottom: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .skill-detail .skill-description {
+            white-space: normal;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .skill-detail-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .skill-detail-stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .skill-detail-stat-label {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .skill-detail-install-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 16px;
+        }
+
+        .skill-detail-install-label {
+            font-size: 12px;
+            color: #475569;
+            margin-bottom: 8px;
+            text-align: left;
+        }
+
+        .skill-detail-install-cmd {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .skill-detail-install-cmd code {
+            flex: 1;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            color: #334155;
+            word-break: break-all;
+            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 6px;
+        }
+
+        .skill-detail-install-cmd button {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .skill-detail-install-cmd button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 600;
+            color: #fff;
+            margin: 0 auto 16px;
         }
 
         .skill-detail h3 {
@@ -1133,35 +1352,34 @@
 
         /* TOP 50 Section */
         #top50 {
-            background: linear-gradient(180deg, rgba(241, 245, 249, 0.5) 0%, rgba(248, 250, 252, 0.8) 100%);
-            margin: 0 -24px;
-            padding: 28px 24px;
-            border-radius: 0;
+            /* 统一使用section样式 */
         }
 
         /* Upload Section */
         #upload {
-            margin: 32px 0;
+            /* 统一使用section样式 */
         }
 
         .upload-card-container {
             display: flex;
-            gap: 20px;
+            gap: 24px;
             flex-wrap: wrap;
+            align-items: stretch;
         }
 
         .upload-card {
-            background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-            border-radius: 12px;
-            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px;
             flex: 1;
             min-width: 300px;
-            max-width: 500px;
+            max-width: 1fr;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
-            border: 1px solid rgba(243, 244, 246, 0.8);
+            border: 1px solid rgba(229, 231, 235, 0.5);
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            backdrop-filter: blur(8px);
         }
 
         .upload-card::before {
@@ -1200,75 +1418,80 @@
         .upload-card-input {
             width: 100%;
             padding: 10px 14px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
+            border: 1px solid rgba(229, 231, 235, 0.6);
+            border-radius: 10px;
             font-size: 14px;
-            background: #f9fafb;
+            background: rgba(255, 255, 255, 0.95);
             transition: all 0.2s;
         }
 
         .upload-card-input:focus {
             outline: none;
-            border-color: #3b82f6;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
             background: #fff;
         }
 
         .upload-card-select {
             width: 100%;
             padding: 10px 14px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
+            border: 1px solid rgba(229, 231, 235, 0.6);
+            border-radius: 10px;
             font-size: 14px;
-            background: #f9fafb;
+            background: rgba(255, 255, 255, 0.95);
             cursor: pointer;
             appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 10px center;
-            background-size: 14px;
+            background-position: right 12px center;
+            background-size: 16px;
+            transition: all 0.2s;
         }
 
         .upload-card-select:focus {
             outline: none;
-            border-color: #3b82f6;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
             background-color: #fff;
         }
 
         .upload-card-textarea {
             width: 100%;
             padding: 10px 14px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
+            border: 1px solid rgba(229, 231, 235, 0.6);
+            border-radius: 10px;
             font-size: 14px;
-            background: #f9fafb;
+            background: rgba(255, 255, 255, 0.95);
             resize: vertical;
             min-height: 60px;
             font-family: inherit;
+            transition: all 0.2s;
         }
 
         .upload-card-textarea:focus {
             outline: none;
-            border-color: #3b82f6;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
             background: #fff;
         }
 
         .upload-file-zone {
-            border: 2px dashed #d1d5db;
-            border-radius: 8px;
-            padding: 16px;
+            border: 2px dashed rgba(148, 163, 184, 0.4);
+            border-radius: 12px;
+            padding: 20px;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s;
-            background: #fafafa;
+            background: rgba(248, 250, 252, 0.8);
         }
 
         .upload-file-zone:hover {
-            border-color: #3b82f6;
+            border-color: #2563eb;
             background: #f0f9ff;
         }
 
         .upload-file-zone.dragover {
-            border-color: #3b82f6;
+            border-color: #2563eb;
             background: #dbeafe;
         }
 
@@ -1287,25 +1510,25 @@
 
         .upload-card-btn {
             width: 100%;
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
             color: #fff;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 8px;
         }
 
         .upload-card-btn:hover {
-            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 50%, #7c3aed 100%);
-            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
-            transform: translateY(-1px);
+            background: linear-gradient(135deg, #1d4ed8 0%, #4338ca 100%);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+            transform: translateY(-2px);
         }
 
         .upload-card-btn:disabled {
@@ -1324,12 +1547,13 @@
 
         /* Stats Card */
         .stats-card {
-            background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-            border-radius: 12px;
-            padding: 20px;
-            width: 260px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px;
+            flex: 0 0 280px;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
-            border: 1px solid rgba(243, 244, 246, 0.8);
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            backdrop-filter: blur(8px);
         }
 
         .stats-card-title {
@@ -1371,10 +1595,7 @@
 
         /* Explore Section */
         #explore {
-            background: linear-gradient(180deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.5) 100%);
-            margin: 32px -24px 0;
-            padding: 28px 24px;
-            border-radius: 0;
+            /* 统一使用section样式 */
         }
 
         .counter {
@@ -1428,27 +1649,34 @@
         }
 
         .page-dot {
-            width: 36px;
-            height: 36px;
-            border: none;
-            background: #fff;
+            width: 38px;
+            height: 38px;
+            border: 1px solid rgba(229, 231, 235, 0.6);
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 10px;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .page-dot:hover {
             background: #f0f9ff;
-            color: #3b82f6;
+            border-color: rgba(59, 130, 246, 0.3);
+            color: #2563eb;
         }
 
         .page-dot.active {
-            background: #3b82f6;
+            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
             color: #fff;
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+        }
+
+        @media (max-width: 1280px) {
+            .skills-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
 
         @media (max-width: 1024px) {
@@ -1466,6 +1694,10 @@
                 max-width: 100%;
             }
 
+            .hero-subtitle {
+                max-width: 100%;
+            }
+
             .hero-buttons {
                 justify-content: center;
             }
@@ -1477,26 +1709,42 @@
                 height: 280px;
                 margin-top: 32px;
             }
+
+            .upload-card-container {
+                flex-direction: column;
+            }
+
+            .stats-card {
+                flex: none;
+                width: 100%;
+            }
         }
 
         @media (max-width: 640px) {
             .container {
-                padding: 32px 16px;
+                padding: 24px 16px 48px;
             }
 
-            .skill-item {
-                grid-template-columns: 24px 32px 1fr;
-                gap: 12px;
-            }
-
-            .skill-stats {
-                grid-column: 1 / -1;
-                justify-content: flex-start;
-                padding-left: 68px;
-            }
-
-            .filters {
+            .topbar {
                 flex-direction: column;
+                text-align: center;
+                border-radius: 16px;
+                padding: 14px 16px;
+            }
+
+            .section {
+                padding: 24px 20px;
+                border-radius: 16px;
+            }
+
+            .install-box {
+                padding: 20px;
+                border-radius: 16px;
+            }
+
+            .hero-section {
+                padding: 32px 24px;
+                border-radius: 20px;
             }
 
             .hero-title {
@@ -1518,6 +1766,21 @@
 
             .hero-cards {
                 display: none;
+            }
+
+            .skill-item {
+                grid-template-columns: 24px 32px 1fr;
+                gap: 12px;
+            }
+
+            .skill-stats {
+                grid-column: 1 / -1;
+                justify-content: flex-start;
+                padding-left: 68px;
+            }
+
+            .filters {
+                flex-direction: column;
             }
 
             .skills-grid {
@@ -1542,272 +1805,12 @@
             .upload-card, .stats-card {
                 max-width: 100%;
                 width: 100%;
-            }
-        }
-        :root {
-            --brand-1: #2563eb;
-            --brand-2: #4f46e5;
-            --brand-3: #7c3aed;
-            --text-main: #0f172a;
-            --text-secondary: #475569;
-            --surface: rgba(255, 255, 255, 0.88);
-            --border-soft: rgba(148, 163, 184, 0.2);
-            --shadow-soft: 0 16px 40px rgba(37, 99, 235, 0.12);
-        }
-
-        body {
-            background:
-                radial-gradient(1200px 500px at 10% -10%, rgba(59, 130, 246, 0.18), transparent 60%),
-                radial-gradient(900px 420px at 90% -12%, rgba(139, 92, 246, 0.16), transparent 58%),
-                linear-gradient(180deg, #f8fbff 0%, #f5f7ff 50%, #f8fafc 100%);
-            color: var(--text-main);
-        }
-
-        .container {
-            max-width: 1180px;
-            padding-top: 28px;
-            padding-bottom: 72px;
-        }
-
-        .topbar {
-            margin-bottom: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            padding: 10px 16px;
-            border-radius: 999px;
-            border: 1px solid var(--border-soft);
-            background: rgba(255, 255, 255, 0.65);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 6px 24px rgba(30, 64, 175, 0.08);
-            font-size: 13px;
-            color: #334155;
-        }
-
-        .topbar strong {
-            color: #1d4ed8;
-        }
-
-        .hero-section {
-            border-radius: 28px;
-            padding: 56px 48px;
-            border: 1px solid rgba(99, 102, 241, 0.15);
-            box-shadow: var(--shadow-soft);
-            background:
-                radial-gradient(circle at 100% 0%, rgba(236, 72, 153, 0.14), transparent 46%),
-                radial-gradient(circle at 0% 100%, rgba(14, 165, 233, 0.14), transparent 42%),
-                linear-gradient(135deg, #eff6ff 0%, #eef2ff 42%, #f5f3ff 100%);
-        }
-
-        .hero-title {
-            font-size: 52px;
-            line-height: 1.15;
-            letter-spacing: -0.02em;
-            color: #0f172a;
-        }
-
-        .highlight {
-            background: linear-gradient(90deg, var(--brand-1), var(--brand-3));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .hero-subtitle {
-            max-width: 620px;
-            color: var(--text-secondary);
-            font-size: 17px;
-            line-height: 1.8;
-        }
-
-        .hero-btn {
-            border-radius: 12px;
-            font-weight: 600;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-        }
-
-        .hero-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 24px rgba(59, 130, 246, 0.2);
-        }
-
-        .hero-btn-primary {
-            background: linear-gradient(90deg, var(--brand-1), var(--brand-2));
-        }
-
-        .hero-btn-secondary {
-            border: 1px solid rgba(59, 130, 246, 0.25);
-            background: rgba(255, 255, 255, 0.82);
-            color: #1e3a8a;
-        }
-
-        .hero-cards {
-            width: 360px;
-        }
-
-        .hero-card {
-            border: 1px solid rgba(148, 163, 184, 0.24);
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.92);
-            box-shadow: 0 10px 28px rgba(99, 102, 241, 0.12);
-        }
-
-        .install-box,
-        .section,
-        .footer {
-            border-radius: 20px;
-            border: 1px solid var(--border-soft);
-            background: var(--surface);
-            box-shadow: 0 12px 36px rgba(15, 23, 42, 0.06);
-            backdrop-filter: blur(8px);
-        }
-
-        #top50,
-        #upload,
-        #explore {
-            margin-top: 22px;
-        }
-
-        .section {
-            padding: 30px 26px;
-        }
-
-        .section h2 {
-            font-size: 29px;
-            letter-spacing: -0.02em;
-            color: #0f172a;
-            margin-bottom: 8px;
-        }
-
-        .section-desc {
-            color: #64748b;
-            margin-bottom: 20px;
-        }
-
-        .skill-item,
-        .skill-card {
-            border-radius: 14px;
-            border: 1px solid rgba(148, 163, 184, 0.2);
-            background: rgba(255, 255, 255, 0.9);
-            transition: all 0.2s ease;
-        }
-
-        .skill-item:hover,
-        .skill-card:hover {
-            border-color: rgba(99, 102, 241, 0.35);
-            box-shadow: 0 12px 28px rgba(79, 70, 229, 0.14);
-            transform: translateY(-2px);
-        }
-
-        .skill-icon,
-        .skill-card-icon {
-            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35), 0 8px 18px rgba(15, 23, 42, 0.2);
-        }
-
-        .skill-category-tag,
-        .skill-card-category,
-        .skill-category {
-            border-radius: 999px;
-            border: 1px solid rgba(99, 102, 241, 0.2);
-            background: rgba(99, 102, 241, 0.08);
-            color: #4338ca;
-        }
-
-        .category-filters {
-            margin-bottom: 12px;
-        }
-
-        .category-btn {
-            border: 1px solid rgba(148, 163, 184, 0.24);
-            background: rgba(255, 255, 255, 0.75);
-            border-radius: 999px;
-            transition: all 0.2s ease;
-        }
-
-        .category-btn.active,
-        .category-btn:hover {
-            background: linear-gradient(90deg, rgba(37, 99, 235, 0.12), rgba(139, 92, 246, 0.12));
-            border-color: rgba(79, 70, 229, 0.34);
-            color: #312e81;
-        }
-
-        .search-input,
-        .sort-select,
-        .upload-card-input,
-        .upload-card-select,
-        .upload-card-textarea {
-            border-radius: 10px;
-            border: 1px solid rgba(148, 163, 184, 0.28);
-            background: rgba(255, 255, 255, 0.92);
-        }
-
-        .search-input:focus,
-        .sort-select:focus,
-        .upload-card-input:focus,
-        .upload-card-select:focus,
-        .upload-card-textarea:focus {
-            outline: none;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.14);
-        }
-
-        .upload-card-btn,
-        .btn-download {
-            border-radius: 10px;
-            font-weight: 600;
-            background: linear-gradient(90deg, var(--brand-1), var(--brand-3));
-        }
-
-        .upload-file-zone {
-            border-radius: 12px;
-            border: 1.5px dashed rgba(79, 70, 229, 0.35);
-            background: rgba(99, 102, 241, 0.04);
-        }
-
-        .stats-card {
-            border: 1px solid rgba(148, 163, 184, 0.24);
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.94));
-        }
-
-        .pagination button,
-        .top50-pagination button {
-            border-radius: 10px;
-            border: 1px solid rgba(148, 163, 184, 0.24);
-            background: rgba(255, 255, 255, 0.92);
-        }
-
-        .pagination button.active,
-        .top50-pagination button.active {
-            background: linear-gradient(90deg, var(--brand-1), var(--brand-2));
-            color: #fff;
-            border-color: transparent;
-        }
-
-        .footer {
-            padding: 28px;
-            margin-top: 24px;
-            text-align: center;
-        }
-
-        .footer h3 {
-            font-size: 22px;
-            margin-bottom: 10px;
-        }
-
-        @media (max-width: 1024px) {
-            .topbar {
-                border-radius: 14px;
-                display: block;
-                line-height: 1.7;
+                flex: none;
             }
 
-            .hero-section {
-                padding: 42px 30px;
-            }
-
-            .hero-title {
-                font-size: 38px;
+            .footer {
+                padding: 24px 20px;
+                border-radius: 16px;
             }
         }
     </style>
@@ -2167,23 +2170,23 @@
         }
 
         // Create skill item
-        function createSkillItem(skill, showRank = false) {
+        function createSkillItem(skill, showRank = false, rank = 0) {
             const item = document.createElement('div');
             item.className = 'skill-item';
             item.onclick = () => showSkillDetail(skill);
 
             // Determine rank badge class
             let rankBadgeClass = 'rank-other';
-            if (skill.rank === 1) rankBadgeClass = 'rank-1';
-            else if (skill.rank === 2) rankBadgeClass = 'rank-2';
-            else if (skill.rank === 3) rankBadgeClass = 'rank-3';
+            if (rank === 1) rankBadgeClass = 'rank-1';
+            else if (rank === 2) rankBadgeClass = 'rank-2';
+            else if (rank === 3) rankBadgeClass = 'rank-3';
 
             const iconColor = getIconColor(skill.name);
             const icon = skill.icon || skill.name.charAt(0).toUpperCase();
             const categoryTagClass = getCategoryTagClass(skill.category);
 
             item.innerHTML = `
-                ${showRank ? `<div class="skill-rank-badge ${rankBadgeClass}">${skill.rank}</div>` : ''}
+                ${showRank ? `<div class="skill-rank-badge ${rankBadgeClass}">${rank}</div>` : ''}
                 <div class="skill-icon" style="background: ${iconColor}">${icon}</div>
                 <div class="skill-content">
                     <div class="skill-header-row">
@@ -2208,33 +2211,114 @@
         function showSkillDetail(skill) {
             const modal = document.getElementById('skillModal');
             document.getElementById('skillModalTitle').textContent = skill.name;
+
+            // Use slug from API or generate from name
+            const slug = skill.slug || skill.name.toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .substring(0, 40);
+
+            const installCmd = `npx clawhub@latest install ${slug}`;
+            const acceleratedUrl = `${window.location.origin}/api/skills/${skill.id}/download`;
+
             document.getElementById('skillDetail').innerHTML = `
-                <div class="skill-detail-icon">${skill.icon || skill.name.charAt(0)}</div>
+                <div class="skill-detail-icon" style="background: ${getIconColor(skill.name)}">${skill.icon || skill.name.charAt(0)}</div>
                 <h3>${skill.name}</h3>
-                <span class="skill-category">${skill.category}</span>
-                <p class="skill-description">${skill.description}</p>
+                <span class="skill-category-tag ${getCategoryTagClass(skill.category)}">${skill.category}</span>
+                <p class="skill-description" style="white-space: normal; margin: 16px 0;">${skill.description}</p>
                 <div class="skill-detail-stats">
                     <div>
                         <div class="skill-detail-stat-value">${formatNumber(skill.downloads)}</div>
                         <div class="skill-detail-stat-label">下载量</div>
                     </div>
                     <div>
-                        <div class="skill-detail-stat-value">${skill.rating}</div>
+                        <div class="skill-detail-stat-value">⭐ ${skill.rating}</div>
                         <div class="skill-detail-stat-label">评分</div>
                     </div>
                 </div>
-                <button class="btn-download" onclick="downloadSkill(${skill.id})">📥 下载 Skill</button>
+
+                <!-- ClawHub 安装命令 -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-top: 16px;">
+                    <div style="font-size: 12px; color: #64748b; margin-bottom: 8px;">📦 ClawHub 安装命令</div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <code style="flex: 1; font-family: 'Monaco', 'Consolas', monospace; font-size: 12px; color: #334155; word-break: break-all;">${installCmd}</code>
+                        <button onclick="copyToClipboard('${installCmd}')" style="padding: 8px 16px; background: #6b7280; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500;">复制</button>
+                    </div>
+                </div>
+
+                <!-- 加速下载 -->
+                <div style="background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%); border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px; margin-top: 12px;">
+                    <div style="font-size: 12px; color: #2563eb; margin-bottom: 8px; font-weight: 600;">⚡ 加速下载（国内镜像）</div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <code style="flex: 1; font-family: 'Monaco', 'Consolas', monospace; font-size: 12px; color: #334155; word-break: break-all;">${acceleratedUrl}</code>
+                        <button onclick="copyToClipboard('${acceleratedUrl}')" style="padding: 8px 16px; background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500;">复制</button>
+                    </div>
+                    <button onclick="downloadSkill(${skill.id})" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: 600;">📥 直接下载</button>
+                </div>
             `;
             modal.classList.add('active');
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('已复制到剪贴板', 'success');
+            });
         }
 
         function closeSkillModal() {
             document.getElementById('skillModal').classList.remove('active');
         }
 
-        function downloadSkill(id) {
-            window.location.href = `/api/skills/${id}/download`;
-            showToast('开始下载...', 'success');
+        async function downloadSkill(id) {
+            showToast('正在获取下载链接...', 'success');
+            try {
+                const response = await fetch(`/api/skills/${id}/download`);
+                if (response.status === 503) {
+                    // Rate limited - show fallback options
+                    const data = await response.json();
+                    showRateLimitModal(data);
+                } else if (response.ok) {
+                    // Success - trigger download
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `skill_${id}.zip`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                    showToast('下载成功！文件已缓存到本地服务器', 'success');
+                } else {
+                    const data = await response.json();
+                    showToast(data.message || '下载失败', 'error');
+                }
+            } catch (error) {
+                showToast('下载失败: ' + error.message, 'error');
+            }
+        }
+
+        function showRateLimitModal(data) {
+            const modal = document.getElementById('skillModal');
+            document.getElementById('skillDetail').innerHTML += `
+                <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 12px; margin-top: 16px;">
+                    <div style="font-size: 13px; color: #92400e; margin-bottom: 8px; font-weight: 600;">⚠️ ClawHub 速率限制</div>
+                    <p style="font-size: 12px; color: #78350f; margin-bottom: 12px;">
+                        ClawHub 暂时限制了下载请求。请使用以下替代方案：
+                    </p>
+                    <div style="background: #fff; border-radius: 6px; padding: 10px; margin-bottom: 8px;">
+                        <div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">方式 1: 使用 ClawHub 命令行</div>
+                        <code style="font-size: 12px; color: #374151;">${data.install_cmd}</code>
+                    </div>
+                    <div style="background: #fff; border-radius: 6px; padding: 10px;">
+                        <div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">方式 2: 直接下载链接</div>
+                        <a href="${data.direct_url}" target="_blank" style="font-size: 12px; color: #2563eb; word-break: break-all;">${data.direct_url}</a>
+                    </div>
+                    <p style="font-size: 11px; color: #92400e; margin-top: 12px;">
+                        💡 提示：成功下载后，文件将缓存到本地服务器，下次下载将不受限制。
+                    </p>
+                </div>
+            `;
         }
 
         function openUploadModal() {
@@ -2318,7 +2402,10 @@
             const end = Math.min(start + state.top50PerPage, state.top50.length);
             const pageSkills = state.top50.slice(start, end);
 
-            pageSkills.forEach(skill => list.appendChild(createSkillItem(skill, true)));
+            pageSkills.forEach((skill, index) => {
+                const rank = start + index + 1; // Calculate rank based on position
+                list.appendChild(createSkillItem(skill, true, rank));
+            });
             revealItems(list);
             renderTop50Pagination();
         }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"skillhub/internal/config"
@@ -13,6 +14,7 @@ import (
 	"skillhub/internal/utils"
 	"strings"
 	"sync"
+	"time"
 )
 
 // SkillService 业务逻辑层
@@ -176,24 +178,94 @@ func (s *SkillService) UploadSkill(req *UploadRequest, fileData io.Reader) (*mod
 	return skill, nil
 }
 
-// DownloadSkill 下载 Skill 文件
+// DownloadSkill 下载 Skill 文件（代理+缓存模式）
 func (s *SkillService) DownloadSkill(id int) (string, error) {
 	skill, err := s.repo.FindByID(context.Background(), uint(id))
 	if err != nil {
 		return "", errors.New("skill not found")
 	}
 
-	if skill.FileName == "" {
-		return "", errors.New("skill has no file")
+	// 检查本地是否已缓存
+	if skill.FileName != "" {
+		filePath := filepath.Join(s.uploadDir, skill.FileName)
+		if _, err := os.Stat(filePath); err == nil {
+			// 已缓存，直接返回
+			go s.repo.IncrementDownloads(context.Background(), uint(id))
+			return filePath, nil
+		}
 	}
 
-	filePath := filepath.Join(s.uploadDir, skill.FileName)
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		return "", errors.New("file not found")
+	// 未缓存，从 ClawHub 代理下载
+	if skill.Slug == "" {
+		return "", errors.New("skill has no slug and no local file")
+	}
+
+	// 从 ClawHub 下载
+	filePath, err := s.proxyFromClawHub(skill)
+	if err != nil {
+		// 如果是速率限制错误，返回特殊错误包含 ClawHub 直接链接
+		return "", fmt.Errorf("proxy failed: %v (try direct: https://clawhub.ai/api/v1/download?slug=%s)", err, skill.Slug)
 	}
 
 	// 增加下载计数
 	go s.repo.IncrementDownloads(context.Background(), uint(id))
+
+	return filePath, nil
+}
+
+// proxyFromClawHub 从 ClawHub 代理下载并缓存
+func (s *SkillService) proxyFromClawHub(skill *models.Skill) (string, error) {
+	// 构建 ClawHub 下载 URL
+	clawhubURL := fmt.Sprintf("https://clawhub.ai/api/v1/download?slug=%s", skill.Slug)
+
+	// 创建 HTTP 客户端（带超时）
+	client := &http.Client{
+		Timeout: 120 * time.Second,
+	}
+
+	resp, err := client.Get(clawhubURL)
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch from ClawHub: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("ClawHub returned status %d", resp.StatusCode)
+	}
+
+	// 确保上传目录存在
+	if err := os.MkdirAll(s.uploadDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create upload directory: %v", err)
+	}
+
+	// 生成本地文件名
+	filename := fmt.Sprintf("%d_%s.zip", skill.ID, skill.Slug)
+	filePath := filepath.Join(s.uploadDir, filename)
+
+	// 保存文件
+	dst, err := os.Create(filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to create file: %v", err)
+	}
+
+	fileSize, err := io.Copy(dst, resp.Body)
+	dst.Close()
+	if err != nil {
+		os.Remove(filePath)
+		return "", fmt.Errorf("failed to save file: %v", err)
+	}
+
+	// 更新数据库记录
+	now := time.Now()
+	skill.FileName = filename
+	skill.FileSize = fileSize
+	skill.CachedAt = &now
+	skill.SourceURL = clawhubURL
+
+	if err := s.repo.Update(context.Background(), skill); err != nil {
+		os.Remove(filePath)
+		return "", fmt.Errorf("failed to update skill: %v", err)
+	}
 
 	return filePath, nil
 }
