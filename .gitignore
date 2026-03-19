@@ -1,0 +1,13 @@
+# Binaries
+bin/
+*.exe
+
+# Uploads
+uploads/
+
+# IDE
+.idea/
+.vscode/
+
+# Local config
+.claude/
