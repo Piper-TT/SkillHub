@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SkillHub is a Go-based Skill management and distribution platform with a Web UI and REST API. It integrates **1571+ real ClawHub skills** and supports **proxy+cache accelerated downloads** to bypass ClawHub rate limits.
+SkillHub is a Go-based Skill management and distribution platform with a Web UI and REST API. It integrates **3500+ ClawHub skills** and supports local upload for team sharing.
 
 ## Build & Run Commands
 
@@ -17,6 +17,9 @@ go run ./cmd/server/main.go
 
 # Build executable (force rebuild for embedded templates)
 go build -a -o bin/server.exe ./cmd/server/main.go
+
+# Import skills from ClawHub
+go run ./scripts/import_clawhub.go
 ```
 
 Server starts on `http://localhost:8081` by default.
@@ -29,13 +32,14 @@ Layered architecture with dependency injection:
 cmd/server/main.go     # Entry point, wire dependencies, setup Gin routes
 internal/
 ├── handlers/          # HTTP handlers (Gin context, request/response)
-├── service/           # Business logic layer (includes proxy download)
+├── service/           # Business logic layer
 ├── repository/        # Data access layer (GORM)
 ├── models/            # GORM models and DTOs
 ├── middleware/        # Gin middleware (logger, security, recovery)
 ├── config/            # Viper config loading
-├── data/              # Skill data (skills.json - 1571 skills)
 └── utils/             # Validators, response helpers
+scripts/
+└── import_clawhub.go  # ClawHub data crawler
 ```
 
 **Data flow**: Handler → Service → Repository → Database
@@ -55,29 +59,21 @@ All routes under `/api`:
 - `POST /skills/upload` (multipart form: name, category, file required)
 - `PUT /skills/:id`, `DELETE /skills/:id`
 
-## Proxy + Cache Download System
+## Key Features
 
-### How it works
+### Category Selector
+- Custom dropdown component with preset categories
+- Supports custom category input
+- Located in `cmd/server/templates/index.html`
 
-1. **First request**: Proxy from ClawHub (`https://clawhub.ai/api/v1/download?slug=xxx`), cache to `uploads/`
-2. **Subsequent requests**: Serve from local cache, no rate limit
+### Skill Detail Modal
+- **Local uploaded skills**: Show local download button (curl command + direct download)
+- **ClawHub skills**: Show ClawHub install command + AI assistant install prompt
+- The install prompt can be copied and sent to Claude/ChatGPT/Cursor for automatic installation
 
-### Key files
-
-- `internal/service/skill_service.go` - `DownloadSkill()` and `proxyFromClawHub()`
-- `internal/handlers/skill.go` - Rate limit handling (503 response with fallback URLs)
-- `internal/models/skill.go` - Cache fields: `SourceURL`, `FileSize`, `CachedAt`
-
-### Rate limit handling
-
-When ClawHub returns 429 (rate limit), the API returns:
-```json
-{
-  "code": 503,
-  "direct_url": "https://clawhub.ai/api/v1/download?slug=xxx",
-  "install_cmd": "npx clawhub@latest install xxx"
-}
-```
+### Upload Handler
+- Located in `internal/handlers/skill.go`
+- Fixed: Uses `uploadWithContent()` directly instead of nil reader
 
 ## Configuration
 
@@ -85,9 +81,12 @@ When ClawHub returns 429 (rate limit), the API returns:
 
 ## Database
 
-SQLite database auto-migrates on startup. The `Skill` model uses soft deletes (`gorm.DeletedAt`).
+SQLite database (`skills.db`) auto-migrates on startup. The `Skill` model uses soft deletes (`gorm.DeletedAt`).
 
-**Seed data**: Loaded from `internal/data/skills.json` on first run (1571 ClawHub skills).
+**Data fields**:
+- `Name`, `Slug`, `Icon`, `Category`, `Description`
+- `Downloads`, `Rating`, `Verified`, `Safe`
+- `FileName` (for local uploaded files)
 
 ## Embeds
 
@@ -97,7 +96,7 @@ Templates and static files are embedded via `//go:embed` directive in `main.go`.
 
 Single-page app in `cmd/server/templates/index.html`:
 - Top 50 ranking with pagination
-- Category filtering
+- Category filtering with custom dropdown
 - Skill search
-- Dual download options (ClawHub CLI / accelerated mirror)
-- Rate limit modal with fallback options
+- Upload form with custom category input
+- Skill detail modal with download options
