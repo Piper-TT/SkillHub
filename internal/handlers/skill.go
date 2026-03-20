@@ -139,15 +139,11 @@ func (h *SkillHandler) UploadSkill(c *gin.Context) {
 		FileName:    header.Filename,
 	}
 
-	// 重新创建 reader（因为已经读取过了）
-	skill, err := h.svc.UploadSkill(req, io.NopCloser(nil))
+	// 使用读取的文件内容上传
+	skill, err := h.uploadWithContent(req, fileContent)
 	if err != nil {
-		// 重新上传，使用保存的文件内容
-		skill, err = h.uploadWithContent(req, fileContent)
-		if err != nil {
-			utils.InternalError(c, err.Error())
-			return
-		}
+		utils.InternalError(c, err.Error())
+		return
 	}
 
 	c.JSON(http.StatusOK, models.UploadResponse{

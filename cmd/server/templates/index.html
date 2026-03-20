@@ -1455,6 +1455,103 @@
             background-color: #fff;
         }
 
+        /* Category Selector */
+        .category-selector {
+            position: relative;
+        }
+
+        .category-selector-display {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid rgba(229, 231, 235, 0.6);
+            border-radius: 10px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.95);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+            color: #374151;
+        }
+
+        .category-selector-display:hover {
+            border-color: #2563eb;
+        }
+
+        .category-selector-display.active {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .category-arrow {
+            width: 16px;
+            height: 16px;
+            color: #6b7280;
+            transition: transform 0.2s;
+        }
+
+        .category-selector-display.active .category-arrow {
+            transform: rotate(180deg);
+        }
+
+        .category-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid rgba(229, 231, 235, 0.6);
+            border-radius: 10px;
+            margin-top: 4px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            z-index: 100;
+            display: none;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .category-dropdown.show {
+            display: block;
+        }
+
+        .category-option {
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 14px;
+        }
+
+        .category-option:hover {
+            background: #f0f9ff;
+            color: #2563eb;
+        }
+
+        .category-option.selected {
+            background: #eff6ff;
+            color: #2563eb;
+            font-weight: 500;
+        }
+
+        .category-divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 4px 0;
+        }
+
+        .category-custom {
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .category-custom:hover {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
         .upload-card-textarea {
             width: 100%;
             padding: 10px 14px;
@@ -1854,12 +1951,11 @@
         <div class="install-box">
             <div class="install-label">将此提示发送给你的Agent，安装 SkillHub CLI 并优先使用加速源</div>
             <div class="install-code">
-                <code id="installCode">根据 https://skillhub-1388575217.cos.ap-guangzhou.myqcloud.com/install/skillhub.md 安装 SkillHub CLI，并优先采用 SkillHub 加速安装技能</code>
+                <code id="installCode">根据 https://skillhub-1388575217.cos.ap-guangzhou.myqcloud.com/install/skillhub.md 安装 Skillhub商店</code>
                 <button onclick="copyInstallCode()">复制</button>
             </div>
             <div class="install-badges">
                 <span><span class="badge-icon badge-verified">★</span> 官方认证推荐</span>
-                <span><span class="badge-icon badge-fast">⚡</span> 加速下载</span>
                 <span><span class="badge-icon badge-safe">✓</span> 安全审计</span>
             </div>
         </div>
@@ -1867,7 +1963,7 @@
         <!-- TOP 50 -->
         <section class="section" id="top50">
             <h2>精选 TOP 50 AI Skills 榜单</h2>
-            <p class="section-desc">从 ClawHub 生态中精选最值得安装的 50 个 AI Skills，国内高速镜像，一键加速安装。</p>
+            <p class="section-desc">从 ClawHub 生态中精选最值得安装的 50 个 AI Skills。</p>
             <div class="skills-list" id="top50List"></div>
             <div class="top50-pagination" id="top50Pagination"></div>
         </section>
@@ -1887,18 +1983,33 @@
                             <input type="text" id="cardSkillIcon" class="upload-card-input" placeholder="图标" maxlength="2" style="max-width: 80px; text-align: center;">
                         </div>
 
-                        <select id="cardSkillCategory" class="upload-card-select" required>
-                            <option value="">选择分类</option>
-                            <option value="开发工具">💻 开发工具</option>
-                            <option value="多媒体">🎨 多媒体</option>
-                            <option value="办公协同">📊 办公协同</option>
-                            <option value="安全工具">🔒 安全工具</option>
-                            <option value="数据管理">📁 数据管理</option>
-                            <option value="文档处理">📄 文档处理</option>
-                            <option value="信息处理">🔍 信息处理</option>
-                            <option value="AI智能">🤖 AI智能</option>
-                            <option value="其他">📦 其他</option>
-                        </select>
+                        <!-- 自定义分类选择器 -->
+                        <div class="category-selector" id="categorySelector">
+                            <div class="category-selector-display" onclick="toggleCategoryDropdown()">
+                                <span id="categoryDisplayText">选择分类</span>
+                                <svg class="category-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </div>
+                            <div class="category-dropdown" id="categoryDropdown">
+                                <div class="category-option" onclick="uploadSelectCategory('开发工具')">💻 开发工具</div>
+                                <div class="category-option" onclick="uploadSelectCategory('AI智能')">🤖 AI智能</div>
+                                <div class="category-option" onclick="uploadSelectCategory('多媒体')">🎨 多媒体</div>
+                                <div class="category-option" onclick="uploadSelectCategory('办公协同')">📊 办公协同</div>
+                                <div class="category-option" onclick="uploadSelectCategory('安全工具')">🔒 安全工具</div>
+                                <div class="category-option" onclick="uploadSelectCategory('数据管理')">📁 数据管理</div>
+                                <div class="category-option" onclick="uploadSelectCategory('文档处理')">📄 文档处理</div>
+                                <div class="category-option" onclick="uploadSelectCategory('信息处理')">🔍 信息处理</div>
+                                <div class="category-option" onclick="uploadSelectCategory('浏览器自动化')">🌐 浏览器自动化</div>
+                                <div class="category-option" onclick="uploadSelectCategory('其他')">📦 其他</div>
+                                <div class="category-divider"></div>
+                                <div class="category-custom" onclick="showCustomInput()">
+                                    <span>✏️ 自定义分类...</span>
+                                </div>
+                            </div>
+                            <input type="hidden" id="cardSkillCategory" required>
+                        </div>
+                        <input type="text" id="customCategoryInput" class="upload-card-input" placeholder="输入自定义分类" style="display: none; margin-top: 8px;">
 
                         <textarea id="cardSkillDesc" class="upload-card-textarea" placeholder="简单描述你的 Skill 功能..." rows="2"></textarea>
 
@@ -2185,6 +2296,17 @@
             const icon = skill.icon || skill.name.charAt(0).toUpperCase();
             const categoryTagClass = getCategoryTagClass(skill.category);
 
+            // TOP 50 不显示下载量和评分，其他列表显示
+            const statsHtml = showRank ? '' : `
+                <div class="skill-stats">
+                    <div class="skill-stats-primary">
+                        <span class="arrow">↑</span>
+                        ${formatNumber(skill.downloads)}
+                    </div>
+                    <div class="skill-stats-secondary">★ ${skill.rating || 5.0}</div>
+                </div>
+            `;
+
             item.innerHTML = `
                 ${showRank ? `<div class="skill-rank-badge ${rankBadgeClass}">${rank}</div>` : ''}
                 <div class="skill-icon" style="background: ${iconColor}">${icon}</div>
@@ -2195,13 +2317,7 @@
                     </div>
                     <p class="skill-description">${skill.description}</p>
                 </div>
-                <div class="skill-stats">
-                    <div class="skill-stats-primary">
-                        <span class="arrow">↑</span>
-                        ${formatNumber(skill.downloads)}
-                    </div>
-                    <div class="skill-stats-secondary">★ ${skill.rating || 5.0}</div>
-                </div>
+                ${statsHtml}
             `;
 
             return item;
@@ -2219,7 +2335,46 @@
                 .substring(0, 40);
 
             const installCmd = `npx clawhub@latest install ${slug}`;
-            const acceleratedUrl = `${window.location.origin}/api/skills/${skill.id}/download`;
+            const downloadUrl = `${window.location.origin}/api/skills/${skill.id}/download`;
+            const curlCmd = `curl -L "${downloadUrl}" -o "${skill.slug || skill.name}.zip"`;
+
+            // 只有有 slug 的才显示 ClawHub 安装命令
+            const clawhubSection = skill.slug ? `
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-top: 16px;">
+                    <div style="font-size: 12px; color: #64748b; margin-bottom: 8px;">📦 ClawHub 安装命令（官方）</div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <code id="clawhubCmd" style="flex: 1; font-family: 'Monaco', 'Consolas', monospace; font-size: 12px; color: #334155; word-break: break-all;">${installCmd}</code>
+                        <button onclick="copyCmd('clawhubCmd')" style="padding: 8px 16px; background: #3b82f6; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500;">复制</button>
+                    </div>
+                </div>
+            ` : '';
+
+            // 只有有本地文件的才显示本地下载
+            const localDownloadSection = skill.file_name ? `
+                <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; margin-top: 12px;">
+                    <div style="font-size: 12px; color: #16a34a; margin-bottom: 8px; font-weight: 600;">📥 本地下载</div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <code id="curlCmd" style="flex: 1; font-family: 'Monaco', 'Consolas', monospace; font-size: 11px; color: #334155; word-break: break-all;">${curlCmd}</code>
+                        <button onclick="copyCmd('curlCmd')" style="padding: 8px 16px; background: #e5e7eb; color: #374151; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500;">复制</button>
+                    </div>
+                    <a href="${window.location.origin}/uploads/${skill.file_name}" download style="display: block; width: 100%; padding: 10px; background: #22c55e; color: #fff; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: 600; text-align: center; text-decoration: none;">⬇️ 直接下载</a>
+                </div>
+            ` : '';
+
+            // 非本地上传的 skill 显示安装提示
+            const skillInstallSlug = skill.slug || skill.name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').substring(0, 40);
+            const installPrompt = !skill.file_name ? `
+                <div style="background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%); border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px; margin-top: 12px;">
+                    <div style="font-size: 12px; color: #2563eb; margin-bottom: 8px; font-weight: 600;">💡 将此提示发送给你的 Agent 安装技能</div>
+                    <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 8px;">
+                        <code id="installPromptCmd" style="font-family: 'Monaco', 'Consolas', monospace; font-size: 11px; color: #334155; word-break: break-all; line-height: 1.6;">请先检查是否已安装 SkillHub 商店，若未安装，请根据 https://skillhub-1388575217.cos.ap-guangzhou.myqcloud.com/install/skillhub.md 安装 Skillhub 商店，然后安装 ${skillInstallSlug} 技能。\n\n若已安装，则直接安装 ${skillInstallSlug} 技能。</code>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button onclick="copyCmd('installPromptCmd')" style="flex: 1; padding: 8px 16px; background: #3b82f6; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500;">📋 复制</button>
+                    </div>
+                    <div style="font-size: 11px; color: #6b7280; margin-top: 8px; text-align: center;">适用于 Claude、ChatGPT、Cursor 等任何 AI 助手</div>
+                </div>
+            ` : '';
 
             document.getElementById('skillDetail').innerHTML = `
                 <div class="skill-detail-icon" style="background: ${getIconColor(skill.name)}">${skill.icon || skill.name.charAt(0)}</div>
@@ -2237,24 +2392,9 @@
                     </div>
                 </div>
 
-                <!-- ClawHub 安装命令 -->
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-top: 16px;">
-                    <div style="font-size: 12px; color: #64748b; margin-bottom: 8px;">📦 ClawHub 安装命令</div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <code style="flex: 1; font-family: 'Monaco', 'Consolas', monospace; font-size: 12px; color: #334155; word-break: break-all;">${installCmd}</code>
-                        <button onclick="copyToClipboard('${installCmd}')" style="padding: 8px 16px; background: #6b7280; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500;">复制</button>
-                    </div>
-                </div>
-
-                <!-- 加速下载 -->
-                <div style="background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%); border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px; margin-top: 12px;">
-                    <div style="font-size: 12px; color: #2563eb; margin-bottom: 8px; font-weight: 600;">⚡ 加速下载（国内镜像）</div>
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                        <code style="flex: 1; font-family: 'Monaco', 'Consolas', monospace; font-size: 12px; color: #334155; word-break: break-all;">${acceleratedUrl}</code>
-                        <button onclick="copyToClipboard('${acceleratedUrl}')" style="padding: 8px 16px; background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500;">复制</button>
-                    </div>
-                    <button onclick="downloadSkill(${skill.id})" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: 600;">📥 直接下载</button>
-                </div>
+                ${clawhubSection}
+                ${localDownloadSection}
+                ${installPrompt}
             `;
             modal.classList.add('active');
         }
@@ -2265,60 +2405,58 @@
             });
         }
 
-        function closeSkillModal() {
-            document.getElementById('skillModal').classList.remove('active');
-        }
-
-        async function downloadSkill(id) {
-            showToast('正在获取下载链接...', 'success');
-            try {
-                const response = await fetch(`/api/skills/${id}/download`);
-                if (response.status === 503) {
-                    // Rate limited - show fallback options
-                    const data = await response.json();
-                    showRateLimitModal(data);
-                } else if (response.ok) {
-                    // Success - trigger download
-                    const blob = await response.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `skill_${id}.zip`;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    a.remove();
-                    showToast('下载成功！文件已缓存到本地服务器', 'success');
-                } else {
-                    const data = await response.json();
-                    showToast(data.message || '下载失败', 'error');
-                }
-            } catch (error) {
-                showToast('下载失败: ' + error.message, 'error');
+        function copyCmd(elementId) {
+            const el = document.getElementById(elementId);
+            if (el) {
+                navigator.clipboard.writeText(el.textContent).then(() => {
+                    showToast('已复制到剪贴板', 'success');
+                });
             }
         }
 
-        function showRateLimitModal(data) {
-            const modal = document.getElementById('skillModal');
-            document.getElementById('skillDetail').innerHTML += `
-                <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 12px; margin-top: 16px;">
-                    <div style="font-size: 13px; color: #92400e; margin-bottom: 8px; font-weight: 600;">⚠️ ClawHub 速率限制</div>
-                    <p style="font-size: 12px; color: #78350f; margin-bottom: 12px;">
-                        ClawHub 暂时限制了下载请求。请使用以下替代方案：
-                    </p>
-                    <div style="background: #fff; border-radius: 6px; padding: 10px; margin-bottom: 8px;">
-                        <div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">方式 1: 使用 ClawHub 命令行</div>
-                        <code style="font-size: 12px; color: #374151;">${data.install_cmd}</code>
-                    </div>
-                    <div style="background: #fff; border-radius: 6px; padding: 10px;">
-                        <div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">方式 2: 直接下载链接</div>
-                        <a href="${data.direct_url}" target="_blank" style="font-size: 12px; color: #2563eb; word-break: break-all;">${data.direct_url}</a>
-                    </div>
-                    <p style="font-size: 11px; color: #92400e; margin-top: 12px;">
-                        💡 提示：成功下载后，文件将缓存到本地服务器，下次下载将不受限制。
-                    </p>
-                </div>
-            `;
+        // Category Selector Functions
+        function toggleCategoryDropdown() {
+            const dropdown = document.getElementById('categoryDropdown');
+            const display = document.querySelector('.category-selector-display');
+            dropdown.classList.toggle('show');
+            display.classList.toggle('active');
+        }
+
+        function uploadSelectCategory(category) {
+            document.getElementById('cardSkillCategory').value = category;
+            document.getElementById('categoryDisplayText').textContent = category;
+            document.getElementById('customCategoryInput').style.display = 'none';
+            document.getElementById('customCategoryInput').value = '';
+
+            // Update selected state
+            document.querySelectorAll('.category-option').forEach(opt => opt.classList.remove('selected'));
+
+            toggleCategoryDropdown();
+        }
+
+        function showCustomInput() {
+            document.getElementById('customCategoryInput').style.display = 'block';
+            document.getElementById('customCategoryInput').focus();
+            toggleCategoryDropdown();
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const selector = document.getElementById('categorySelector');
+            if (selector && !selector.contains(e.target)) {
+                document.getElementById('categoryDropdown').classList.remove('show');
+                document.querySelector('.category-selector-display')?.classList.remove('active');
+            }
+        });
+
+        // Handle custom category input
+        document.getElementById('customCategoryInput')?.addEventListener('input', function(e) {
+            document.getElementById('cardSkillCategory').value = e.target.value;
+            document.getElementById('categoryDisplayText').textContent = e.target.value || '选择分类';
+        });
+
+        function closeSkillModal() {
+            document.getElementById('skillModal').classList.remove('active');
         }
 
         function openUploadModal() {
