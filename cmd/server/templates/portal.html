@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hub 平台 - 探索 AI 生态的无限可能</title>
+    <title>DASHub - 探索 AI 生态的无限可能</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -547,8 +547,8 @@
     <nav class="navbar">
         <div class="navbar-inner">
             <a href="/" class="navbar-brand">
-                <div class="navbar-logo">H</div>
-                <span class="navbar-title">Hub 平台</span>
+                <div class="navbar-logo">D</div>
+                <span class="navbar-title">DASHub</span>
             </a>
             <div class="navbar-nav">
                 <a href="/" class="active">首页</a>
@@ -592,22 +592,22 @@
                 </div>
 
                 <!-- MCPHub -->
-                <div class="hub-card disabled" style="--hub-color: #10b981;" onclick="showToast('MCPHub 即将推出，敬请期待！')">
+                <div class="hub-card" style="--hub-color: #10b981;" onclick="navigateTo('/mcp')">
                     <div class="hub-icon mcp">🔌</div>
                     <h3 class="hub-title">MCPHub</h3>
                     <p class="hub-subtitle">MCP 服务器/工具库</p>
                     <p class="hub-desc">发现和部署 MCP 服务器，连接 Claude 与外部工具、数据库、API，解锁更多可能。</p>
                     <div class="hub-tags">
-                        <span class="hub-tag warning">即将推出</span>
+                        <span class="hub-tag primary" id="mcpCount">加载中...</span>
+                        <span class="hub-tag success">官方精选</span>
                     </div>
                     <div class="hub-action">
                         <span class="hub-action-text" style="color: #10b981;">
-                            敬请期待
+                            立即探索
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M5 12h14M12 5l7 7-7 7"/>
                             </svg>
                         </span>
-                        <span class="hub-status">Coming Soon</span>
                     </div>
                 </div>
 
@@ -661,7 +661,7 @@
                 <a href="/skills">SkillHub</a>
                 <a href="https://github.com/Piper-TT/SkillHub" target="_blank">GitHub</a>
             </div>
-            <p>© 2026 Hub 平台. Built with ❤️ for AI enthusiasts.</p>
+            <p>© 2026 DASHub. Built with ❤️ for AI enthusiasts.</p>
         </footer>
     </div>
 
@@ -690,6 +690,16 @@
             } catch (error) {
                 console.error('Failed to load stats:', error);
                 document.getElementById('skillCount').textContent = '1571+ Skills';
+            }
+
+            // 加载 MCP 统计数据
+            try {
+                const mcpResponse = await fetch('/api/mcp/stats');
+                const mcpData = await mcpResponse.json();
+                document.getElementById('mcpCount').textContent = `${mcpData.total_servers || 0}+ MCP Servers`;
+            } catch (error) {
+                console.error('Failed to load MCP stats:', error);
+                document.getElementById('mcpCount').textContent = '12+ MCP Servers';
             }
         }
 

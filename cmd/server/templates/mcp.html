@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCPHub - 发现最强大的 MCP 服务器</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-1: #10b981;
+            --brand-2: #059669;
+            --brand-3: #047857;
+            --text-main: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --surface: rgba(255, 255, 255, 0.88);
+            --border-soft: rgba(148, 163, 184, 0.2);
+            --shadow-soft: 0 16px 40px rgba(16, 185, 129, 0.12);
+            --gradient-1: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --gradient-2: linear-gradient(135deg, #10b981 0%, #14b8a6 50%, #059669 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background:
+                radial-gradient(1200px 500px at 10% -10%, rgba(16, 185, 129, 0.15), transparent 60%),
+                radial-gradient(900px 420px at 90% -12%, rgba(20, 184, 166, 0.12), transparent 58%),
+                linear-gradient(180deg, #f0fdf4 0%, #f5f7ff 50%, #f8fafc 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-soft);
+            padding: 0 24px;
+        }
+
+        .navbar-inner {
+            max-width: 1180px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        .navbar-brand span:first-child {
+            font-size: 24px;
+        }
+
+        .navbar-brand strong {
+            font-size: 18px;
+            font-weight: 700;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .navbar-nav {
+            display: flex;
+            gap: 24px;
+        }
+
+        .navbar-nav a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 15px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .navbar-nav a:hover, .navbar-nav a.active {
+            color: var(--brand-1);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 32px 24px 72px;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            text-align: center;
+            padding: 40px 0 50px;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--brand-1);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .hero-title {
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--text-main) 0%, var(--brand-1) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            max-width: 500px;
+            margin: 0 auto 24px;
+        }
+
+        /* Search Box */
+        .search-box {
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 14px 20px 14px 48px;
+            border: 1px solid var(--border-soft);
+            border-radius: 12px;
+            font-size: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+            transition: all 0.2s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--brand-1);
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
+        }
+
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+        }
+
+        /* Section */
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            backdrop-filter: blur(8px);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Categories */
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .category-btn {
+            padding: 8px 16px;
+            border-radius: 999px;
+            border: 1px solid var(--border-soft);
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .category-btn:hover {
+            border-color: var(--brand-1);
+            color: var(--brand-1);
+        }
+
+        .category-btn.active {
+            background: var(--gradient-1);
+            color: white;
+            border-color: transparent;
+        }
+
+        /* Server Grid */
+        .server-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        /* Server Card */
+        .server-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 14px;
+            padding: 18px;
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .server-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-2);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .server-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(16, 185, 129, 0.12);
+            border-color: rgba(16, 185, 129, 0.25);
+        }
+
+        .server-card:hover::before {
+            opacity: 1;
+        }
+
+        .server-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .server-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .server-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .server-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .server-category {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .server-badges {
+            display: flex;
+            gap: 4px;
+        }
+
+        .badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .badge-official {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--brand-1);
+        }
+
+        .badge-verified {
+            background: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+        }
+
+        .server-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .server-stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .server-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .server-install {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            background: rgba(16, 185, 129, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(16, 185, 129, 0.1);
+        }
+
+        .server-install code {
+            flex: 1;
+            font-size: 11px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .copy-btn {
+            padding: 4px 8px;
+            background: var(--gradient-1);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid var(--border-soft);
+            background: white;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            border-color: var(--brand-1);
+            color: var(--brand-1);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination button.active {
+            background: var(--gradient-1);
+            color: white;
+            border-color: transparent;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(229, 231, 235, 0.5);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--brand-1);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-soft);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            padding: 28px;
+            max-width: 560px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.show .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .modal-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-title {
+            flex: 1;
+        }
+
+        .modal-title h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .modal-title p {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-section {
+            margin-bottom: 20px;
+        }
+
+        .modal-section h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .modal-section p {
+            font-size: 14px;
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        .config-box {
+            background: #1e293b;
+            border-radius: 10px;
+            padding: 16px;
+            overflow-x: auto;
+        }
+
+        .config-box pre {
+            margin: 0;
+            font-size: 12px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn-primary {
+            flex: 1;
+            padding: 12px 20px;
+            background: var(--gradient-1);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-secondary {
+            padding: 12px 20px;
+            background: white;
+            color: var(--text-main);
+            border: 1px solid var(--border-soft);
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--brand-1);
+            color: var(--brand-1);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(15, 23, 42, 0.9);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        /* Empty */
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .server-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 32px;
+            }
+
+            .server-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .navbar-inner {
+                height: 56px;
+            }
+
+            .container {
+                padding: 24px 16px 48px;
+            }
+
+            .hero-section {
+                padding: 24px 0 32px;
+            }
+
+            .hero-title {
+                font-size: 28px;
+            }
+
+            .section {
+                padding: 20px;
+                border-radius: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/mcp" class="navbar-brand">
+                <span>🔌</span>
+                <strong>MCPHub</strong>
+            </a>
+            <div class="navbar-nav">
+                <a href="/">首页</a>
+                <a href="/skills">SkillHub</a>
+                <a href="/mcp" class="active">MCPHub</a>
+                <a href="https://github.com/Piper-TT/SkillHub" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-badge">
+                <span>✨</span>
+                <span>MCP 服务器聚合平台</span>
+            </div>
+            <h1 class="hero-title">发现最强大的 MCP 服务器</h1>
+            <p class="hero-subtitle">收录优质 MCP 服务器，一键配置你的 AI 助手，连接无限可能</p>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索 MCP 服务器..." onkeyup="handleSearch(event)">
+            </div>
+        </section>
+
+        <!-- Categories -->
+        <section class="section">
+            <div class="categories" id="categories">
+                <button class="category-btn active" onclick="filterByCategory('')">全部</button>
+            </div>
+        </section>
+
+        <!-- Server List -->
+        <section class="section">
+            <h2 class="section-title">📦 MCP 服务器</h2>
+            <div class="server-grid" id="serverGrid">
+                <div class="loading">加载中...</div>
+            </div>
+            <div class="pagination" id="pagination"></div>
+        </section>
+
+        <!-- Stats -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalServers">-</div>
+                <div class="stat-label">MCP 服务器</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalStars">-</div>
+                <div class="stat-label">GitHub Stars</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalCategories">-</div>
+                <div class="stat-label">分类</div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>© 2026 DASHub. Built with ❤️ for AI enthusiasts.</p>
+        </footer>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-icon" id="modalIcon">📦</div>
+                <div class="modal-title">
+                    <h2 id="modalTitle">服务器名称</h2>
+                    <p id="modalCategory">分类</p>
+                </div>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-section">
+                <h3>描述</h3>
+                <p id="modalDesc">服务器描述</p>
+            </div>
+            <div class="modal-section">
+                <h3>安装命令</h3>
+                <div class="config-box">
+                    <pre id="modalInstall">npx @anthropic/mcp-server-example</pre>
+                </div>
+            </div>
+            <div class="modal-section" id="configSection">
+                <h3>Claude Desktop 配置</h3>
+                <div class="config-box">
+                    <pre id="modalConfig">{}</pre>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <a id="modalGithub" href="#" target="_blank" class="btn-secondary">GitHub</a>
+                <button class="btn-primary" onclick="copyInstallCmd()">复制安装命令</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // State
+        const state = {
+            servers: [],
+            page: 1,
+            perPage: 18,
+            total: 0,
+            category: '',
+            search: '',
+            currentServer: null
+        };
+
+        // Category icons
+        const categoryIcons = {
+            'File System': '📁',
+            'Database': '🗄️',
+            'Web Search': '🔍',
+            'Browser': '🌐',
+            'AI Tools': '🤖',
+            'Cloud': '☁️',
+            'Communication': '💬',
+            'Developer': '🛠️',
+            'Data': '📊',
+            'Other': '📦'
+        };
+
+        // Icon colors
+        const iconColors = [
+            '#10b981', '#059669', '#14b8a6', '#0d9488', '#047857',
+            '#34d399', '#6ee7b7', '#a7f3d0', '#6366f1', '#8b5cf6'
+        ];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCategories();
+            loadServers();
+            loadStats();
+        });
+
+        // Load categories
+        async function loadCategories() {
+            try {
+                const response = await fetch('/api/mcp/categories');
+                const data = await response.json();
+                const container = document.getElementById('categories');
+
+                // Add "全部" button
+                let html = '<button class="category-btn active" onclick="filterByCategory(\'\')">全部</button>';
+
+                // Add category buttons
+                for (const [cat, count] of Object.entries(data.categories || {})) {
+                    const icon = categoryIcons[cat] || '📦';
+                    html += `<button class="category-btn" onclick="filterByCategory('${cat}')">${icon} ${cat} (${count})</button>`;
+                }
+
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Failed to load categories:', error);
+            }
+        }
+
+        // Load servers
+        async function loadServers() {
+            const grid = document.getElementById('serverGrid');
+            grid.innerHTML = '<div class="loading">加载中...</div>';
+
+            try {
+                const params = new URLSearchParams({
+                    page: state.page,
+                    per_page: state.perPage,
+                    category: state.category,
+                    search: state.search
+                });
+
+                const response = await fetch(`/api/mcp?${params}`);
+                const data = await response.json();
+
+                state.servers = data.servers || [];
+                state.total = data.total || 0;
+
+                renderServers();
+                renderPagination();
+            } catch (error) {
+                console.error('Failed to load servers:', error);
+                grid.innerHTML = '<div class="empty"><div class="empty-icon">😕</div><p>加载失败，请稍后重试</p></div>';
+            }
+        }
+
+        // Render servers
+        function renderServers() {
+            const grid = document.getElementById('serverGrid');
+
+            if (state.servers.length === 0) {
+                grid.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><p>暂无数据</p></div>';
+                return;
+            }
+
+            grid.innerHTML = state.servers.map(server => {
+                const icon = server.icon || categoryIcons[server.category] || '📦';
+                const colorIndex = server.name.charCodeAt(0) % iconColors.length;
+                const iconColor = iconColors[colorIndex];
+
+                return `
+                    <div class="server-card" onclick="showDetail(${server.id})">
+                        <div class="server-header">
+                            <div class="server-icon" style="background: ${iconColor};">${icon}</div>
+                            <div class="server-info">
+                                <div class="server-name">${server.name}</div>
+                                <div class="server-category">${server.category || 'Other'}</div>
+                            </div>
+                            <div class="server-badges">
+                                ${server.official ? '<span class="badge badge-official">官方</span>' : ''}
+                                ${server.verified ? '<span class="badge badge-verified">验证</span>' : ''}
+                            </div>
+                        </div>
+                        <p class="server-desc">${server.description || '暂无描述'}</p>
+                        <div class="server-stats">
+                            <span>⭐ ${formatNumber(server.stars || 0)}</span>
+                            <span>📥 ${formatNumber(server.downloads || 0)}</span>
+                        </div>
+                        <div class="server-install">
+                            <code>${server.install_cmd || 'npm install'}</code>
+                            <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('${server.install_cmd || ''}')">复制</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render pagination
+        function renderPagination() {
+            const container = document.getElementById('pagination');
+            const totalPages = Math.ceil(state.total / state.perPage);
+
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+
+            // Previous button
+            html += `<button ${state.page === 1 ? 'disabled' : ''} onclick="goToPage(${state.page - 1})">上一页</button>`;
+
+            // Page numbers
+            const start = Math.max(1, state.page - 2);
+            const end = Math.min(totalPages, state.page + 2);
+
+            for (let i = start; i <= end; i++) {
+                html += `<button class="${i === state.page ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            }
+
+            // Next button
+            html += `<button ${state.page === totalPages ? 'disabled' : ''} onclick="goToPage(${state.page + 1})">下一页</button>`;
+
+            container.innerHTML = html;
+        }
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/mcp/stats');
+                const data = await response.json();
+
+                animateValue('totalServers', data.total_servers || 0);
+                animateValue('totalStars', data.total_stars || 0);
+                animateValue('totalCategories', data.categories || 0);
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        // Filter by category
+        function filterByCategory(category) {
+            state.category = category;
+            state.page = 1;
+
+            // Update active button
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            loadServers();
+        }
+
+        // Handle search
+        function handleSearch(event) {
+            if (event.key === 'Enter') {
+                state.search = event.target.value.trim();
+                state.page = 1;
+                loadServers();
+            }
+        }
+
+        // Go to page
+        function goToPage(page) {
+            if (page < 1 || page > Math.ceil(state.total / state.perPage)) return;
+            state.page = page;
+            loadServers();
+            window.scrollTo({ top: 300, behavior: 'smooth' });
+        }
+
+        // Show detail
+        async function showDetail(id) {
+            const server = state.servers.find(s => s.id === id);
+            if (!server) return;
+
+            state.currentServer = server;
+
+            document.getElementById('modalIcon').textContent = server.icon || categoryIcons[server.category] || '📦';
+            document.getElementById('modalIcon').style.background = iconColors[server.name.charCodeAt(0) % iconColors.length];
+            document.getElementById('modalTitle').textContent = server.name;
+            document.getElementById('modalCategory').textContent = server.category || 'Other';
+            document.getElementById('modalDesc').textContent = server.description || '暂无描述';
+            document.getElementById('modalInstall').textContent = server.install_cmd || 'npm install';
+            document.getElementById('modalConfig').textContent = server.config || '{}';
+            document.getElementById('modalGithub').href = server.github_url || '#';
+
+            document.getElementById('modal').classList.add('show');
+        }
+
+        // Close modal
+        function closeModal(event) {
+            if (!event || event.target === event.currentTarget) {
+                document.getElementById('modal').classList.remove('show');
+            }
+        }
+
+        // Copy install command
+        function copyInstallCmd() {
+            if (state.currentServer && state.currentServer.install_cmd) {
+                copyToClipboard(state.currentServer.install_cmd);
+            }
+        }
+
+        // Copy to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('已复制到剪贴板');
+            }).catch(() => {
+                showToast('复制失败');
+            });
+        }
+
+        // Show toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // Format number
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        // Animate value
+        function animateValue(elementId, target) {
+            const element = document.getElementById(elementId);
+            let current = 0;
+            const increment = Math.ceil(target / 30);
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                element.textContent = formatNumber(current);
+            }, 20);
+        }
+    </script>
+</body>
+</html>

@@ -64,6 +64,11 @@ func main() {
 	skillService := service.NewSkillService(skillRepo, cfg.Server.UploadDir)
 	service.SetGlobalService(skillService)
 
+	// 初始化 MCP 依赖
+	mcpRepo := repository.NewMCPRepository(db)
+	mcpService := service.NewMCPService(mcpRepo)
+	mcpHandler := handlers.NewMCPHandler(mcpService)
+
 	// 初始化刷新服务
 	refreshService := service.NewRefreshService(skillRepo)
 	refreshService.SetLogger(log)
@@ -119,6 +124,12 @@ func main() {
 
 		// 初始化（仅用于开发测试）
 		api.POST("/init", skillHandler.InitUploadDir)
+
+		// MCP API 路由
+		api.GET("/mcp", mcpHandler.GetServers)
+		api.GET("/mcp/categories", mcpHandler.GetCategories)
+		api.GET("/mcp/stats", mcpHandler.GetStats)
+		api.GET("/mcp/:id", mcpHandler.GetServerByID)
 	}
 
 	// Portal 主页
@@ -136,6 +147,16 @@ func main() {
 		data, err := webFS.ReadFile("templates/index.html")
 		if err != nil {
 			c.String(http.StatusInternalServerError, "Failed to load template")
+			return
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
+	})
+
+	// MCPHub 界面
+	r.GET("/mcp", func(c *gin.Context) {
+		data, err := webFS.ReadFile("templates/mcp.html")
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to load mcp template")
 			return
 		}
 		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
@@ -208,13 +229,18 @@ func initDatabase(cfg *config.Config) (*gorm.DB, error) {
 	}
 
 	// 自动迁移
-	if err := db.AutoMigrate(&models.Skill{}); err != nil {
+	if err := db.AutoMigrate(&models.Skill{}, &models.MCPServer{}); err != nil {
 		return nil, fmt.Errorf("failed to migrate database: %w", err)
 	}
 
 	// 初始化种子数据
 	if err := seedData(db); err != nil {
 		return nil, fmt.Errorf("failed to seed data: %w", err)
+	}
+
+	// 初始化 MCP 种子数据
+	if err := seedMCPData(db); err != nil {
+		return nil, fmt.Errorf("failed to seed MCP data: %w", err)
 	}
 
 	return db, nil
@@ -381,4 +407,226 @@ func getWorkDir() string {
 	}
 
 	return "."
+}
+
+// seedMCPData 初始化 MCP 种子数据
+func seedMCPData(db *gorm.DB) error {
+	var count int64
+	db.Model(&models.MCPServer{}).Count(&count)
+	if count > 0 {
+		return nil // 已有数据，跳过
+	}
+
+	// 从 JSON 文件读取 MCP 数据
+	servers, err := loadMCPServersFromJSON()
+	if err != nil {
+		// 如果文件不存在，使用默认数据
+		servers = getDefaultMCPServers()
+	}
+
+	return db.Create(&servers).Error
+}
+
+// loadMCPServersFromJSON 从 JSON 文件加载 MCP 数据
+func loadMCPServersFromJSON() ([]models.MCPServer, error) {
+	paths := []string{
+		"internal/data/mcp_servers.json",
+		"./internal/data/mcp_servers.json",
+		filepath.Join(getWorkDir(), "internal/data/mcp_servers.json"),
+	}
+
+	var data []byte
+	var err error
+
+	for _, path := range paths {
+		data, err = os.ReadFile(path)
+		if err == nil {
+			break
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	var servers []models.MCPServer
+	if err := json.Unmarshal(data, &servers); err != nil {
+		return nil, err
+	}
+
+	return servers, nil
+}
+
+// getDefaultMCPServers 获取默认 MCP 服务器数据
+func getDefaultMCPServers() []models.MCPServer {
+	return []models.MCPServer{
+		{
+			Name:        "Filesystem MCP",
+			Slug:        "filesystem",
+			Icon:        "📁",
+			Category:    "File System",
+			Description: "安全文件系统操作，支持读写、搜索和管理文件",
+			GitHubURL:   "https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem",
+			Stars:       8500,
+			Downloads:   50000,
+			InstallCmd:  "npx @anthropic/mcp-server-filesystem",
+			Config:      `{"mcpServers": {"filesystem": {"command": "npx", "args": ["-y", "@anthropic/mcp-server-filesystem", "/path/to/allowed/dir"]}}}`,
+			Verified:    true,
+			Official:    true,
+		},
+		{
+			Name:        "PostgreSQL MCP",
+			Slug:        "postgresql",
+			Icon:        "🗄️",
+			Category:    "Database",
+			Description: "只读 PostgreSQL 数据库访问，支持模式检查",
+			GitHubURL:   "https://github.com/modelcontextprotocol/servers/tree/main/src/postgres",
+			Stars:       6200,
+			Downloads:   35000,
+			InstallCmd:  "npx @anthropic/mcp-server-postgres",
+			Config:      `{"mcpServers": {"postgres": {"command": "npx", "args": ["-y", "@anthropic/mcp-server-postgres", "postgresql://user:pass@localhost/db"]}}}`,
+			Verified:    true,
+			Official:    true,
+		},
+		{
+			Name:        "GitHub MCP",
+			Slug:        "github",
+			Icon:        "🛠️",
+			Category:    "Developer",
+			Description: "GitHub API 集成，支持仓库、Issue、PR 等操作",
+			GitHubURL:   "https://github.com/modelcontextprotocol/servers/tree/main/src/github",
+			Stars:       7800,
+			Downloads:   42000,
+			InstallCmd:  "npx @anthropic/mcp-server-github",
+			Config:      `{"mcpServers": {"github": {"command": "npx", "args": ["-y", "@anthropic/mcp-server-github"], "env": {"GITHUB_TOKEN": "your-token"}}}}`,
+			Verified:    true,
+			Official:    true,
+		},
+		{
+			Name:        "Puppeteer MCP",
+			Slug:        "puppeteer",
+			Icon:        "🌐",
+			Category:    "Browser",
+			Description: "浏览器自动化，支持截图、表单填写、页面导航",
+			GitHubURL:   "https://github.com/modelcontextprotocol/servers/tree/main/src/puppeteer",
+			Stars:       5400,
+			Downloads:   28000,
+			InstallCmd:  "npx @anthropic/mcp-server-puppeteer",
+			Config:      `{"mcpServers": {"puppeteer": {"command": "npx", "args": ["-y", "@anthropic/mcp-server-puppeteer"]}}}`,
+			Verified:    true,
+			Official:    true,
+		},
+		{
+			Name:        "Brave Search MCP",
+			Slug:        "brave-search",
+			Icon:        "🔍",
+			Category:    "Web Search",
+			Description: "Brave 搜索 API 集成，支持网络搜索",
+			GitHubURL:   "https://github.com/modelcontextprotocol/servers/tree/main/src/brave-search",
+			Stars:       4800,
+			Downloads:   25000,
+			InstallCmd:  "npx @anthropic/mcp-server-brave-search",
+			Config:      `{"mcpServers": {"brave-search": {"command": "npx", "args": ["-y", "@anthropic/mcp-server-brave-search"], "env": {"BRAVE_API_KEY": "your-key"}}}}`,
+			Verified:    true,
+			Official:    true,
+		},
+		{
+			Name:        "Slack MCP",
+			Slug:        "slack",
+			Icon:        "💬",
+			Category:    "Communication",
+			Description: "Slack API 集成，支持消息发送和频道管理",
+			GitHubURL:   "https://github.com/modelcontextprotocol/servers/tree/main/src/slack",
+			Stars:       3200,
+			Downloads:   18000,
+			InstallCmd:  "npx @anthropic/mcp-server-slack",
+			Config:      `{"mcpServers": {"slack": {"command": "npx", "args": ["-y", "@anthropic/mcp-server-slack"], "env": {"SLACK_BOT_TOKEN": "your-token"}}}}`,
+			Verified:    true,
+			Official:    true,
+		},
+		{
+			Name:        "Google Maps MCP",
+			Slug:        "google-maps",
+			Icon:        "🗺️",
+			Category:    "Data",
+			Description: "Google Maps API 集成，支持地址搜索和路线规划",
+			GitHubURL:   "https://github.com/modelcontextprotocol/servers/tree/main/src/google-maps",
+			Stars:       2800,
+			Downloads:   15000,
+			InstallCmd:  "npx @anthropic/mcp-server-google-maps",
+			Config:      `{"mcpServers": {"google-maps": {"command": "npx", "args": ["-y", "@anthropic/mcp-server-google-maps"], "env": {"GOOGLE_MAPS_API_KEY": "your-key"}}}}`,
+			Verified:    true,
+			Official:    true,
+		},
+		{
+			Name:        "Memory MCP",
+			Slug:        "memory",
+			Icon:        "🧠",
+			Category:    "AI Tools",
+			Description: "持久化记忆存储，让 AI 记住对话历史",
+			GitHubURL:   "https://github.com/modelcontextprotocol/servers/tree/main/src/memory",
+			Stars:       4500,
+			Downloads:   22000,
+			InstallCmd:  "npx @anthropic/mcp-server-memory",
+			Config:      `{"mcpServers": {"memory": {"command": "npx", "args": ["-y", "@anthropic/mcp-server-memory"]}}}`,
+			Verified:    true,
+			Official:    true,
+		},
+		{
+			Name:        "Fetch MCP",
+			Slug:        "fetch",
+			Icon:        "📡",
+			Category:    "Web Search",
+			Description: "HTTP 请求工具，支持获取网页内容",
+			GitHubURL:   "https://github.com/modelcontextprotocol/servers/tree/main/src/fetch",
+			Stars:       3600,
+			Downloads:   19000,
+			InstallCmd:  "npx @anthropic/mcp-server-fetch",
+			Config:      `{"mcpServers": {"fetch": {"command": "npx", "args": ["-y", "@anthropic/mcp-server-fetch"]}}}`,
+			Verified:    true,
+			Official:    true,
+		},
+		{
+			Name:        "SQLite MCP",
+			Slug:        "sqlite",
+			Icon:        "🗃️",
+			Category:    "Database",
+			Description: "SQLite 数据库操作，支持查询和修改",
+			GitHubURL:   "https://github.com/modelcontextprotocol/servers/tree/main/src/sqlite",
+			Stars:       2900,
+			Downloads:   16000,
+			InstallCmd:  "npx @anthropic/mcp-server-sqlite",
+			Config:      `{"mcpServers": {"sqlite": {"command": "npx", "args": ["-y", "@anthropic/mcp-server-sqlite", "--db-path", "/path/to/db.sqlite"]}}}`,
+			Verified:    true,
+			Official:    true,
+		},
+		{
+			Name:        "Git MCP",
+			Slug:        "git",
+			Icon:        "📝",
+			Category:    "Developer",
+			Description: "Git 操作工具，支持提交、分支、差异对比",
+			GitHubURL:   "https://github.com/modelcontextprotocol/servers/tree/main/src/git",
+			Stars:       4100,
+			Downloads:   21000,
+			InstallCmd:  "npx @anthropic/mcp-server-git",
+			Config:      `{"mcpServers": {"git": {"command": "npx", "args": ["-y", "@anthropic/mcp-server-git", "--repository", "/path/to/repo"]}}}`,
+			Verified:    true,
+			Official:    true,
+		},
+		{
+			Name:        "Sequential Thinking MCP",
+			Slug:        "sequential-thinking",
+			Icon:        "💭",
+			Category:    "AI Tools",
+			Description: "结构化思考工具，帮助 AI 进行复杂推理",
+			GitHubURL:   "https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking",
+			Stars:       3800,
+			Downloads:   17000,
+			InstallCmd:  "npx @anthropic/mcp-server-sequential-thinking",
+			Config:      `{"mcpServers": {"sequential-thinking": {"command": "npx", "args": ["-y", "@anthropic/mcp-server-sequential-thinking"]}}}`,
+			Verified:    true,
+			Official:    true,
+		},
+	}
 }
