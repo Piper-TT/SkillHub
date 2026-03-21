@@ -30,6 +30,8 @@ type SkillRepository interface {
 	GetStats(ctx context.Context) (*SkillStats, error)
 	// FindTopByDownloads 获取下载量最高的 N 个
 	FindTopByDownloads(ctx context.Context, limit int) ([]models.Skill, error)
+	// ReplaceAll 替换所有数据（用于刷新）
+	ReplaceAll(ctx context.Context, skills []models.Skill) error
 }
 
 // SkillFilter 过滤条件
@@ -181,4 +183,28 @@ func (r *skillRepo) FindTopByDownloads(ctx context.Context, limit int) ([]models
 		Limit(limit).
 		Find(&skills).Error
 	return skills, err
+}
+
+func (r *skillRepo) ReplaceAll(ctx context.Context, skills []models.Skill) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 清空现有数据
+		if err := tx.Exec("DELETE FROM skills").Error; err != nil {
+			return err
+		}
+
+		// 批量插入
+		batchSize := 100
+		for i := 0; i < len(skills); i += batchSize {
+			end := i + batchSize
+			if end > len(skills) {
+				end = len(skills)
+			}
+			batch := skills[i:end]
+			if err := tx.Create(&batch).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }

@@ -64,6 +64,10 @@ func main() {
 	skillService := service.NewSkillService(skillRepo, cfg.Server.UploadDir)
 	service.SetGlobalService(skillService)
 
+	// 初始化刷新服务
+	refreshService := service.NewRefreshService(skillRepo)
+	refreshService.SetLogger(log)
+
 	skillHandler := handlers.NewSkillHandler(skillService)
 
 	// 5. 设置 Gin
@@ -117,8 +121,18 @@ func main() {
 		api.POST("/init", skillHandler.InitUploadDir)
 	}
 
-	// 首页
+	// Portal 主页
 	r.GET("/", func(c *gin.Context) {
+		data, err := webFS.ReadFile("templates/portal.html")
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to load portal template")
+			return
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
+	})
+
+	// SkillHub 界面
+	r.GET("/skills", func(c *gin.Context) {
 		data, err := webFS.ReadFile("templates/index.html")
 		if err != nil {
 			c.String(http.StatusInternalServerError, "Failed to load template")
@@ -146,6 +160,11 @@ func main() {
 			log.Fatalf("Failed to start server: %v", err)
 		}
 	}()
+
+	// 启动后台数据刷新服务（每24小时刷新一次）
+	ctxRefresh, cancelRefresh := context.WithCancel(context.Background())
+	defer cancelRefresh()
+	refreshService.StartBackgroundRefresh(ctxRefresh, 24*time.Hour)
 
 	// 等待中断信号
 	quit := make(chan os.Signal, 1)

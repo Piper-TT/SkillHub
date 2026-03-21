@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hub 平台 - 探索 AI 生态的无限可能</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-1: #2563eb;
+            --brand-2: #4f46e5;
+            --brand-3: #7c3aed;
+            --hub-skill: #2563eb;
+            --hub-mcp: #10b981;
+            --hub-agent: #8b5cf6;
+            --text-main: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --surface: rgba(255, 255, 255, 0.88);
+            --border-soft: rgba(148, 163, 184, 0.2);
+            --shadow-soft: 0 16px 40px rgba(37, 99, 235, 0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background:
+                radial-gradient(1200px 500px at 10% -10%, rgba(59, 130, 246, 0.18), transparent 60%),
+                radial-gradient(900px 420px at 90% -12%, rgba(139, 92, 246, 0.16), transparent 58%),
+                linear-gradient(180deg, #f8fbff 0%, #f5f7ff 50%, #f8fafc 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-soft);
+            padding: 0 24px;
+        }
+
+        .navbar-inner {
+            max-width: 1180px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        .navbar-logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--brand-1) 0%, var(--brand-2) 50%, var(--brand-3) 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .navbar-title {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--brand-1), var(--brand-3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .navbar-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .navbar-nav a:hover {
+            background: rgba(37, 99, 235, 0.08);
+            color: var(--brand-1);
+        }
+
+        .navbar-nav a.active {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--brand-1);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 48px 24px 96px;
+        }
+
+        /* Hero 区域 */
+        .hero-section {
+            text-align: center;
+            padding: 60px 0 80px;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--brand-1);
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 24px;
+            animation: fadeInUp 0.8s ease 0.1s backwards;
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--text-main) 0%, var(--brand-1) 50%, var(--brand-3) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 0.8s ease 0.2s backwards;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+            animation: fadeInUp 0.8s ease 0.3s backwards;
+        }
+
+        /* Hub 卡片网格 */
+        .hubs-section {
+            margin-bottom: 60px;
+        }
+
+        .hubs-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        /* Hub 卡片 */
+        .hub-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            backdrop-filter: blur(8px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .hub-card:nth-child(1) { animation-delay: 0.4s; }
+        .hub-card:nth-child(2) { animation-delay: 0.5s; }
+        .hub-card:nth-child(3) { animation-delay: 0.6s; }
+
+        .hub-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--hub-color);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .hub-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .hub-card:hover::before {
+            opacity: 1;
+        }
+
+        .hub-card.disabled {
+            cursor: default;
+        }
+
+        .hub-card.disabled:hover {
+            transform: translateY(-4px);
+        }
+
+        /* Hub 图标 */
+        .hub-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+            transition: transform 0.3s ease;
+        }
+
+        .hub-card:hover .hub-icon {
+            transform: scale(1.1);
+        }
+
+        .hub-icon.skill {
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+        }
+
+        .hub-icon.mcp {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+        }
+
+        .hub-icon.agent {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+        }
+
+        /* Hub 内容 */
+        .hub-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text-main);
+        }
+
+        .hub-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .hub-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        /* Hub 标签 */
+        .hub-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .hub-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .hub-tag.primary {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--brand-1);
+        }
+
+        .hub-tag.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+        }
+
+        .hub-tag.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #d97706;
+        }
+
+        /* Hub 操作 */
+        .hub-action {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 16px;
+            border-top: 1px solid rgba(229, 231, 235, 0.5);
+        }
+
+        .hub-action-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--hub-color);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hub-action-text svg {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.2s ease;
+        }
+
+        .hub-card:hover .hub-action-text svg {
+            transform: translateX(4px);
+        }
+
+        .hub-status {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: rgba(148, 163, 184, 0.1);
+            color: var(--text-muted);
+        }
+
+        /* 统计区域 */
+        .stats-section {
+            animation: fadeInUp 0.8s ease 0.7s backwards;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin: 0 auto 12px;
+        }
+
+        .stat-icon.skills {
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        .stat-icon.downloads {
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .stat-icon.categories {
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 80px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-soft);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 16px;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--brand-1);
+        }
+
+        /* Toast 提示 */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(15, 23, 42, 0.9);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1024px) {
+            .hubs-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .hubs-grid .hub-card:last-child {
+                grid-column: span 2;
+                max-width: 50%;
+                margin: 0 auto;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 36px;
+            }
+
+            .hero-subtitle {
+                font-size: 16px;
+            }
+
+            .hubs-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hubs-grid .hub-card:last-child {
+                grid-column: span 1;
+                max-width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .navbar-inner {
+                height: 56px;
+            }
+
+            .navbar-title {
+                font-size: 16px;
+            }
+
+            .navbar-nav a {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+
+            .container {
+                padding: 32px 16px 64px;
+            }
+
+            .hero-section {
+                padding: 40px 0 60px;
+            }
+
+            .hero-title {
+                font-size: 28px;
+            }
+
+            .hero-subtitle {
+                font-size: 15px;
+            }
+
+            .hub-card {
+                padding: 24px;
+            }
+
+            .stat-value {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/" class="navbar-brand">
+                <div class="navbar-logo">H</div>
+                <span class="navbar-title">Hub 平台</span>
+            </a>
+            <div class="navbar-nav">
+                <a href="/" class="active">首页</a>
+                <a href="https://github.com/Piper-TT/SkillHub" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Hero 区域 -->
+        <section class="hero-section">
+            <div class="hero-badge">
+                <span>✨</span>
+                <span>一站式 AI 资源平台</span>
+            </div>
+            <h1 class="hero-title">探索 AI 生态的无限可能</h1>
+            <p class="hero-subtitle">发现、管理、部署 AI 资源。从 Skills 到 MCP 服务器，再到智能体，一站式满足你的 AI 需求。</p>
+        </section>
+
+        <!-- Hub 卡片区域 -->
+        <section class="hubs-section">
+            <div class="hubs-grid">
+                <!-- SkillHub -->
+                <div class="hub-card" style="--hub-color: #2563eb;" onclick="navigateTo('/skills')">
+                    <div class="hub-icon skill">🚀</div>
+                    <h3 class="hub-title">SkillHub</h3>
+                    <p class="hub-subtitle">AI 技能库</p>
+                    <p class="hub-desc">收录 2.2万+ AI Skills，支持高速加速下载，轻松扩展 AI 能力，让 Claude 更强大。</p>
+                    <div class="hub-tags">
+                        <span class="hub-tag primary" id="skillCount">加载中...</span>
+                        <span class="hub-tag success">官方精选</span>
+                    </div>
+                    <div class="hub-action">
+                        <span class="hub-action-text" style="color: #2563eb;">
+                            立即探索
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- MCPHub -->
+                <div class="hub-card disabled" style="--hub-color: #10b981;" onclick="showToast('MCPHub 即将推出，敬请期待！')">
+                    <div class="hub-icon mcp">🔌</div>
+                    <h3 class="hub-title">MCPHub</h3>
+                    <p class="hub-subtitle">MCP 服务器/工具库</p>
+                    <p class="hub-desc">发现和部署 MCP 服务器，连接 Claude 与外部工具、数据库、API，解锁更多可能。</p>
+                    <div class="hub-tags">
+                        <span class="hub-tag warning">即将推出</span>
+                    </div>
+                    <div class="hub-action">
+                        <span class="hub-action-text" style="color: #10b981;">
+                            敬请期待
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </span>
+                        <span class="hub-status">Coming Soon</span>
+                    </div>
+                </div>
+
+                <!-- 智能体Hub -->
+                <div class="hub-card disabled" style="--hub-color: #8b5cf6;" onclick="showToast('智能体Hub 即将推出，敬请期待！')">
+                    <div class="hub-icon agent">🤖</div>
+                    <h3 class="hub-title">智能体Hub</h3>
+                    <p class="hub-subtitle">智能体库</p>
+                    <p class="hub-desc">精选 AI 智能体模板，快速部署个性化 AI 助手，提升工作效率。</p>
+                    <div class="hub-tags">
+                        <span class="hub-tag warning">即将推出</span>
+                    </div>
+                    <div class="hub-action">
+                        <span class="hub-action-text" style="color: #8b5cf6;">
+                            敬请期待
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </span>
+                        <span class="hub-status">Coming Soon</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 统计区域 -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon skills">📦</div>
+                    <div class="stat-value" id="totalSkills">-</div>
+                    <div class="stat-label">Skills 总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon downloads">⬇️</div>
+                    <div class="stat-value" id="totalDownloads">-</div>
+                    <div class="stat-label">总下载量</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon categories">📁</div>
+                    <div class="stat-value" id="totalCategories">-</div>
+                    <div class="stat-label">分类数</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-links">
+                <a href="/">首页</a>
+                <a href="/skills">SkillHub</a>
+                <a href="https://github.com/Piper-TT/SkillHub" target="_blank">GitHub</a>
+            </div>
+            <p>© 2026 Hub 平台. Built with ❤️ for AI enthusiasts.</p>
+        </footer>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 页面加载时获取统计数据
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+        });
+
+        // 加载统计数据
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+
+                // 更新统计卡片
+                animateCounter('totalSkills', data.total_skills || 0);
+                animateCounter('totalDownloads', formatNumber(data.total_downloads || 0));
+                animateCounter('totalCategories', data.categories || 0);
+
+                // 更新 SkillHub 卡片标签
+                document.getElementById('skillCount').textContent = `${data.total_skills || 0}+ Skills`;
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+                document.getElementById('skillCount').textContent = '1571+ Skills';
+            }
+        }
+
+        // 数字动画
+        function animateCounter(elementId, targetValue) {
+            const element = document.getElementById(elementId);
+            if (typeof targetValue === 'number') {
+                let current = 0;
+                const increment = Math.ceil(targetValue / 50);
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= targetValue) {
+                        current = targetValue;
+                        clearInterval(timer);
+                    }
+                    element.textContent = formatNumber(current);
+                }, 20);
+            } else {
+                element.textContent = targetValue;
+            }
+        }
+
+        // 格式化数字
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        // 导航跳转
+        function navigateTo(path) {
+            window.location.href = path;
+        }
+
+        // 显示 Toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
