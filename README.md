@@ -1,11 +1,12 @@
 # SkillHub
 
-SkillHub 是一个基于 Go 的 Skill 管理与分发平台，提供 Web 界面和 REST API。已集成 **3500+ ClawHub 技能数据**，支持本地上传和团队共享。
+SkillHub 是一个基于 Go 的 Skill 与 MCP 服务器管理与分发平台，提供 Web 界面和 REST API。已集成 **3500+ ClawHub 技能** 和 **3400+ MCP 服务器**，支持本地上传和团队共享。
 
 ## 功能特性
 
-- **真实数据**: 3500+ ClawHub 技能，含名称、描述、分类
-- **TOP50 排行**: 精选热门技能展示
+- **ClawHub 技能**: 3500+ 技能数据，含名称、描述、分类
+- **MCP 服务器**: 3400+ MCP 服务器，支持配置一键复制
+- **TOP50 排行**: 精选热门技能/服务器展示
 - **本地上传**: 支持上传本地技能包，自定义分类
 - **团队共享**: 部署到内网服务器，团队共享技能资源
 - **安装提示**: 一键复制安装提示，发送给 AI 助手安装技能
@@ -39,7 +40,9 @@ SkillHub 是一个基于 Go 的 Skill 管理与分发平台，提供 Web 界面�
 │   └── data/               # 技能数据
 ├── uploads/                # 上传文件目录
 ├── scripts/                # 工具脚本
-│   └── import_clawhub.go   # ClawHub 数据爬取脚本
+│   ├── import_clawhub.go       # ClawHub 数据爬取脚本
+│   ├── import_mcp.go           # MCP 服务器爬取脚本 (mcp.so API)
+│   └── parse_mcp_readme.go     # MCP 服务器解析脚本 (GitHub README)
 ├── config.yaml             # 运行配置
 ├── skills.db               # SQLite 数据库
 └── go.mod
@@ -86,12 +89,6 @@ go run ./cmd/server/main.go
 - 点击技能详情，复制安装提示
 - 将提示发送给 AI 助手（Claude、ChatGPT、Cursor 等）自动安装
 
-### 爬取 ClawHub 数据
-
-```bash
-go run ./scripts/import_clawhub.go
-```
-
 ## 配置说明
 
 配置文件：`config.yaml`
@@ -122,6 +119,8 @@ logging:
 
 基础路径：`/api`
 
+### 技能 API
+
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET | `/health` | 健康检查 |
@@ -134,6 +133,15 @@ logging:
 | POST | `/skills/upload` | 上传技能包 |
 | PUT | `/skills/:id` | 更新技能 |
 | DELETE | `/skills/:id` | 删除技能 |
+
+### MCP 服务器 API
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/mcp/servers` | 分页查询 MCP 服务器 |
+| GET | `/mcp/servers/:id` | MCP 服务器详情 |
+| GET | `/mcp/categories` | MCP 分类统计 |
+| GET | `/mcp/stats` | MCP 统计 |
 
 ## 构建
 
@@ -150,7 +158,21 @@ go build -a -o bin/server.exe ./cmd/server/main.go
 
 ## 数据来源
 
-技能数据来自 [ClawHub](https://clawhub.ai)，通过 `scripts/import_clawhub.go` 脚本从 API 爬取并存储到 SQLite 数据库。
+- **技能数据**: 来自 [ClawHub](https://clawhub.ai)，通过 `scripts/import_clawhub.go` 脚本从 API 爬取
+- **MCP 服务器**: 来自 [mcp.so](https://mcp.so) API 和 [awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers)，通过 `scripts/import_mcp.go` 和 `scripts/parse_mcp_readme.go` 爬取
+
+### 爬取数据
+
+```bash
+# 爬取 ClawHub 技能
+go run ./scripts/import_clawhub.go
+
+# 爬取 MCP 服务器 (mcp.so API)
+go run ./scripts/import_mcp.go
+
+# 解析 MCP 服务器 (GitHub README)
+go run ./scripts/parse_mcp_readme.go
+```
 
 ## License
 

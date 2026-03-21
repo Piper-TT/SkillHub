@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SkillHub is a Go-based Skill management and distribution platform with a Web UI and REST API. It integrates **3500+ ClawHub skills** and supports local upload for team sharing.
+SkillHub is a Go-based Skill and MCP Server management and distribution platform with a Web UI and REST API. It integrates **3500+ ClawHub skills** and **3400+ MCP servers**, supports local upload for team sharing.
 
 ## Build & Run Commands
 
@@ -20,6 +20,12 @@ go build -a -o bin/server.exe ./cmd/server/main.go
 
 # Import skills from ClawHub
 go run ./scripts/import_clawhub.go
+
+# Import MCP servers from mcp.so API
+go run ./scripts/import_mcp.go
+
+# Parse MCP servers from GitHub README
+go run ./scripts/parse_mcp_readme.go
 ```
 
 Server starts on `http://localhost:8081` by default.
@@ -39,7 +45,9 @@ internal/
 ├── config/            # Viper config loading
 └── utils/             # Validators, response helpers
 scripts/
-└── import_clawhub.go  # ClawHub data crawler
+├── import_clawhub.go       # ClawHub data crawler
+├── import_mcp.go           # MCP server crawler (mcp.so API)
+└── parse_mcp_readme.go     # MCP server parser (GitHub README)
 ```
 
 **Data flow**: Handler → Service → Repository → Database
@@ -54,10 +62,16 @@ scripts/
 ## API Routes
 
 All routes under `/api`:
+
+### Skills
 - `GET /health`, `/top50`, `/skills`, `/categories`, `/stats`
 - `GET /skills/:id`, `/skills/:id/download`
 - `POST /skills/upload` (multipart form: name, category, file required)
 - `PUT /skills/:id`, `DELETE /skills/:id`
+
+### MCP Servers
+- `GET /mcp/servers`, `/mcp/servers/:id`
+- `GET /mcp/categories`, `/mcp/stats`
 
 ## Key Features
 
@@ -81,12 +95,18 @@ All routes under `/api`:
 
 ## Database
 
-SQLite database (`skills.db`) auto-migrates on startup. The `Skill` model uses soft deletes (`gorm.DeletedAt`).
+SQLite database (`skills.db`) auto-migrates on startup. Models use soft deletes (`gorm.DeletedAt`).
 
-**Data fields**:
+**Skill model fields**:
 - `Name`, `Slug`, `Icon`, `Category`, `Description`
 - `Downloads`, `Rating`, `Verified`, `Safe`
 - `FileName` (for local uploaded files)
+
+**MCPServer model fields**:
+- `Name`, `Slug`, `Icon`, `Category`, `Description`
+- `GitHubURL`, `NPMPackage`, `PyPIPkg`
+- `Stars`, `Downloads`, `InstallCmd`, `Config`
+- `Verified`, `Official`
 
 ## Embeds
 
