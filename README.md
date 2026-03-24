@@ -1,18 +1,19 @@
 # SkillHub
 
-SkillHub 是一个基于 Go 的 Skill 与 MCP 服务器管理与分发平台，提供 Web 界面和 REST API。已集成 **3500+ ClawHub 技能** 和 **3400+ MCP 服务器**，支持本地上传和团队共享。
+SkillHub 是一个基于 Go 的 Skill 与 MCP 服务器管理与分发平台，提供 Web 界面和 REST API。已集成 **12000+ ClawHub 技能** 和 **3400+ MCP 服务器**，支持本地上传和团队共享。
 
 ## 功能特性
 
-- **ClawHub 技能**: 3500+ 技能数据，含名称、描述、分类
+- **ClawHub 技能**: 12000+ 技能数据，含名称、描述、分类
 - **MCP 服务器**: 3400+ MCP 服务器，支持配置一键复制
 - **TOP50 排行**: 精选热门技能/服务器展示
-- **本地上传**: 支持上传本地技能包，自定义分类
+- **本地上传**: 支持上传本地技能包和 MCP 服务器，自定义分类
 - **团队共享**: 部署到内网服务器，团队共享技能资源
 - **安装提示**: 一键复制安装提示，发送给 AI 助手安装技能
 - **分类浏览**: 10+ 技能分类（AI智能、开发工具、浏览器自动化等）
 - **技能搜索**: 支持名称和描述搜索
 - **SQLite 持久化**: 轻量级数据存储
+- **Portal 入口**: 统一入口页面，24 小时定时刷新
 
 ## 技术栈
 
@@ -28,7 +29,10 @@ SkillHub 是一个基于 Go 的 Skill 与 MCP 服务器管理与分发平台，�
 .
 ├── cmd/server/             # 服务入口、页面模板与静态资源
 │   ├── main.go
-│   └── templates/index.html
+│   └── templates/
+│       ├── portal.html     # Portal 入口页面
+│       ├── index.html      # SkillHub 页面
+│       └── mcp.html        # MCPHub 页面
 ├── internal/
 │   ├── config/             # 配置加载
 │   ├── handlers/           # HTTP 处理器
@@ -68,16 +72,25 @@ go run ./cmd/server/main.go
 
 启动后默认访问：
 
-- Web UI: `http://localhost:8081/`
+- Portal 入口: `http://localhost:8081/`
+- SkillHub: `http://localhost:8081/skills`
+- MCPHub: `http://localhost:8081/mcp`
 - 健康检查: `http://localhost:8081/api/health`
 
 ## 使用说明
 
 ### 上传技能
 
-1. 访问 Web UI 上传区域
+1. 访问 SkillHub 页面 `/skills` 上传区域
 2. 填写技能名称、选择或输入自定义分类
 3. 上传 .zip 技能包
+4. 提交保存
+
+### 上传 MCP 服务器
+
+1. 访问 MCPHub 页面 `/mcp` 上传区域
+2. 填写服务器名称、GitHub 地址、描述等
+3. 上传 .zip 或 .tar.gz 服务器文件
 4. 提交保存
 
 ### 安装技能
@@ -88,6 +101,13 @@ go run ./cmd/server/main.go
 **ClawHub 技能**:
 - 点击技能详情，复制安装提示
 - 将提示发送给 AI 助手（Claude、ChatGPT、Cursor 等）自动安装
+
+### 配置 MCP 服务器
+
+1. 浏览 MCPHub 页面查找需要的服务器
+2. 点击服务器卡片查看详情
+3. 复制 GitHub 地址或下载本地文件
+4. 按照服务器文档进行配置
 
 ## 配置说明
 
@@ -138,10 +158,12 @@ logging:
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/mcp/servers` | 分页查询 MCP 服务器 |
-| GET | `/mcp/servers/:id` | MCP 服务器详情 |
+| GET | `/mcp` | 分页查询 MCP 服务器 |
+| GET | `/mcp/:id` | MCP 服务器详情 |
 | GET | `/mcp/categories` | MCP 分类统计 |
 | GET | `/mcp/stats` | MCP 统计 |
+| GET | `/mcp/:id/download` | 下载 MCP 服务器文件 |
+| POST | `/mcp/upload` | 上传 MCP 服务器文件 |
 
 ## 构建
 
@@ -158,7 +180,7 @@ go build -a -o bin/server.exe ./cmd/server/main.go
 
 ## 数据来源
 
-- **技能数据**: 来自 [ClawHub](https://clawhub.ai)，通过 `scripts/import_clawhub.go` 脚本从 API 爬取
+- **技能数据**: 来自 [ClawHub](https://clawhub.ai)，通过 `scripts/import_clawhub.go` 脚本从 API 爬取，已扩展关键词覆盖 12000+ 技能
 - **MCP 服务器**: 来自 [mcp.so](https://mcp.so) API 和 [awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers)，通过 `scripts/import_mcp.go` 和 `scripts/parse_mcp_readme.go` 爬取
 
 ### 爬取数据

@@ -4,7 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SkillHub is a Go-based Skill and MCP Server management and distribution platform with a Web UI and REST API. It integrates **3500+ ClawHub skills** and **3400+ MCP servers**, supports local upload for team sharing.
+SkillHub is a Go-based Skill and MCP Server management and distribution platform with a Web UI and REST API. It integrates **12000+ ClawHub skills** and **3400+ MCP servers**, supports local upload for team sharing.
+
+**Three main pages**:
+- **Portal** (`/`): Unified entry page with 24-hour auto-refresh
+- **SkillHub** (`/skills`): Skill management and browsing
+- **MCPHub** (`/mcp`): MCP server management and browsing
 
 ## Build & Run Commands
 
@@ -70,8 +75,10 @@ All routes under `/api`:
 - `PUT /skills/:id`, `DELETE /skills/:id`
 
 ### MCP Servers
-- `GET /mcp/servers`, `/mcp/servers/:id`
-- `GET /mcp/categories`, `/mcp/stats`
+- `GET /mcp`, `/mcp/:id` - List servers, get server details
+- `GET /mcp/categories`, `/mcp/stats` - Categories and statistics
+- `GET /mcp/:id/download` - Download server file
+- `POST /mcp/upload` - Upload server file (multipart form: name, category, file required)
 
 ## Key Features
 
@@ -114,9 +121,24 @@ Templates and static files are embedded via `//go:embed` directive in `main.go`.
 
 ## Frontend
 
-Single-page app in `cmd/server/templates/index.html`:
+Three single-page apps in `cmd/server/templates/`:
+
+### Portal (`portal.html`)
+- Unified entry page with links to SkillHub and MCPHub
+- 24-hour auto-refresh meta tag
+- Simple and clean design
+
+### SkillHub (`index.html`)
 - Top 50 ranking with pagination
 - Category filtering with custom dropdown
 - Skill search
 - Upload form with custom category input
 - Skill detail modal with download options
+
+### MCPHub (`mcp.html`)
+- Server grid with pagination
+- Category filtering
+- Server search
+- Upload form for MCP server files
+- Server detail modal with GitHub link and download options
+- Stats display (total servers, stars, categories)
