@@ -34,3 +34,4 @@ uploads/
 
 # Local config
 .claude/
+.gstack/

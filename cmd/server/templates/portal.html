@@ -611,23 +611,23 @@
                     </div>
                 </div>
 
-                <!-- 智能体Hub -->
-                <div class="hub-card disabled" style="--hub-color: #8b5cf6;" onclick="showToast('智能体Hub 即将推出，敬请期待！')">
-                    <div class="hub-icon agent">🤖</div>
-                    <h3 class="hub-title">智能体Hub</h3>
-                    <p class="hub-subtitle">智能体库</p>
-                    <p class="hub-desc">精选 AI 智能体模板，快速部署个性化 AI 助手，提升工作效率。</p>
+                <!-- AgentHub -->
+                <div class="hub-card" style="--hub-color: #8b5cf6;" onclick="navigateTo('/agent')">
+                    <div class="hub-icon agent">🔮</div>
+                    <h3 class="hub-title">AgentHub</h3>
+                    <p class="hub-subtitle">智能体在线运行平台</p>
+                    <p class="hub-desc">选择智能体，直接在浏览器中对话体验。配置你的 API Key，即刻开始。</p>
                     <div class="hub-tags">
-                        <span class="hub-tag warning">即将推出</span>
+                        <span class="hub-tag primary" id="agentCount">加载中...</span>
+                        <span class="hub-tag success">在线运行</span>
                     </div>
                     <div class="hub-action">
                         <span class="hub-action-text" style="color: #8b5cf6;">
-                            敬请期待
+                            立即体验
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M5 12h14M12 5l7 7-7 7"/>
                             </svg>
                         </span>
-                        <span class="hub-status">Coming Soon</span>
                     </div>
                 </div>
             </div>
@@ -700,6 +700,16 @@
             } catch (error) {
                 console.error('Failed to load MCP stats:', error);
                 document.getElementById('mcpCount').textContent = '12+ MCP Servers';
+            }
+
+            // 加载 Agent 统计数据
+            try {
+                const agentResponse = await fetch('/api/agent/stats');
+                const agentData = await agentResponse.json();
+                document.getElementById('agentCount').textContent = `${agentData.total_agents || 0}+ Agents`;
+            } catch (error) {
+                console.error('Failed to load Agent stats:', error);
+                document.getElementById('agentCount').textContent = '4+ Agents';
             }
         }
 

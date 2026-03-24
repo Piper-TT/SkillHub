@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 18089
   upload_dir: ./uploads
   max_upload_size: 104857600  # 100MB
 

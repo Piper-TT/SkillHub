@@ -29,6 +29,9 @@ type MCPServer struct {
 	Stars     int `gorm:"default:0" json:"stars"`
 	Downloads int `gorm:"default:0" json:"downloads"`
 
+	// 本地上传文件
+	FileName string `gorm:"size:255" json:"file_name"`
+
 	// 安装信息
 	InstallCmd string `gorm:"size:500" json:"install_cmd"`
 	Config     string `gorm:"size:2000" json:"config"` // JSON 配置示例

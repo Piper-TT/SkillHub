@@ -69,6 +69,19 @@ func main() {
 	mcpService := service.NewMCPService(mcpRepo)
 	mcpHandler := handlers.NewMCPHandler(mcpService)
 
+	// 初始化 AgentHub 依赖
+	agentRepo := repository.NewAgentRepository(db)
+	sessionRepo := repository.NewSessionRepository(db)
+	apiKeyRepo := repository.NewAPIKeyRepository(db)
+	llmService := service.NewLLMService()
+	agentService := service.NewAgentService(agentRepo, sessionRepo, apiKeyRepo)
+	agentHandler := handlers.NewAgentHandler(agentService, llmService)
+
+	// 初始化恶意文件分析依赖
+	analysisRepo := repository.NewAnalysisRepository(db)
+	analysisService := service.NewAnalysisService(analysisRepo, cfg.Server.UploadDir, cfg.Server.MaxUploadSize)
+	analysisHandler := handlers.NewAnalysisHandler(analysisService)
+
 	// 初始化刷新服务
 	refreshService := service.NewRefreshService(skillRepo)
 	refreshService.SetLogger(log)
@@ -130,6 +143,44 @@ func main() {
 		api.GET("/mcp/categories", mcpHandler.GetCategories)
 		api.GET("/mcp/stats", mcpHandler.GetStats)
 		api.GET("/mcp/:id", mcpHandler.GetServerByID)
+		api.POST("/mcp/upload", mcpHandler.UploadServer)
+		api.GET("/mcp/:id/download", mcpHandler.DownloadServer)
+		api.DELETE("/mcp/:id", mcpHandler.DeleteServer)
+
+		// AgentHub API 路由
+		api.GET("/agent", agentHandler.GetAgents)
+		api.GET("/agent/categories", agentHandler.GetCategories)
+		api.GET("/agent/stats", agentHandler.GetStats)
+		api.GET("/agent/models", agentHandler.GetModels)
+		api.GET("/agent/:id", agentHandler.GetAgentByID)
+		api.POST("/agent/:id/chat", agentHandler.Chat)
+		api.GET("/agent/:id/sessions", agentHandler.GetSessions)
+		api.GET("/session/:id", agentHandler.GetSession)
+		api.DELETE("/session/:id", agentHandler.DeleteSession)
+
+		// API Key 管理
+		api.POST("/user/apikey", agentHandler.SaveAPIKey)
+		api.POST("/user/apikey/validate", agentHandler.ValidateAPIKey)
+		api.GET("/user/apikey", agentHandler.GetAPIKeys)
+		api.DELETE("/user/apikey/:provider", agentHandler.DeleteAPIKey)
+
+		// 测试接口
+		api.GET("/agent/stream/test", agentHandler.StreamTest)
+
+		// 恶意文件分析 API 路由
+		api.POST("/analysis/upload", analysisHandler.UploadFile)
+		api.GET("/analysis/tasks", analysisHandler.GetTaskList)
+		api.GET("/analysis/:id", analysisHandler.GetTask)
+		api.GET("/analysis/:id/result", analysisHandler.GetTaskResult)
+		api.GET("/analysis/:id/report", analysisHandler.GetTaskReport)
+		api.GET("/analysis/:id/pdf", analysisHandler.DownloadPDF)
+		api.DELETE("/analysis/:id", analysisHandler.CancelTask)
+
+		// IDA 服务器管理
+		api.GET("/ida/servers", analysisHandler.GetIDAServers)
+		api.POST("/ida/servers", analysisHandler.RegisterIDAServer)
+		api.DELETE("/ida/servers/:id", analysisHandler.RemoveIDAServer)
+		api.POST("/ida/servers/:id/heartbeat", analysisHandler.ServerHeartbeat)
 	}
 
 	// Portal 主页
@@ -157,6 +208,36 @@ func main() {
 		data, err := webFS.ReadFile("templates/mcp.html")
 		if err != nil {
 			c.String(http.StatusInternalServerError, "Failed to load mcp template")
+			return
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
+	})
+
+	// AgentHub 界面
+	r.GET("/agent", func(c *gin.Context) {
+		data, err := webFS.ReadFile("templates/agent.html")
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to load agent template")
+			return
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
+	})
+
+	// Agent 聊天界面
+	r.GET("/agent/:id/chat", func(c *gin.Context) {
+		data, err := webFS.ReadFile("templates/chat.html")
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to load chat template")
+			return
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
+	})
+
+	// 恶意文件分析界面
+	r.GET("/analysis", func(c *gin.Context) {
+		data, err := webFS.ReadFile("templates/analysis.html")
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to load analysis template")
 			return
 		}
 		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
@@ -229,7 +310,15 @@ func initDatabase(cfg *config.Config) (*gorm.DB, error) {
 	}
 
 	// 自动迁移
-	if err := db.AutoMigrate(&models.Skill{}, &models.MCPServer{}); err != nil {
+	if err := db.AutoMigrate(
+		&models.Skill{},
+		&models.MCPServer{},
+		&models.Agent{},
+		&models.Session{},
+		&models.UserAPIKey{},
+		&models.AnalysisTask{},
+		&models.IDAServer{},
+	); err != nil {
 		return nil, fmt.Errorf("failed to migrate database: %w", err)
 	}
 
@@ -241,6 +330,11 @@ func initDatabase(cfg *config.Config) (*gorm.DB, error) {
 	// 初始化 MCP 种子数据
 	if err := seedMCPData(db); err != nil {
 		return nil, fmt.Errorf("failed to seed MCP data: %w", err)
+	}
+
+	// 初始化 Agent 种子数据
+	if err := seedAgentData(db); err != nil {
+		return nil, fmt.Errorf("failed to seed Agent data: %w", err)
 	}
 
 	return db, nil
@@ -629,4 +723,136 @@ func getDefaultMCPServers() []models.MCPServer {
 			Official:    true,
 		},
 	}
+}
+
+// seedAgentData 初始化 Agent 种子数据
+func seedAgentData(db *gorm.DB) error {
+	var count int64
+	db.Model(&models.Agent{}).Count(&count)
+	if count > 0 {
+		return nil // 已有数据，跳过
+	}
+
+	agents := []models.Agent{
+		{
+			Name:        "恶意文件分析助手",
+			Slug:        "malware-analyzer",
+			Icon:        "🦠",
+			Category:    "安全分析",
+			Description: "分析可疑文件的特征、行为和威胁等级，提供专业的恶意软件分析报告",
+			SystemPrompt: `你是一个专业的恶意文件分析助手。你的任务是帮助安全研究人员分析可疑文件的特征和行为。
+
+你可以分析以下内容：
+- PE 文件结构分析（入口点、节区、导入表等）
+- 行为特征识别（进程注入、持久化、逃避技术等）
+- 威胁等级评估（高/中/低）
+- IoC 提取（哈希、IP、域名、互斥体等）
+- 缓解建议
+
+分析时请注意：
+1. 基于用户提供的特征进行客观分析
+2. 给出明确的威胁等级（高/中/低）
+3. 提供可操作的建议
+4. 如果信息不足，主动询问更多细节
+
+回复格式：
+## 分析结论
+[简要总结]
+
+## 威胁等级
+🔴 高 / 🟡 中 / 🟢 低
+
+## 可疑特征
+- 特征1: 说明
+- 特征2: 说明
+
+## 建议
+1. ...
+2. ...`,
+			Model:       "claude-3-opus-20240229",
+			Temperature: 0.3,
+			MaxTokens:   4096,
+			Verified:    true,
+			UsageCount:  0,
+		},
+		{
+			Name:        "代码安全审查助手",
+			Slug:        "code-security-reviewer",
+			Icon:        "🔐",
+			Category:    "安全分析",
+			Description: "审查代码中的安全漏洞，包括注入、XSS、认证问题等",
+			SystemPrompt: `你是一个专业的代码安全审查助手。帮助开发者识别代码中的安全漏洞。
+
+审查重点：
+- SQL 注入
+- XSS 跨站脚本
+- 命令注入
+- 路径遍历
+- 敏感信息泄露
+- 认证和授权问题
+- 加密使用不当
+
+对每个问题提供：
+1. 漏洞描述
+2. 风险等级
+3. 修复建议
+4. 修复后代码示例`,
+			Model:       "claude-3-opus-20240229",
+			Temperature: 0.3,
+			MaxTokens:   4096,
+			Verified:    true,
+			UsageCount:  0,
+		},
+		{
+			Name:        "威胁情报分析助手",
+			Slug:        "threat-intel-analyzer",
+			Icon:        "🔍",
+			Category:    "安全分析",
+			Description: "分析威胁情报数据，识别攻击模式和关联威胁",
+			SystemPrompt: `你是一个专业的威胁情报分析助手。帮助安全团队分析威胁情报数据。
+
+分析能力：
+- APT 组织关联分析
+- 恶意软件家族识别
+- 攻击技术映射 (MITRE ATT&CK)
+- IoC 关联分析
+- 威胁趋势分析
+
+提供结构化的分析报告，包括威胁评估和建议的防御措施。`,
+			Model:       "claude-3-opus-20240229",
+			Temperature: 0.4,
+			MaxTokens:   4096,
+			Verified:    true,
+			UsageCount:  0,
+		},
+		{
+			Name:        "日志分析助手",
+			Slug:        "log-analyzer",
+			Icon:        "📊",
+			Category:    "安全分析",
+			Description: "分析安全日志，发现异常行为和潜在威胁",
+			SystemPrompt: `你是一个专业的安全日志分析助手。帮助安全团队分析各类日志。
+
+分析能力：
+- Windows 事件日志分析
+- Linux 系统日志分析
+- Web 服务器日志分析
+- 网络设备日志分析
+- 应用程序日志分析
+
+识别：
+- 异常登录行为
+- 权限提升
+- 横向移动
+- 数据外传
+- 恶意软件活动`,
+			Model:       "claude-3-opus-20240229",
+			Temperature: 0.3,
+			MaxTokens:   4096,
+			Verified:    true,
+			UsageCount:  0,
+		},
+	}
+
+	return db.Create(&agents).Error
 }

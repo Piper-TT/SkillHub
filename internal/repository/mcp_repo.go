@@ -30,6 +30,8 @@ type MCPRepository interface {
 	FindTopByStars(ctx context.Context, limit int) ([]models.MCPServer, error)
 	// ReplaceAll 替换所有数据
 	ReplaceAll(ctx context.Context, servers []models.MCPServer) error
+	// IncrementDownloads 增加下载计数
+	IncrementDownloads(ctx context.Context, id uint) error
 }
 
 // MCPFilter 过滤条件
@@ -210,4 +212,12 @@ func (r *mcpRepo) ReplaceAll(ctx context.Context, servers []models.MCPServer) er
 
 		return nil
 	})
+}
+
+func (r *mcpRepo) IncrementDownloads(ctx context.Context, id uint) error {
+	return r.db.WithContext(ctx).
+		Model(&models.MCPServer{}).
+		Where("id = ?", id).
+		UpdateColumn("downloads", gorm.Expr("downloads + 1")).
+		Error
 }

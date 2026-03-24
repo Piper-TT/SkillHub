@@ -398,25 +398,50 @@ func main() {
 		}
 	}
 
-	// 清空现有数据
-	fmt.Println("清空现有数据...")
-	db.Exec("DELETE FROM skills")
-
-	// 批量插入
-	fmt.Println("插入新数据...")
+	// 增量合并模式：保留本地上传的技能，只更新/新增 ClawHub 数据
+	fmt.Println("增量合并数据（保留本地上传的技能）...")
 	batchSize := 100
+	newCount := 0
+	updateCount := 0
+
 	for i := 0; i < len(skills); i += batchSize {
 		end := i + batchSize
 		if end > len(skills) {
 			end = len(skills)
 		}
 		batch := skills[i:end]
-		if err := db.Create(&batch).Error; err != nil {
-			fmt.Printf("插入批次 %d-%d 失败: %v\n", i, end, err)
+
+		for _, skill := range batch {
+			var existing Skill
+			result := db.Where("slug = ?", skill.Slug).First(&existing)
+			if result.Error == gorm.ErrRecordNotFound {
+				// 新记录，插入
+				if err := db.Create(&skill).Error; err != nil {
+					fmt.Printf("插入 %s 失败: %v\n", skill.Slug, err)
+				} else {
+					newCount++
+				}
+			} else if result.Error == nil {
+				// 已存在，更新（只更新 ClawHub 字段，保留本地上传的 FileName 等）
+				updates := map[string]interface{}{
+					"name":        skill.Name,
+					"description": skill.Description,
+					"category":    skill.Category,
+					"downloads":   skill.Downloads,
+					"rating":      skill.Rating,
+					"icon":        skill.Icon,
+				}
+				if err := db.Model(&existing).Updates(updates).Error; err != nil {
+					fmt.Printf("更新 %s 失败: %v\n", skill.Slug, err)
+				} else {
+					updateCount++
+				}
+			}
 		}
+		fmt.Printf("\r处理进度: %d/%d (新增: %d, 更新: %d)", end, len(skills), newCount, updateCount)
 	}
 
-	fmt.Printf("\n✅ 成功导入 %d 个 Skills!\n", len(skills))
+	fmt.Printf("\n\n✅ 导入完成! 新增: %d, 更新: %d, 总计: %d\n", newCount, updateCount, len(skills))
 }
 
 func getIcon(name string) string {

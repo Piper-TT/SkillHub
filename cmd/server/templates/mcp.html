@@ -661,6 +661,97 @@
             color: var(--text-muted);
         }
 
+        /* Upload Section */
+        .upload-section {
+            margin-bottom: 24px;
+        }
+
+        .upload-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-group input {
+            padding: 10px 14px;
+            border: 1px solid var(--border-soft);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--brand-1);
+        }
+
+        .upload-file-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .file-input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed var(--border-soft);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .file-input-wrapper input[type="file"]::file-selector-button {
+            padding: 8px 16px;
+            margin-right: 12px;
+            background: var(--gradient-1);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .file-label {
+            display: none;
+        }
+
+        .btn-upload {
+            padding: 12px 24px;
+            background: var(--gradient-1);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+        }
+
         /* Empty */
         .empty {
             text-align: center;
@@ -768,6 +859,45 @@
             <div class="pagination" id="pagination"></div>
         </section>
 
+        <!-- Upload Section -->
+        <section class="section upload-section">
+            <h2 class="section-title">📤 上传 MCP 服务器</h2>
+            <form id="uploadForm" onsubmit="handleUpload(event)" enctype="multipart/form-data">
+                <div class="upload-grid">
+                    <div class="form-group">
+                        <label>服务器名称 *</label>
+                        <input type="text" id="uploadName" name="name" required placeholder="例如：my-mcp-server">
+                    </div>
+                    <div class="form-group">
+                        <label>分类 *</label>
+                        <input type="text" id="uploadCategory" name="category" required placeholder="例如：Developer" list="categoryList">
+                        <datalist id="categoryList">
+                            <option value="File System">
+                            <option value="Database">
+                            <option value="Web Search">
+                            <option value="Browser">
+                            <option value="AI Tools">
+                            <option value="Cloud">
+                            <option value="Communication">
+                            <option value="Developer">
+                            <option value="Data">
+                            <option value="Other">
+                        </datalist>
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>描述</label>
+                        <input type="text" id="uploadDesc" name="description" placeholder="简要描述服务器功能">
+                    </div>
+                </div>
+                <div class="upload-file-row">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="uploadFile" name="file" accept=".zip,.tar.gz,.tgz" required>
+                    </div>
+                    <button type="submit" class="btn-upload">上传服务器</button>
+                </div>
+            </form>
+        </section>
+
         <!-- Stats -->
         <div class="stats-grid" id="statsGrid">
             <div class="stat-card">
@@ -806,20 +936,21 @@
                 <p id="modalDesc">服务器描述</p>
             </div>
             <div class="modal-section">
-                <h3>安装命令</h3>
+                <h3>GitHub 地址</h3>
                 <div class="config-box">
-                    <pre id="modalInstall">npx @anthropic/mcp-server-example</pre>
+                    <pre id="modalGithubUrl">https://github.com/...</pre>
                 </div>
             </div>
-            <div class="modal-section" id="configSection">
-                <h3>Claude Desktop 配置</h3>
+            <div class="modal-section" id="downloadSection" style="display: none;">
+                <h3>下载命令</h3>
                 <div class="config-box">
-                    <pre id="modalConfig">{}</pre>
+                    <pre id="modalDownloadCmd">curl -L "http://localhost:8081/api/mcp/1/download" -o server.zip</pre>
                 </div>
             </div>
             <div class="modal-actions">
-                <a id="modalGithub" href="#" target="_blank" class="btn-secondary">GitHub</a>
-                <button class="btn-primary" onclick="copyInstallCmd()">复制安装命令</button>
+                <a id="modalGithub" href="#" target="_blank" class="btn-primary">访问 GitHub</a>
+                <button class="btn-secondary" id="downloadBtn" style="display: none;" onclick="downloadServer()">下载文件</button>
+                <button class="btn-secondary" onclick="copyGithubUrl()">复制链接</button>
             </div>
         </div>
     </div>
@@ -948,8 +1079,8 @@
                             <span>📥 ${formatNumber(server.downloads || 0)}</span>
                         </div>
                         <div class="server-install">
-                            <code>${server.install_cmd || 'npm install'}</code>
-                            <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('${server.install_cmd || ''}')">复制</button>
+                            <code>${server.github_url || '#'}</code>
+                            <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('${server.github_url || ''}')">复制</button>
                         </div>
                     </div>
                 `;
@@ -1042,11 +1173,61 @@
             document.getElementById('modalTitle').textContent = server.name;
             document.getElementById('modalCategory').textContent = server.category || 'Other';
             document.getElementById('modalDesc').textContent = server.description || '暂无描述';
-            document.getElementById('modalInstall').textContent = server.install_cmd || 'npm install';
-            document.getElementById('modalConfig').textContent = server.config || '{}';
+            document.getElementById('modalGithubUrl').textContent = server.github_url || '暂无链接';
             document.getElementById('modalGithub').href = server.github_url || '#';
 
+            // 显示/隐藏下载按钮和下载命令
+            const downloadSection = document.getElementById('downloadSection');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const downloadCmd = document.getElementById('modalDownloadCmd');
+
+            if (server.file_name) {
+                downloadSection.style.display = 'block';
+                downloadBtn.style.display = 'inline-block';
+                const downloadUrl = `${window.location.origin}/api/mcp/${server.id}/download`;
+                downloadCmd.textContent = `curl -L "${downloadUrl}" -o "${server.name}.zip"`;
+            } else {
+                downloadSection.style.display = 'none';
+                downloadBtn.style.display = 'none';
+            }
+
             document.getElementById('modal').classList.add('show');
+        }
+
+        // Download server file
+        function downloadServer() {
+            if (state.currentServer && state.currentServer.file_name) {
+                window.location.href = `/api/mcp/${state.currentServer.id}/download`;
+            }
+        }
+
+        // Handle upload
+        async function handleUpload(event) {
+            event.preventDefault();
+
+            const form = document.getElementById('uploadForm');
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/api/mcp/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('上传成功！');
+                    form.reset();
+                    loadServers();
+                    loadCategories();
+                    loadStats();
+                } else {
+                    showToast(result.message || '上传失败');
+                }
+            } catch (error) {
+                showToast('上传失败: ' + error.message);
+            }
         }
 
         // Close modal
@@ -1056,10 +1237,10 @@
             }
         }
 
-        // Copy install command
-        function copyInstallCmd() {
-            if (state.currentServer && state.currentServer.install_cmd) {
-                copyToClipboard(state.currentServer.install_cmd);
+        // Copy GitHub URL
+        function copyGithubUrl() {
+            if (state.currentServer && state.currentServer.github_url) {
+                copyToClipboard(state.currentServer.github_url);
             }
         }
 
