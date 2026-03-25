@@ -80,6 +80,7 @@ func main() {
 	// 初始化恶意文件分析依赖
 	analysisRepo := repository.NewAnalysisRepository(db)
 	analysisService := service.NewAnalysisService(analysisRepo, cfg.Server.UploadDir, cfg.Server.MaxUploadSize)
+	analysisService.SetAPIKeyRepository(repository.NewAPIKeyRepository(db))
 	analysisHandler := handlers.NewAnalysisHandler(analysisService)
 
 	// 初始化刷新服务

@@ -682,7 +682,7 @@
                         <div class="agent-stats">
                             <span>💬 ${agent.usage_count || 0} 次对话</span>
                         </div>
-                        <button class="btn-chat" onclick="startChat(${agent.id})">开始对话</button>
+                        <button class="btn-chat" onclick="startChat(${agent.id}, '${agent.slug}')">开始对话</button>
                     </div>
                 `;
             }).join('');
@@ -712,7 +712,12 @@
             loadAgents();
         }
 
-        function startChat(agentId) {
+        function startChat(agentId, slug) {
+            // 恶意文件分析助手跳转到专用分析页面
+            if (slug === 'malware-analyzer') {
+                window.location.href = '/analysis';
+                return;
+            }
             window.location.href = `/agent/${agentId}/chat`;
         }
 

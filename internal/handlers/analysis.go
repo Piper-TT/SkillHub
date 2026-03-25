@@ -31,18 +31,6 @@ func (h *AnalysisHandler) UploadFile(c *gin.Context) {
 		return
 	}
 
-	// 解析 agent_id
-	agentIDStr := c.PostForm("agent_id")
-	if agentIDStr == "" {
-		utils.BadRequest(c, "缺少 agent_id 参数")
-		return
-	}
-	agentID, err := strconv.ParseUint(agentIDStr, 10, 32)
-	if err != nil {
-		utils.BadRequest(c, "无效的 agent_id")
-		return
-	}
-
 	// 获取上传的文件
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -52,8 +40,8 @@ func (h *AnalysisHandler) UploadFile(c *gin.Context) {
 
 	description := c.PostForm("description")
 
-	// 上传文件并创建任务
-	task, err := h.svc.UploadFile(userID, uint(agentID), file, description)
+	// 上传文件并创建任务 (agentID=0 表示使用默认 MCP 分析)
+	task, err := h.svc.UploadFile(userID, 0, file, description)
 	if err != nil {
 		utils.InternalError(c, err.Error())
 		return
