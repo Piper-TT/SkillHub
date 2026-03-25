@@ -53,8 +53,13 @@ internal/
 │   ├── skill_service.go
 │   ├── mcp_service.go
 │   ├── agent_service.go
-│   ├── llm_service.go    # Multi-provider LLM integration
-│   ├── analysis_service.go
+│   ├── llm_service.go       # Multi-provider LLM integration (Anthropic/OpenAI/DeepSeek/GLM)
+│   ├── llm_tool_service.go  # LLM Tool Call support with multi-turn execution
+│   ├── tool_registry.go     # Tool registry pattern for managing callable tools
+│   ├── mcp_client.go        # MCP client with session management
+│   ├── mcp_tool_adapter.go  # Adapts MCP tools to ToolExecutor interface
+│   ├── analysis_agent.go    # LLM-powered malware analysis agent
+│   ├── analysis_service.go  # Analysis service orchestration
 │   └── refresh_service.go
 ├── repository/        # Data access layer (GORM)
 │   ├── skill_repo.go
@@ -140,6 +145,22 @@ All routes under `/api`:
 - Encrypted API key storage (AES-GCM)
 - Customizable agents with system prompts
 
+### Malware Analysis (LLM + MCP Integration)
+- **IDA-Pro-MCP Integration**: Auto-start MCP server for each analysis task
+- **LLM Tool Call**: LLM decides which analysis tools to call
+- **Tool Registry Pattern**: Unified interface for MCP tools and custom tools
+- **Analysis Flow**:
+  1. User uploads file → creates analysis task
+  2. System starts `idalib-mcp.exe` with target file
+  3. LLM Agent calls MCP tools (analyze_binary, get_functions, get_strings, etc.)
+  4. Agent generates professional malware analysis report
+- **Key Files**:
+  - `tool_registry.go`: `ToolExecutor` interface for tool abstraction
+  - `llm_tool_service.go`: Multi-turn tool execution loop
+  - `mcp_client.go`: MCP protocol with session ID handling
+  - `mcp_tool_adapter.go`: Adapts MCP tools to `ToolExecutor`
+  - `analysis_agent.go`: Malware analysis prompt and report generation
+
 ### Category Selector
 - Custom dropdown component with preset categories
 - Supports custom category input
@@ -186,6 +207,11 @@ SQLite database (`skills.db`) auto-migrates on startup. Models use soft deletes 
 - `UserID`, `Provider`, `EncryptedKey`, `CustomEndpoint`
 - AES-GCM encryption for API keys
 
+**AnalysisTask model fields**:
+- `UserID`, `AgentID`, `FileName`, `FilePath`, `FileHash`
+- `FileType`, `FileSize`, `Status`, `Progress`
+- `ResultJSON`, `ReportMD`, `ReportPDF`, `ErrorMessage`
+
 ## Embeds
 
 Templates and static files are embedded via `//go:embed` directive in `main.go`. Use `go build -a` to force rebuild when templates change.
@@ -221,6 +247,9 @@ Single-page apps in `cmd/server/templates/`:
 - Session management
 
 ### Analysis (`analysis.html`)
-- File upload interface
-- Task list with status
-- Report viewing and PDF download
+- File upload interface for PE/ELF binaries
+- Real-time task status polling
+- Analysis progress indicator
+- Markdown report viewer
+- PDF report download
+- Task history list

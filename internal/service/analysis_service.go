@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -24,25 +25,88 @@ type AnalysisService struct {
 	maxSize    int64 // 最大文件大小 (bytes)
 	mcpClient  *MCPClient
 	llmSvc     *LLMService
+	agent      *AnalysisAgent          // LLM Agent
+	apiKeyRepo repository.APIKeyRepository // API Key 仓库
+	idalibPath string                  // idalib-mcp.exe 路径
 }
 
 // NewAnalysisService 创建分析服务
 func NewAnalysisService(repo *repository.AnalysisRepository, uploadDir string, maxSize int64) *AnalysisService {
-	// 初始化 MCP 客户端 (IDA-Pro-MCP)
+	// 初始化 MCP 客户端
 	mcpClient := NewMCPClient("http://127.0.0.1:8745/mcp")
 
 	return &AnalysisService{
-		repo:      repo,
-		uploadDir: uploadDir,
-		maxSize:   maxSize,
-		mcpClient: mcpClient,
-		llmSvc:    NewLLMService(),
+		repo:       repo,
+		uploadDir:  uploadDir,
+		maxSize:    maxSize,
+		mcpClient:  mcpClient,
+		llmSvc:     NewLLMService(),
+		idalibPath: "idalib-mcp.exe", // 默认路径，可通过配置修改
 	}
+}
+
+// SetIDALibPath 设置 idalib-mcp.exe 路径
+func (s *AnalysisService) SetIDALibPath(path string) {
+	s.idalibPath = path
+}
+
+// SetAPIKeyRepository 设置 API Key 仓库
+func (s *AnalysisService) SetAPIKeyRepository(repo repository.APIKeyRepository) {
+	s.apiKeyRepo = repo
+}
+
+// SetAgent 设置分析智能体
+func (s *AnalysisService) SetAgent(agent *AnalysisAgent) {
+	s.agent = agent
 }
 
 // SetLLMService 设置 LLM 服务
 func (s *AnalysisService) SetLLMService(llmSvc *LLMService) {
 	s.llmSvc = llmSvc
+}
+
+// InitAgentForUser 为用户初始化分析智能体
+func (s *AnalysisService) InitAgentForUser(userID string) error {
+	if s.apiKeyRepo == nil {
+		fmt.Println("[Analysis] No API key repository, using basic MCP analysis")
+		return nil
+	}
+
+	// 获取用户配置的 API Key（优先级：glm > deepseek > openai > anthropic）
+	providers := []string{"glm", "deepseek", "openai", "anthropic"}
+	var apiKey *models.UserAPIKey
+	var provider string
+
+	for _, p := range providers {
+		key, err := s.apiKeyRepo.FindByUserAndProvider(context.Background(), userID, p)
+		if err == nil && key != nil {
+			apiKey = key
+			provider = p
+			break
+		}
+	}
+
+	if apiKey == nil {
+		fmt.Println("[Analysis] No API key configured, using basic MCP analysis")
+		return nil
+	}
+
+	// 解密 API Key
+	decryptedKey, err := utils.DecryptAPIKey(apiKey.EncryptedKey)
+	if err != nil {
+		return fmt.Errorf("解密 API Key 失败: %w", err)
+	}
+
+	// 创建分析智能体
+	s.agent = NewAnalysisAgent(&AnalysisAgentConfig{
+		APIKey:   decryptedKey,
+		Provider: provider,
+		Model:    apiKey.BaseModel,
+		MCPURL:   "http://127.0.0.1:8745/mcp",
+	})
+
+	fmt.Printf("[Analysis] Agent initialized with provider: %s, model: %s\n", provider, apiKey.BaseModel)
+	return nil
 }
 
 // UploadFile 上传文件并创建分析任务
@@ -113,6 +177,11 @@ func (s *AnalysisService) UploadFile(userID string, agentID uint, file *multipar
 		return nil, fmt.Errorf("创建分析任务失败: %w", err)
 	}
 
+	// 为用户初始化 Agent（如果尚未初始化）
+	if s.agent == nil && s.apiKeyRepo != nil {
+		s.InitAgentForUser(userID)
+	}
+
 	// 异步启动分析
 	go s.runAnalysis(task.ID, filePath, file.Filename)
 
@@ -124,14 +193,71 @@ func (s *AnalysisService) runAnalysis(taskID uint, filePath, fileName string) {
 	startTime := time.Now()
 
 	// 更新状态为运行中
-	s.repo.UpdateTaskStatus(taskID, "running", 10)
+	s.repo.UpdateTaskStatus(taskID, "running", 5)
 
 	fmt.Printf("[Analysis] Starting analysis for task %d: %s\n", taskID, fileName)
 
-	// 1. 调用 IDA-Pro-MCP 分析二进制文件
+	// 启动 MCP 服务器
+	fmt.Printf("[Analysis] Starting MCP server with file: %s\n", filePath)
+	s.repo.UpdateTaskProgress(taskID, 8)
+
+	if err := s.mcpClient.StartServer(s.idalibPath, filePath); err != nil {
+		fmt.Printf("[Analysis] Failed to start MCP server: %v\n", err)
+		s.FailAnalysis(taskID, fmt.Sprintf("启动分析引擎失败: %v", err))
+		return
+	}
+	defer s.mcpClient.StopServer()
+
+	s.repo.UpdateTaskProgress(taskID, 10)
+	fmt.Printf("[Analysis] MCP server started successfully\n")
+
+	// 优先使用 LLM Agent 进行智能分析
+	if s.agent != nil {
+		fmt.Printf("[Analysis] Using LLM Agent for intelligent analysis\n")
+
+		// 调用 Agent 分析
+		result, err := s.agent.Analyze(context.Background(), filePath, fileName)
+		if err != nil {
+			fmt.Printf("[Analysis] Agent error: %v, falling back to basic analysis\n", err)
+			// 降级到基础分析
+			s.runBasicAnalysis(taskID, filePath, fileName, startTime)
+			return
+		}
+
+		s.repo.UpdateTaskProgress(taskID, 90)
+
+		// 生成报告
+		reportMD := s.agent.GenerateReport(fileName, result)
+
+		// 保存结果
+		analysisResult := &models.AnalysisResult{
+			FileName:     fileName,
+			FileSize:     0,
+			FileType:     "PE",
+			Architecture: "x86_64",
+			Bits:         64,
+			Endianness:   "Little",
+			EntryPoint:   0,
+			BaseAddress:  0,
+			AnalysisTime: result.Duration,
+		}
+
+		s.CompleteAnalysis(taskID, analysisResult, reportMD)
+		fmt.Printf("[Analysis] Agent analysis completed in %v\n", result.Duration)
+		return
+	}
+
+	// 降级到基础 MCP 分析
+	fmt.Printf("[Analysis] Using basic MCP analysis (no LLM Agent configured)\n")
+	s.runBasicAnalysis(taskID, filePath, fileName, startTime)
+}
+
+// runBasicAnalysis 基础 MCP 分析（不使用 LLM）
+func (s *AnalysisService) runBasicAnalysis(taskID uint, filePath, fileName string, startTime time.Time) {
+	// 1. 调用 IDA-Pro-MCP 分析二进制文件 (文件已在启动时加载)
 	s.repo.UpdateTaskProgress(taskID, 20)
 
-	analysisResult, err := s.mcpClient.AnalyzeBinary(filePath)
+	analysisResult, err := s.mcpClient.AnalyzeBinary()
 	if err != nil {
 		fmt.Printf("[Analysis] MCP analyze error: %v\n", err)
 		s.FailAnalysis(taskID, fmt.Sprintf("IDA Pro 分析失败: %v", err))
@@ -146,7 +272,7 @@ func (s *AnalysisService) runAnalysis(taskID uint, filePath, fileName string) {
 	s.repo.UpdateTaskProgress(taskID, 60)
 
 	// 3. 获取字符串
-	strings, _ := s.mcpClient.GetStrings()
+	stringsData, _ := s.mcpClient.GetStrings()
 	s.repo.UpdateTaskProgress(taskID, 70)
 
 	// 4. 获取导入表
@@ -158,7 +284,7 @@ func (s *AnalysisService) runAnalysis(taskID uint, filePath, fileName string) {
 	s.repo.UpdateTaskProgress(taskID, 85)
 
 	// 6. 生成报告
-	reportMD := s.GenerateReportFromMCP(fileName, analysisResult, functions, strings, imports, exports)
+	reportMD := s.GenerateReportFromMCP(fileName, analysisResult, functions, stringsData, imports, exports)
 
 	s.repo.UpdateTaskProgress(taskID, 95)
 

@@ -49,6 +49,13 @@ SkillHub 是一个基于 Go 的 Skill 与 MCP 服务器管理与分发平台，�
 │   ├── models/             # 数据模型
 │   ├── repository/         # 数据访问层
 │   ├── service/            # 业务逻辑层
+│   │   ├── llm_service.go        # 多 Provider LLM 集成
+│   │   ├── llm_tool_service.go   # LLM Tool Call 支持
+│   │   ├── tool_registry.go      # 工具注册中心
+│   │   ├── mcp_client.go         # MCP 客户端
+│   │   ├── mcp_tool_adapter.go   # MCP 工具适配器
+│   │   ├── analysis_agent.go     # 恶意文件分析 Agent
+│   │   └── analysis_service.go   # 分析服务
 │   ├── utils/              # 工具与校验
 │   └── data/               # 技能数据
 ├── skills/                 # 本地技能包存储目录
@@ -108,16 +115,26 @@ go run ./cmd/server/main.go
 ### 使用 AgentHub
 
 1. 访问 AgentHub 页面 `/agent`
-2. 点击设置按钮配置 LLM API Key（支持 Anthropic/OpenAI/DeepSeek/GLM）
+2. 点击设置按钮配置 LLM API Key
+   - 支持 Anthropic、OpenAI、DeepSeek、GLM（智谱）
+   - API Key 使用 AES-GCM 加密存储
 3. 选择一个智能体开始聊天
-4. 支持会话历史和多轮对话
+4. 支持会话历史、多轮对话、SSE 流式响应
 
 ### 恶意文件分析
 
 1. 访问分析页面 `/analysis`
-2. 上传可疑文件（支持 PE/ELF/APK/脚本等）
-3. 等待自动化分析完成
-4. 查看分析报告或导出 PDF
+2. 上传可疑文件（支持 PE/ELF 可执行文件）
+3. 系统自动启动 IDA-Pro-MCP 进行二进制分析
+4. LLM Agent 智能调用分析工具（函数列表、字符串、导入导出表等）
+5. 生成专业的恶意软件分析报告
+6. 支持导出 PDF 报告
+
+**分析特性**:
+- 集成 IDA-Pro-MCP 进行深度二进制分析
+- LLM Agent 智能编排分析流程
+- 自动识别威胁等级和恶意行为
+- 提取 IOC 指标（IP、URL、可疑函数等）
 
 ### 安装技能
 

@@ -6,15 +6,22 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"os/exec"
 	"sync"
 	"time"
 )
 
-// MCPClient MCP 客户端
+// MCPClient MCP 客户端 - 支持启动和管理 idalib-mcp 进程
 type MCPClient struct {
 	baseURL    string
 	httpClient *http.Client
 	mu         sync.Mutex
+
+	// 进程管理
+	cmd         *exec.Cmd
+	processFile string // 当前分析的文件
+	sessionID   string // MCP Session ID
 }
 
 // NewMCPClient 创建 MCP 客户端
@@ -36,10 +43,121 @@ type MCPToolResult struct {
 	IsError bool `json:"isError"`
 }
 
+// StartServer 启动 MCP 服务器
+func (c *MCPClient) StartServer(idalibPath, targetFile string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// 如果已经有进程在运行，先停止
+	if c.cmd != nil && c.cmd.Process != nil {
+		c.cmd.Process.Kill()
+		c.cmd = nil
+	}
+
+	fmt.Printf("[MCP] Starting server for: %s\n", targetFile)
+
+	// 启动 idalib-mcp.exe
+	cmd := exec.Command(idalibPath,
+		"--isolated-contexts",
+		"--host", "127.0.0.1",
+		"--port", "8745",
+		targetFile,
+	)
+
+	// 设置输出
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("启动 MCP 服务器失败: %w", err)
+	}
+
+	c.cmd = cmd
+	c.processFile = targetFile
+	c.sessionID = "" // 重置 session
+
+	// 等待服务器就绪并初始化
+	fmt.Printf("[MCP] Waiting for server to be ready (timeout: 10m)...\n")
+	if err := c.waitForReadyAndInit(10 * time.Minute); err != nil {
+		c.StopServer()
+		return fmt.Errorf("MCP 服务器初始化失败: %w", err)
+	}
+
+	fmt.Printf("[MCP] Server ready with session: %s\n", c.sessionID)
+	return nil
+}
+
+// StopServer 停止 MCP 服务器
+func (c *MCPClient) StopServer() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.cmd != nil && c.cmd.Process != nil {
+		fmt.Printf("[MCP] Stopping server...\n")
+		c.cmd.Process.Kill()
+		c.cmd.Wait()
+		c.cmd = nil
+		c.processFile = ""
+		c.sessionID = ""
+	}
+}
+
+// waitForReadyAndInit 等待服务器就绪并初始化
+func (c *MCPClient) waitForReadyAndInit(timeout time.Duration) error {
+	start := time.Now()
+	for time.Since(start) < timeout {
+		// 尝试初始化连接
+		reqBody := map[string]interface{}{
+			"jsonrpc": "2.0",
+			"id":      1,
+			"method":  "initialize",
+			"params": map[string]interface{}{
+				"protocolVersion": "2024-11-05",
+				"clientInfo": map[string]interface{}{
+					"name":    "skillhub",
+					"version": "1.0",
+				},
+				"capabilities": map[string]interface{}{},
+			},
+		}
+
+		body, _ := json.Marshal(reqBody)
+		req, err := http.NewRequest("POST", c.baseURL, bytes.NewReader(body))
+		if err != nil {
+			time.Sleep(500 * time.Millisecond)
+			continue
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			time.Sleep(500 * time.Millisecond)
+			continue
+		}
+
+		// 获取 Session ID
+		sessionID := resp.Header.Get("Mcp-Session-Id")
+		resp.Body.Close()
+
+		if resp.StatusCode == 200 && sessionID != "" {
+			c.sessionID = sessionID
+			return nil
+		}
+
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	return fmt.Errorf("timeout waiting for MCP server")
+}
+
 // CallTool 调用 MCP 工具
 func (c *MCPClient) CallTool(toolName string, args map[string]interface{}) (*MCPToolResult, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	if c.sessionID == "" {
+		return nil, fmt.Errorf("MCP session not initialized")
+	}
 
 	reqBody := map[string]interface{}{
 		"jsonrpc": "2.0",
@@ -62,6 +180,7 @@ func (c *MCPClient) CallTool(toolName string, args map[string]interface{}) (*MCP
 	}
 
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Mcp-Session-Id", c.sessionID) // 添加 Session ID
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -100,6 +219,13 @@ func (c *MCPClient) CallTool(toolName string, args map[string]interface{}) (*MCP
 
 // ListTools 列出可用工具
 func (c *MCPClient) ListTools() ([]map[string]interface{}, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.sessionID == "" {
+		return nil, fmt.Errorf("MCP session not initialized")
+	}
+
 	reqBody := map[string]interface{}{
 		"jsonrpc": "2.0",
 		"id":      1,
@@ -118,6 +244,7 @@ func (c *MCPClient) ListTools() ([]map[string]interface{}, error) {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Mcp-Session-Id", c.sessionID)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -150,11 +277,9 @@ func (c *MCPClient) ListTools() ([]map[string]interface{}, error) {
 	return rpcResp.Result.Tools, nil
 }
 
-// AnalyzeBinary 使用 IDA Pro 分析二进制文件
-func (c *MCPClient) AnalyzeBinary(filePath string) (string, error) {
-	result, err := c.CallTool("analyze_binary", map[string]interface{}{
-		"file_path": filePath,
-	})
+// AnalyzeBinary 分析二进制文件
+func (c *MCPClient) AnalyzeBinary() (string, error) {
+	result, err := c.CallTool("analyze_binary", map[string]interface{}{})
 	if err != nil {
 		return "", err
 	}
@@ -252,4 +377,39 @@ func (c *MCPClient) GetMetadata() (string, error) {
 	}
 
 	return "", nil
+}
+
+// DecompileFunction 反编译函数
+func (c *MCPClient) DecompileFunction(funcName string) (string, error) {
+	result, err := c.CallTool("decompile_function", map[string]interface{}{
+		"function_name": funcName,
+	})
+	if err != nil {
+		return "", err
+	}
+	if len(result.Content) > 0 {
+		return result.Content[0].Text, nil
+	}
+	return "", nil
+}
+
+// GetXRefs 获取交叉引用
+func (c *MCPClient) GetXRefs(target string) (string, error) {
+	result, err := c.CallTool("get_xrefs", map[string]interface{}{
+		"target": target,
+	})
+	if err != nil {
+		return "", err
+	}
+	if len(result.Content) > 0 {
+		return result.Content[0].Text, nil
+	}
+	return "", nil
+}
+
+// IsRunning 检查服务器是否在运行
+func (c *MCPClient) IsRunning() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.cmd != nil && c.cmd.Process != nil
 }
