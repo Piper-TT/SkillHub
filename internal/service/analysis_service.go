@@ -22,15 +22,27 @@ type AnalysisService struct {
 	repo       *repository.AnalysisRepository
 	uploadDir  string
 	maxSize    int64 // 最大文件大小 (bytes)
+	mcpClient  *MCPClient
+	llmSvc     *LLMService
 }
 
 // NewAnalysisService 创建分析服务
 func NewAnalysisService(repo *repository.AnalysisRepository, uploadDir string, maxSize int64) *AnalysisService {
+	// 初始化 MCP 客户端 (IDA-Pro-MCP)
+	mcpClient := NewMCPClient("http://127.0.0.1:8745/mcp")
+
 	return &AnalysisService{
 		repo:      repo,
 		uploadDir: uploadDir,
 		maxSize:   maxSize,
+		mcpClient: mcpClient,
+		llmSvc:    NewLLMService(),
 	}
+}
+
+// SetLLMService 设置 LLM 服务
+func (s *AnalysisService) SetLLMService(llmSvc *LLMService) {
+	s.llmSvc = llmSvc
 }
 
 // UploadFile 上传文件并创建分析任务
@@ -101,7 +113,124 @@ func (s *AnalysisService) UploadFile(userID string, agentID uint, file *multipar
 		return nil, fmt.Errorf("创建分析任务失败: %w", err)
 	}
 
+	// 异步启动分析
+	go s.runAnalysis(task.ID, filePath, file.Filename)
+
 	return task, nil
+}
+
+// runAnalysis 执行分析任务
+func (s *AnalysisService) runAnalysis(taskID uint, filePath, fileName string) {
+	startTime := time.Now()
+
+	// 更新状态为运行中
+	s.repo.UpdateTaskStatus(taskID, "running", 10)
+
+	fmt.Printf("[Analysis] Starting analysis for task %d: %s\n", taskID, fileName)
+
+	// 1. 调用 IDA-Pro-MCP 分析二进制文件
+	s.repo.UpdateTaskProgress(taskID, 20)
+
+	analysisResult, err := s.mcpClient.AnalyzeBinary(filePath)
+	if err != nil {
+		fmt.Printf("[Analysis] MCP analyze error: %v\n", err)
+		s.FailAnalysis(taskID, fmt.Sprintf("IDA Pro 分析失败: %v", err))
+		return
+	}
+
+	s.repo.UpdateTaskProgress(taskID, 50)
+	fmt.Printf("[Analysis] Binary analysis completed, result length: %d\n", len(analysisResult))
+
+	// 2. 获取函数列表
+	functions, _ := s.mcpClient.GetFunctions()
+	s.repo.UpdateTaskProgress(taskID, 60)
+
+	// 3. 获取字符串
+	strings, _ := s.mcpClient.GetStrings()
+	s.repo.UpdateTaskProgress(taskID, 70)
+
+	// 4. 获取导入表
+	imports, _ := s.mcpClient.GetImports()
+	s.repo.UpdateTaskProgress(taskID, 80)
+
+	// 5. 获取导出表
+	exports, _ := s.mcpClient.GetExports()
+	s.repo.UpdateTaskProgress(taskID, 85)
+
+	// 6. 生成报告
+	reportMD := s.GenerateReportFromMCP(fileName, analysisResult, functions, strings, imports, exports)
+
+	s.repo.UpdateTaskProgress(taskID, 95)
+
+	// 7. 保存结果
+	result := &models.AnalysisResult{
+		FileName:     fileName,
+		FileSize:     0,
+		FileType:     "PE",
+		Architecture: "x86_64",
+		Bits:         64,
+		Endianness:   "Little",
+		EntryPoint:   0,
+		BaseAddress:  0,
+		AnalysisTime: time.Since(startTime),
+	}
+
+	s.CompleteAnalysis(taskID, result, reportMD)
+
+	fmt.Printf("[Analysis] Task %d completed in %v\n", taskID, time.Since(startTime))
+}
+
+// GenerateReportFromMCP 从 MCP 结果生成报告
+func (s *AnalysisService) GenerateReportFromMCP(fileName, analysis, functions, stringsData, imports, exports string) string {
+	var sb strings.Builder
+
+	sb.WriteString("# 恶意文件分析报告\n\n")
+	sb.WriteString(fmt.Sprintf("**生成时间**: %s\n", time.Now().Format("2006-01-02 15:04:05")))
+	sb.WriteString(fmt.Sprintf("**文件名**: %s\n\n", fileName))
+
+	// 基本信息
+	sb.WriteString("## 基本信息\n\n")
+	if analysis != "" {
+		sb.WriteString(analysis)
+		sb.WriteString("\n\n")
+	}
+
+	// 导入函数
+	if imports != "" {
+		sb.WriteString("## 导入函数\n\n")
+		sb.WriteString("```\n")
+		sb.WriteString(imports)
+		sb.WriteString("\n```\n\n")
+	}
+
+	// 导出函数
+	if exports != "" {
+		sb.WriteString("## 导出函数\n\n")
+		sb.WriteString("```\n")
+		sb.WriteString(exports)
+		sb.WriteString("\n```\n\n")
+	}
+
+	// 函数列表
+	if functions != "" {
+		sb.WriteString("## 函数列表\n\n")
+		sb.WriteString("```\n")
+		sb.WriteString(functions)
+		sb.WriteString("\n```\n\n")
+	}
+
+	// 字符串
+	if stringsData != "" {
+		sb.WriteString("## 字符串\n\n")
+		sb.WriteString("```\n")
+		sb.WriteString(stringsData)
+		sb.WriteString("\n```\n\n")
+	}
+
+	sb.WriteString("---\n\n")
+	sb.WriteString("*报告由 SkillHub 恶意文件分析系统生成*\n")
+
+	return sb.String()
 }
 
 // GetTask 获取任务详情

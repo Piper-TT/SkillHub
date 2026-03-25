@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>恶意文件分析 - AgentHub</title>
+    <title>恶意文件分析 - SkillHub</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -17,7 +17,6 @@
             --success: #10b981;
             --warning: #f59e0b;
             --error: #ef4444;
-            --info: #3b82f6;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -67,50 +66,22 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 24px;
         }
 
-        .tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 24px;
-        }
-
-        .tab {
-            padding: 10px 20px;
-            background: white;
-            border: 1px solid var(--border-soft);
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .tab:hover {
-            border-color: var(--brand-1);
-            color: var(--brand-1);
-        }
-
-        .tab.active {
-            background: var(--gradient-1);
-            color: white;
-            border: none;
-        }
-
+        /* 上传区域 */
         .upload-section {
             background: white;
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 32px;
             border: 1px solid var(--border-soft);
             margin-bottom: 24px;
         }
 
         .upload-section h2 {
-            font-size: 18px;
+            font-size: 20px;
             margin-bottom: 8px;
         }
 
@@ -129,32 +100,14 @@
             transition: all 0.2s ease;
         }
 
-        .upload-area:hover {
+        .upload-area:hover, .upload-area.dragover {
             border-color: var(--brand-1);
             background: rgba(139, 92, 246, 0.02);
         }
 
-        .upload-area.dragover {
-            border-color: var(--brand-1);
-            background: rgba(139, 92, 246, 0.05);
-        }
-
-        .upload-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-
-        .upload-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .upload-desc {
-            font-size: 14px;
-            color: var(--text-muted);
-            margin-bottom: 16px;
-        }
+        .upload-icon { font-size: 48px; margin-bottom: 16px; }
+        .upload-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+        .upload-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; }
 
         .upload-formats {
             display: flex;
@@ -171,65 +124,61 @@
             color: var(--text-secondary);
         }
 
-        .upload-options {
+        .file-info {
             display: flex;
-            gap: 16px;
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 1px solid var(--border-soft);
-        }
-
-        .form-group {
-            flex: 1;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
-
-        .form-group select, .form-group input {
-            width: 100%;
-            padding: 10px 14px;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 10px;
+            margin-top: 20px;
             border: 1px solid var(--border-soft);
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.2s ease;
         }
 
-        .form-group select:focus, .form-group input:focus {
-            outline: none;
-            border-color: var(--brand-1);
+        .file-icon { font-size: 32px; }
+        .file-details { flex: 1; }
+        .file-name { font-size: 15px; font-weight: 600; }
+        .file-size { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+        .file-remove {
+            padding: 6px 12px;
+            background: #fee2e2;
+            color: #dc2626;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
         }
 
-        .btn-upload {
-            padding: 12px 24px;
+        .btn-analyze {
+            width: 100%;
+            padding: 14px 24px;
             background: var(--gradient-1);
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: 10px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
             margin-top: 24px;
         }
 
-        .btn-upload:hover:not(:disabled) {
+        .btn-analyze:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);
         }
 
-        .btn-upload:disabled {
+        .btn-analyze:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
         }
 
+        /* 任务列表 */
         .tasks-section {
             background: white;
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 24px;
             border: 1px solid var(--border-soft);
         }
@@ -238,39 +187,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
-        .tasks-header h2 {
-            font-size: 18px;
-        }
+        .tasks-header h2 { font-size: 18px; }
 
-        .tasks-filter {
-            display: flex;
-            gap: 8px;
-        }
-
-        .filter-btn {
-            padding: 6px 12px;
-            background: #f1f5f9;
-            border: none;
-            border-radius: 6px;
-            font-size: 13px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .filter-btn:hover, .filter-btn.active {
-            background: var(--brand-1);
-            color: white;
-        }
-
-        .task-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+        .task-list { display: flex; flex-direction: column; gap: 12px; }
 
         .task-card {
             display: flex;
@@ -278,7 +200,7 @@
             gap: 16px;
             padding: 16px;
             background: #f8fafc;
-            border-radius: 10px;
+            border-radius: 12px;
             border: 1px solid var(--border-soft);
             cursor: pointer;
             transition: all 0.2s ease;
@@ -292,44 +214,25 @@
         .task-icon {
             width: 48px;
             height: 48px;
-            border-radius: 10px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 24px;
-            background: white;
         }
 
         .task-icon.pe { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
         .task-icon.elf { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
         .task-icon.mach-o { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
 
-        .task-info {
-            flex: 1;
-        }
+        .task-info { flex: 1; }
+        .task-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .task-meta { display: flex; gap: 16px; font-size: 13px; color: var(--text-muted); }
 
-        .task-name {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .task-meta {
-            display: flex;
-            gap: 16px;
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        .task-status {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
-        }
+        .task-status { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 
         .status-badge {
-            padding: 4px 12px;
+            padding: 5px 14px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 500;
@@ -339,7 +242,6 @@
         .status-badge.running { background: #dbeafe; color: #1e40af; }
         .status-badge.completed { background: #d1fae5; color: #065f46; }
         .status-badge.failed { background: #fee2e2; color: #991b1b; }
-        .status-badge.cancelled { background: #f1f5f9; color: #475569; }
 
         .progress-bar {
             width: 100px;
@@ -355,6 +257,16 @@
             transition: width 0.3s ease;
         }
 
+        .btn-download {
+            padding: 6px 14px;
+            background: var(--gradient-1);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -364,120 +276,7 @@
         .empty-icon { font-size: 48px; margin-bottom: 16px; }
         .empty-title { font-size: 18px; font-weight: 600; color: var(--text-main); margin-bottom: 8px; }
 
-        /* Modal */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-overlay.show {
-            display: flex;
-        }
-
-        .modal {
-            background: white;
-            border-radius: 16px;
-            width: 90%;
-            max-width: 800px;
-            max-height: 90vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .modal-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border-soft);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-title {
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        .modal-close {
-            width: 32px;
-            height: 32px;
-            border: none;
-            background: #f1f5f9;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-body {
-            padding: 24px;
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        .report-content {
-            font-size: 14px;
-            line-height: 1.8;
-        }
-
-        .report-content h1 { font-size: 24px; margin-bottom: 16px; }
-        .report-content h2 { font-size: 18px; margin: 24px 0 12px; color: var(--text-main); }
-        .report-content h3 { font-size: 16px; margin: 16px 0 8px; }
-        .report-content table { width: 100%; border-collapse: collapse; margin: 12px 0; }
-        .report-content th, .report-content td { padding: 8px 12px; border: 1px solid var(--border-soft); text-align: left; }
-        .report-content th { background: #f8fafc; font-weight: 600; }
-        .report-content code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
-        .report-content pre { background: #1e293b; color: #e2e8f0; padding: 16px; border-radius: 8px; overflow-x: auto; }
-
-        .modal-footer {
-            padding: 16px 24px;
-            border-top: 1px solid var(--border-soft);
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-        }
-
-        .btn-secondary {
-            padding: 10px 20px;
-            background: #f1f5f9;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-secondary:hover {
-            background: #e2e8f0;
-        }
-
-        .btn-primary {
-            padding: 10px 20px;
-            background: var(--gradient-1);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-        }
+        .hidden { display: none !important; }
 
         .toast {
             position: fixed;
@@ -489,7 +288,6 @@
             padding: 12px 24px;
             border-radius: 10px;
             font-size: 14px;
-            font-weight: 500;
             z-index: 1001;
             opacity: 0;
             transition: all 0.3s ease;
@@ -499,97 +297,29 @@
             transform: translateX(-50%) translateY(0);
             opacity: 1;
         }
-
-        .hidden { display: none !important; }
-
-        /* File info */
-        .file-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            background: #f8fafc;
-            border-radius: 8px;
-            margin-top: 16px;
-        }
-
-        .file-icon {
-            font-size: 24px;
-        }
-
-        .file-details {
-            flex: 1;
-        }
-
-        .file-name {
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .file-size {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .file-remove {
-            padding: 4px 8px;
-            background: #fee2e2;
-            color: #dc2626;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        /* Loading */
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border-soft);
-            border-top-color: var(--brand-1);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
     <header class="header">
-        <a href="/agent" class="btn-back">← 返回</a>
-        <h1 class="header-title">🦠 恶意文件分析平台</h1>
+        <a href="/" class="btn-back">← 返回首页</a>
+        <h1 class="header-title">🦠 恶意文件分析</h1>
     </header>
 
     <main class="container">
-        <div class="tabs">
-            <button class="tab active" onclick="showTab('upload')">上传文件</button>
-            <button class="tab" onclick="showTab('tasks')">分析任务</button>
-        </div>
-
         <!-- 上传区域 -->
-        <section id="upload-tab" class="upload-section">
+        <section class="upload-section">
             <h2>上传可疑文件</h2>
-            <p>支持 PE (Windows)、ELF (Linux)、Mach-O (macOS) 可执行文件分析</p>
+            <p>支持 PE (Windows)、ELF (Linux)、Mach-O (macOS) 可执行文件，自动调用 IDA Pro 进行深度分析</p>
 
             <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
                 <div class="upload-icon">📤</div>
-                <div class="upload-title">点击或拖拽文件到此处上传</div>
-                <div class="upload-desc">最大支持 50MB 文件</div>
+                <div class="upload-title">点击或拖拽文件到此处</div>
+                <div class="upload-desc">最大支持 50MB</div>
                 <div class="upload-formats">
                     <span class="format-badge">.exe</span>
                     <span class="format-badge">.dll</span>
                     <span class="format-badge">.elf</span>
                     <span class="format-badge">.so</span>
-                    <span class="format-badge">.app</span>
                     <span class="format-badge">.dylib</span>
                 </div>
             </div>
@@ -605,90 +335,48 @@
                 <button class="file-remove" onclick="clearFile()">移除</button>
             </div>
 
-            <div class="upload-options">
-                <div class="form-group">
-                    <label>选择分析智能体</label>
-                    <select id="agentSelect">
-                        <option value="1">恶意文件分析助手 (推荐)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>描述 (可选)</label>
-                    <input type="text" id="description" placeholder="简要描述文件来源或可疑行为...">
-                </div>
-            </div>
-
-            <button class="btn-upload" id="uploadBtn" onclick="uploadFile()" disabled>
+            <button class="btn-analyze" id="analyzeBtn" onclick="startAnalysis()" disabled>
                 开始分析
             </button>
         </section>
 
         <!-- 任务列表 -->
-        <section id="tasks-tab" class="tasks-section hidden">
+        <section class="tasks-section">
             <div class="tasks-header">
-                <h2>分析任务</h2>
-                <div class="tasks-filter">
-                    <button class="filter-btn active" onclick="filterTasks('all')">全部</button>
-                    <button class="filter-btn" onclick="filterTasks('pending')">待处理</button>
-                    <button class="filter-btn" onclick="filterTasks('running')">分析中</button>
-                    <button class="filter-btn" onclick="filterTasks('completed')">已完成</button>
-                </div>
+                <h2>分析记录</h2>
             </div>
-
             <div class="task-list" id="taskList">
-                <div class="loading">
-                    <div class="spinner"></div>
+                <div class="empty-state">
+                    <div class="empty-icon">📭</div>
+                    <div class="empty-title">暂无分析记录</div>
+                    <p>上传文件开始分析</p>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- 报告 Modal -->
-    <div class="modal-overlay" id="reportModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h3 class="modal-title" id="modalTitle">分析报告</h3>
-                <button class="modal-close" onclick="closeModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="report-content" id="reportContent">
-                    <!-- 报告内容 -->
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeModal()">关闭</button>
-                <button class="btn-primary" onclick="downloadPDF()">下载 PDF</button>
-            </div>
-        </div>
-    </div>
-
     <div class="toast" id="toast"></div>
 
     <script>
         const state = {
-            userID: localStorage.getItem('agenthub_user_id') || 'user-' + Math.random().toString(36).substr(2, 9),
+            userID: localStorage.getItem('skillhub_user_id') || 'user-' + Math.random().toString(36).substr(2, 9),
             selectedFile: null,
-            tasks: [],
-            currentFilter: 'all',
-            currentTaskId: null
+            tasks: []
         };
 
-        // 保存用户ID
-        if (!localStorage.getItem('agenthub_user_id')) {
-            localStorage.setItem('agenthub_user_id', state.userID);
+        if (!localStorage.getItem('skillhub_user_id')) {
+            localStorage.setItem('skillhub_user_id', state.userID);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            setupFileUpload();
+            setupUpload();
             loadTasks();
-            loadAgents();
         });
 
-        function setupFileUpload() {
+        function setupUpload() {
             const dropZone = document.getElementById('dropZone');
             const fileInput = document.getElementById('fileInput');
 
-            // 拖拽上传
             dropZone.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 dropZone.classList.add('dragover');
@@ -701,13 +389,11 @@
             dropZone.addEventListener('drop', (e) => {
                 e.preventDefault();
                 dropZone.classList.remove('dragover');
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    handleFile(files[0]);
+                if (e.dataTransfer.files.length > 0) {
+                    handleFile(e.dataTransfer.files[0]);
                 }
             });
 
-            // 点击上传
             fileInput.addEventListener('change', (e) => {
                 if (e.target.files.length > 0) {
                     handleFile(e.target.files[0]);
@@ -717,114 +403,116 @@
 
         function handleFile(file) {
             state.selectedFile = file;
-
             document.getElementById('fileName').textContent = file.name;
             document.getElementById('fileSize').textContent = formatSize(file.size);
             document.getElementById('fileInfo').classList.remove('hidden');
-            document.getElementById('uploadBtn').disabled = false;
+            document.getElementById('analyzeBtn').disabled = false;
         }
 
         function clearFile() {
             state.selectedFile = null;
             document.getElementById('fileInput').value = '';
             document.getElementById('fileInfo').classList.add('hidden');
-            document.getElementById('uploadBtn').disabled = true;
+            document.getElementById('analyzeBtn').disabled = true;
         }
 
-        async function uploadFile() {
+        async function startAnalysis() {
             if (!state.selectedFile) return;
+
+            const btn = document.getElementById('analyzeBtn');
+            btn.disabled = true;
+            btn.textContent = '上传中...';
 
             const formData = new FormData();
             formData.append('file', state.selectedFile);
-            formData.append('agent_id', document.getElementById('agentSelect').value);
-            formData.append('description', document.getElementById('description').value);
-
-            const uploadBtn = document.getElementById('uploadBtn');
-            uploadBtn.disabled = true;
-            uploadBtn.textContent = '上传中...';
 
             try {
                 const response = await fetch('/api/analysis/upload', {
                     method: 'POST',
-                    headers: {
-                        'X-User-ID': state.userID
-                    },
+                    headers: { 'X-User-ID': state.userID },
                     body: formData
                 });
 
                 const result = await response.json();
 
                 if (result.code === 0) {
-                    showToast('文件上传成功，已加入分析队列');
+                    showToast('文件已上传，正在分析...');
                     clearFile();
-                    document.getElementById('description').value = '';
-                    showTab('tasks');
                     loadTasks();
+                    // 轮询任务状态
+                    pollTask(result.data.task_id);
                 } else {
                     showToast(result.message || '上传失败');
+                    btn.disabled = false;
+                    btn.textContent = '开始分析';
                 }
             } catch (error) {
                 showToast('上传失败: ' + error.message);
-            } finally {
-                uploadBtn.disabled = false;
-                uploadBtn.textContent = '开始分析';
+                btn.disabled = false;
+                btn.textContent = '开始分析';
             }
         }
 
-        async function loadAgents() {
-            try {
-                const response = await fetch('/api/agent?category=安全分析');
-                const result = await response.json();
+        async function pollTask(taskId) {
+            const checkStatus = async () => {
+                try {
+                    const response = await fetch(`/api/analysis/${taskId}`, {
+                        headers: { 'X-User-ID': state.userID }
+                    });
+                    const result = await response.json();
 
-                if (result.code === 0 && result.data && result.data.agents) {
-                    const select = document.getElementById('agentSelect');
-                    select.innerHTML = result.data.agents.map(agent =>
-                        `<option value="${agent.id}">${agent.name}</option>`
-                    ).join('');
+                    if (result.code === 0) {
+                        const task = result.data;
+                        loadTasks();
+
+                        if (task.status === 'completed') {
+                            showToast('分析完成！点击下载报告');
+                            return;
+                        } else if (task.status === 'failed') {
+                            showToast('分析失败: ' + task.error_message);
+                            return;
+                        } else if (task.status === 'running' || task.status === 'pending') {
+                            setTimeout(checkStatus, 3000);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Poll error:', e);
                 }
-            } catch (error) {
-                console.error('Failed to load agents:', error);
-            }
+            };
+            checkStatus();
         }
 
         async function loadTasks() {
             try {
                 const response = await fetch('/api/analysis/tasks', {
-                    headers: {
-                        'X-User-ID': state.userID
-                    }
+                    headers: { 'X-User-ID': state.userID }
                 });
-
                 const result = await response.json();
-
                 if (result.code === 0) {
                     state.tasks = result.data.tasks || [];
                     renderTasks();
                 }
             } catch (error) {
-                console.error('Failed to load tasks:', error);
+                console.error('Load tasks error:', error);
             }
         }
 
         function renderTasks() {
             const container = document.getElementById('taskList');
-            const filtered = state.currentFilter === 'all'
-                ? state.tasks
-                : state.tasks.filter(t => t.status === state.currentFilter);
 
-            if (filtered.length === 0) {
+            if (state.tasks.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">📭</div>
-                        <div class="empty-title">暂无分析任务</div>
-                        <p>上传可疑文件开始分析</p>
+                        <div class="empty-title">暂无分析记录</div>
+                        <p>上传文件开始分析</p>
                     </div>
                 `;
                 return;
             }
 
-            container.innerHTML = filtered.map(task => `
-                <div class="task-card" onclick="viewTask(${task.id})">
+            container.innerHTML = state.tasks.map(task => `
+                <div class="task-card">
                     <div class="task-icon ${task.file_type.toLowerCase().replace('-', '')}">
                         ${getFileIcon(task.file_type)}
                     </div>
@@ -840,85 +528,19 @@
                         <span class="status-badge ${task.status}">${getStatusText(task.status)}</span>
                         ${task.status === 'running' ? `
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${task.progress}%"></div>
+                                <div class="progress-fill" style="width: ${task.progress || 0}%"></div>
                             </div>
+                        ` : ''}
+                        ${task.status === 'completed' ? `
+                            <button class="btn-download" onclick="downloadReport(${task.id})">下载报告</button>
                         ` : ''}
                     </div>
                 </div>
             `).join('');
         }
 
-        function filterTasks(filter) {
-            state.currentFilter = filter;
-
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            renderTasks();
-        }
-
-        async function viewTask(taskId) {
-            state.currentTaskId = taskId;
-
-            try {
-                const response = await fetch(`/api/analysis/${taskId}`, {
-                    headers: {
-                        'X-User-ID': state.userID
-                    }
-                });
-
-                const result = await response.json();
-
-                if (result.code === 0) {
-                    const task = result.data;
-
-                    if (task.status === 'completed') {
-                        // 加载报告
-                        const reportResponse = await fetch(`/api/analysis/${taskId}/report`, {
-                            headers: {
-                                'X-User-ID': state.userID
-                            }
-                        });
-
-                        if (reportResponse.ok) {
-                            const report = await reportResponse.text();
-                            document.getElementById('modalTitle').textContent = task.file_name;
-                            document.getElementById('reportContent').innerHTML = markdownToHtml(report);
-                            document.getElementById('reportModal').classList.add('show');
-                        }
-                    } else {
-                        showToast('任务尚未完成');
-                    }
-                }
-            } catch (error) {
-                showToast('加载失败: ' + error.message);
-            }
-        }
-
-        function downloadPDF() {
-            if (state.currentTaskId) {
-                window.open(`/api/analysis/${state.currentTaskId}/pdf`, '_blank');
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('reportModal').classList.remove('show');
-        }
-
-        function showTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-
-            if (tab === 'upload') {
-                document.getElementById('upload-tab').classList.remove('hidden');
-                document.getElementById('tasks-tab').classList.add('hidden');
-            } else {
-                document.getElementById('upload-tab').classList.add('hidden');
-                document.getElementById('tasks-tab').classList.remove('hidden');
-                loadTasks();
-            }
+        function downloadReport(taskId) {
+            window.open(`/api/analysis/${taskId}/pdf`, '_blank');
         }
 
         function showToast(message) {
@@ -928,7 +550,6 @@
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
-        // 工具函数
         function formatSize(bytes) {
             if (bytes < 1024) return bytes + ' B';
             if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
@@ -941,23 +562,11 @@
         }
 
         function getStatusText(status) {
-            const map = {
-                'pending': '待处理',
-                'running': '分析中',
-                'completed': '已完成',
-                'failed': '失败',
-                'cancelled': '已取消'
-            };
-            return map[status] || status;
+            return { 'pending': '等待中', 'running': '分析中', 'completed': '已完成', 'failed': '失败' }[status] || status;
         }
 
         function getFileIcon(type) {
-            const icons = {
-                'PE': '🪟',
-                'ELF': '🐧',
-                'Mach-O': '🍎'
-            };
-            return icons[type] || '📄';
+            return { 'PE': '🪟', 'ELF': '🐧', 'Mach-O': '🍎' }[type] || '📄';
         }
 
         function escapeHtml(text) {
@@ -966,47 +575,8 @@
             return div.innerHTML;
         }
 
-        function markdownToHtml(md) {
-            // 简单的 Markdown 转 HTML
-            let html = escapeHtml(md);
-
-            // 标题
-            html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-            html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-            html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-
-            // 表格
-            html = html.replace(/\|(.+)\|/g, (match) => {
-                const cells = match.split('|').filter(c => c.trim());
-                if (cells.some(c => c.trim().match(/^-+$/))) {
-                    return ''; // 分隔行
-                }
-                const isHeader = html.indexOf(match) < html.indexOf('\n');
-                const tag = isHeader ? 'th' : 'td';
-                return '<tr>' + cells.map(c => `<${tag}>${c.trim()}</${tag}>`).join('') + '</tr>';
-            });
-
-            // 代码块
-            html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
-
-            // 行内代码
-            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-            // 粗体
-            html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-
-            // 换行
-            html = html.replace(/\n/g, '<br>');
-
-            return html;
-        }
-
-        // 定时刷新任务状态
-        setInterval(() => {
-            if (!document.getElementById('tasks-tab').classList.contains('hidden')) {
-                loadTasks();
-            }
-        }, 5000);
+        // 定时刷新
+        setInterval(loadTasks, 10000);
     </script>
 </body>
 </html>

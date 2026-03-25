@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"skillhub/internal/models"
@@ -176,8 +177,10 @@ func (h *AgentHandler) Chat(c *gin.Context) {
 		return
 	}
 
+	chunkCount := 0
 	for chunk := range stream {
 		if chunk.Error != nil {
+			fmt.Printf("[SSE] Error: %v\n", chunk.Error)
 			c.SSEvent("error", gin.H{"message": chunk.Error.Error()})
 			flusher.Flush()
 			return
@@ -189,6 +192,7 @@ func (h *AgentHandler) Chat(c *gin.Context) {
 				h.agentSvc.AddMessageToSession(session, "assistant", fullResponse)
 				h.agentSvc.IncrementAgentUsage(uint(agentID))
 			}
+			fmt.Printf("[SSE] Done, total response length: %d, chunks sent: %d\n", len(fullResponse), chunkCount)
 			c.SSEvent("done", gin.H{
 				"session_id": session.ID,
 				"message":    "[DONE]",
@@ -197,7 +201,9 @@ func (h *AgentHandler) Chat(c *gin.Context) {
 			return
 		}
 
+		chunkCount++
 		fullResponse += chunk.Content
+		fmt.Printf("[SSE] Chunk %d: %q\n", chunkCount, chunk.Content)
 		c.SSEvent("message", gin.H{"content": chunk.Content})
 		flusher.Flush()
 	}

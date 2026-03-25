@@ -169,8 +169,10 @@ func (s *LLMService) streamOpenAI(ctx context.Context, req *ChatRequest) (<-chan
 		Stream:      true,
 	})
 	if err != nil {
+		fmt.Printf("[LLM] Stream creation failed: %v\n", err)
 		return nil, err
 	}
+	fmt.Printf("[LLM] Stream created successfully, waiting for response...\n")
 
 	ch := make(chan ChatChunk, 100)
 
@@ -178,10 +180,13 @@ func (s *LLMService) streamOpenAI(ctx context.Context, req *ChatRequest) (<-chan
 		defer close(ch)
 		defer stream.Close()
 
+		chunkCount := 0
 		for {
 			response, err := stream.Recv()
 			if err != nil {
+				fmt.Printf("[LLM] Stream recv error: %v\n", err)
 				if err.Error() == "EOF" || strings.Contains(err.Error(), "stream ended") {
+					fmt.Printf("[LLM] Stream ended normally, total chunks: %d\n", chunkCount)
 					ch <- ChatChunk{Done: true}
 					return
 				}
@@ -189,12 +194,14 @@ func (s *LLMService) streamOpenAI(ctx context.Context, req *ChatRequest) (<-chan
 				return
 			}
 
+			chunkCount++
 			if len(response.Choices) > 0 {
 				delta := response.Choices[0].Delta
 				if delta.Content != "" {
 					ch <- ChatChunk{Content: delta.Content}
 				}
 				if response.Choices[0].FinishReason == "stop" {
+					fmt.Printf("[LLM] Stream finished with stop reason, total chunks: %d\n", chunkCount)
 					ch <- ChatChunk{Done: true}
 					return
 				}
