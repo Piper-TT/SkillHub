@@ -112,7 +112,7 @@ func (c *MCPClient) waitForReadyAndInit(timeout time.Duration) error {
 			"id":      1,
 			"method":  "initialize",
 			"params": map[string]interface{}{
-				"protocolVersion": "2024-11-05",
+				"protocolVersion": "2025-06-18",
 				"clientInfo": map[string]interface{}{
 					"name":    "skillhub",
 					"version": "1.0",
@@ -279,13 +279,23 @@ func (c *MCPClient) ListTools() ([]map[string]interface{}, error) {
 
 // AnalyzeBinary 分析二进制文件
 func (c *MCPClient) AnalyzeBinary() (string, error) {
-	result, err := c.CallTool("analyze_binary", map[string]interface{}{})
+	// 先绑定 session（isolated-contexts 模式需要）
+	if err := c.bindSession(); err != nil {
+		return "", fmt.Errorf("bind session failed: %w", err)
+	}
+
+	result, err := c.CallTool("survey_binary", map[string]interface{}{})
 	if err != nil {
 		return "", err
 	}
 
 	if result.IsError {
-		return "", fmt.Errorf("analysis failed")
+		// 返回更详细的错误信息
+		errMsg := "analysis failed"
+		if len(result.Content) > 0 {
+			errMsg = result.Content[0].Text
+		}
+		return "", fmt.Errorf("analysis failed: %s", errMsg)
 	}
 
 	if len(result.Content) > 0 {
@@ -295,9 +305,40 @@ func (c *MCPClient) AnalyzeBinary() (string, error) {
 	return "", nil
 }
 
+// bindSession 绑定当前 session（isolated-contexts 模式）
+func (c *MCPClient) bindSession() error {
+	// 列出可用 session
+	listResult, err := c.CallTool("idalib_list", map[string]interface{}{})
+	if err != nil {
+		return err
+	}
+
+	// 解析 session 列表
+	if len(listResult.Content) > 0 {
+		var listData struct {
+			Sessions []struct {
+				SessionID string `json:"session_id"`
+			} `json:"sessions"`
+		}
+		if err := json.Unmarshal([]byte(listResult.Content[0].Text), &listData); err != nil {
+			return err
+		}
+
+		if len(listData.Sessions) > 0 {
+			// 切换到第一个 session
+			_, err := c.CallTool("idalib_switch", map[string]interface{}{
+				"session_id": listData.Sessions[0].SessionID,
+			})
+			return err
+		}
+	}
+
+	return fmt.Errorf("no available session")
+}
+
 // GetFunctions 获取函数列表
 func (c *MCPClient) GetFunctions() (string, error) {
-	result, err := c.CallTool("get_functions", map[string]interface{}{})
+	result, err := c.CallTool("list_funcs", map[string]interface{}{})
 	if err != nil {
 		return "", err
 	}
@@ -311,7 +352,9 @@ func (c *MCPClient) GetFunctions() (string, error) {
 
 // GetStrings 获取字符串列表
 func (c *MCPClient) GetStrings() (string, error) {
-	result, err := c.CallTool("get_strings", map[string]interface{}{})
+	result, err := c.CallTool("find", map[string]interface{}{
+		"query": "strings",
+	})
 	if err != nil {
 		return "", err
 	}
@@ -325,7 +368,7 @@ func (c *MCPClient) GetStrings() (string, error) {
 
 // GetImports 获取导入表
 func (c *MCPClient) GetImports() (string, error) {
-	result, err := c.CallTool("get_imports", map[string]interface{}{})
+	result, err := c.CallTool("imports", map[string]interface{}{})
 	if err != nil {
 		return "", err
 	}
@@ -339,7 +382,7 @@ func (c *MCPClient) GetImports() (string, error) {
 
 // GetExports 获取导出表
 func (c *MCPClient) GetExports() (string, error) {
-	result, err := c.CallTool("get_exports", map[string]interface{}{})
+	result, err := c.CallTool("export_funcs", map[string]interface{}{})
 	if err != nil {
 		return "", err
 	}
@@ -353,7 +396,9 @@ func (c *MCPClient) GetExports() (string, error) {
 
 // GetSegments 获取节区信息
 func (c *MCPClient) GetSegments() (string, error) {
-	result, err := c.CallTool("get_segments", map[string]interface{}{})
+	result, err := c.CallTool("list_globals", map[string]interface{}{
+		"category": "segments",
+	})
 	if err != nil {
 		return "", err
 	}
@@ -367,22 +412,14 @@ func (c *MCPClient) GetSegments() (string, error) {
 
 // GetMetadata 获取文件元数据
 func (c *MCPClient) GetMetadata() (string, error) {
-	result, err := c.CallTool("get_metadata", map[string]interface{}{})
-	if err != nil {
-		return "", err
-	}
-
-	if len(result.Content) > 0 {
-		return result.Content[0].Text, nil
-	}
-
-	return "", nil
+	// survey_binary 已包含元数据，这里返回空
+	return "{}", nil
 }
 
 // DecompileFunction 反编译函数
 func (c *MCPClient) DecompileFunction(funcName string) (string, error) {
-	result, err := c.CallTool("decompile_function", map[string]interface{}{
-		"function_name": funcName,
+	result, err := c.CallTool("decompile", map[string]interface{}{
+		"func": funcName,
 	})
 	if err != nil {
 		return "", err
@@ -395,8 +432,8 @@ func (c *MCPClient) DecompileFunction(funcName string) (string, error) {
 
 // GetXRefs 获取交叉引用
 func (c *MCPClient) GetXRefs(target string) (string, error) {
-	result, err := c.CallTool("get_xrefs", map[string]interface{}{
-		"target": target,
+	result, err := c.CallTool("xrefs_to", map[string]interface{}{
+		"subject": target,
 	})
 	if err != nil {
 		return "", err

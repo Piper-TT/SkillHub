@@ -28,6 +28,7 @@ SkillHub 是一个基于 Go 的 Skill 与 MCP 服务器管理与分发平台，�
 - GORM + SQLite (`github.com/glebarez/sqlite`)
 - Viper (配置管理)
 - Zap (日志)
+- gofpdf (PDF 报告生成)
 
 ## 目录结构
 
@@ -57,13 +58,21 @@ SkillHub 是一个基于 Go 的 Skill 与 MCP 服务器管理与分发平台，�
 │   │   ├── analysis_agent.go     # 恶意文件分析 Agent
 │   │   └── analysis_service.go   # 分析服务
 │   ├── utils/              # 工具与校验
+│   │   └── pdf.go               # PDF 报告生成 (gofpdf)
 │   └── data/               # 技能数据
 ├── skills/                 # 本地技能包存储目录
 ├── uploads/                # 上传文件目录
 ├── scripts/                # 工具脚本
 │   ├── import_clawhub.go       # ClawHub 数据爬取脚本
 │   ├── import_mcp.go           # MCP 服务器爬取脚本 (mcp.so API)
-│   └── parse_mcp_readme.go     # MCP 服务器解析脚本 (GitHub README)
+│   ├── parse_mcp_readme.go     # MCP 服务器解析脚本 (GitHub README)
+│   ├── check_db.go             # 数据库检查工具
+│   ├── check_apikeys.go        # API Key 检查工具
+│   ├── check_analysis.go       # 分析任务检查工具
+│   ├── check_task.go           # 单任务检查工具
+│   ├── check_tasks.go          # 批量任务检查工具
+│   ├── test_analysis_agent.go  # 分析 Agent 测试脚本
+│   └── migrate_to_single_user.go # 用户迁移脚本
 ├── config.yaml             # 运行配置
 ├── skills.db               # SQLite 数据库
 └── go.mod

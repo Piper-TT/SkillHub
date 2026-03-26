@@ -341,17 +341,8 @@
         const pathParts = window.location.pathname.split('/');
         state.agentId = parseInt(pathParts[2]);
 
-        // 初始化用户 ID
-        function initUserID() {
-            let userID = localStorage.getItem('agenthub_user_id');
-            if (!userID) {
-                userID = 'user-' + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem('agenthub_user_id', userID);
-            }
-            return userID;
-        }
-
-        const userID = initUserID();
+        // 单用户模式：使用固定的 default 用户
+        const userID = 'default';
 
         document.addEventListener('DOMContentLoaded', () => {
             loadAgent();

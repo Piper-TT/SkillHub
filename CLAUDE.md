@@ -78,10 +78,18 @@ internal/
 ├── middleware/        # Gin middleware (logger, security, recovery)
 ├── config/            # Viper config loading
 └── utils/             # Validators, response helpers, encryption
+    └── pdf.go         # PDF report generation (gofpdf)
 scripts/
 ├── import_clawhub.go       # ClawHub data crawler
 ├── import_mcp.go           # MCP server crawler (mcp.so API)
-└── parse_mcp_readme.go     # MCP server parser (GitHub README)
+├── parse_mcp_readme.go     # MCP server parser (GitHub README)
+├── check_db.go             # Database inspection tool
+├── check_apikeys.go        # API key validation tool
+├── check_analysis.go       # Analysis task checker
+├── check_task.go           # Single task inspector
+├── check_tasks.go          # Batch task inspector
+├── test_analysis_agent.go  # Analysis agent test script
+└── migrate_to_single_user.go # User migration utility
 ```
 
 **Data flow**: Handler → Service → Repository → Database
@@ -92,6 +100,7 @@ scripts/
 - **GORM + SQLite** (`github.com/glebarez/sqlite`): ORM with pure-Go SQLite
 - **Viper**: Configuration management
 - **Zap**: Structured logging
+- **gofpdf**: PDF report generation
 
 ## API Routes
 

@@ -97,12 +97,13 @@ func (s *AnalysisService) InitAgentForUser(userID string) error {
 		return fmt.Errorf("解密 API Key 失败: %w", err)
 	}
 
-	// 创建分析智能体
+	// 创建分析智能体，传入已初始化的 MCP 客户端
 	s.agent = NewAnalysisAgent(&AnalysisAgentConfig{
-		APIKey:   decryptedKey,
-		Provider: provider,
-		Model:    apiKey.BaseModel,
-		MCPURL:   "http://127.0.0.1:8745/mcp",
+		APIKey:    decryptedKey,
+		Provider:  provider,
+		Model:     apiKey.BaseModel,
+		MCPURL:    "http://127.0.0.1:8745/mcp",
+		MCPClient: s.mcpClient, // 传入已初始化的 MCP 客户端
 	})
 
 	fmt.Printf("[Analysis] Agent initialized with provider: %s, model: %s\n", provider, apiKey.BaseModel)
@@ -132,13 +133,6 @@ func (s *AnalysisService) UploadFile(userID string, agentID uint, file *multipar
 	// 计算文件哈希
 	hash := sha256.Sum256(data)
 	fileHash := hex.EncodeToString(hash[:])
-
-	// 检查是否已存在相同文件的任务
-	existingTask, err := s.repo.GetTaskByHash(fileHash)
-	if err == nil && existingTask != nil {
-		// 返回已存在的任务
-		return existingTask, nil
-	}
 
 	// 检测文件类型
 	fileType := utils.DetectFileTypeFromBytes(data)
@@ -177,10 +171,8 @@ func (s *AnalysisService) UploadFile(userID string, agentID uint, file *multipar
 		return nil, fmt.Errorf("创建分析任务失败: %w", err)
 	}
 
-	// 为用户初始化 Agent（如果尚未初始化）
-	if s.agent == nil && s.apiKeyRepo != nil {
-		s.InitAgentForUser(userID)
-	}
+	// 注意：不在 UploadFile 中初始化 Agent，因为 MCP 服务器还未启动
+	// Agent 将在 runAnalysis 中 MCP 服务器启动后初始化
 
 	// 异步启动分析
 	go s.runAnalysis(task.ID, filePath, file.Filename)
@@ -190,7 +182,12 @@ func (s *AnalysisService) UploadFile(userID string, agentID uint, file *multipar
 
 // runAnalysis 执行分析任务
 func (s *AnalysisService) runAnalysis(taskID uint, filePath, fileName string) {
-	startTime := time.Now()
+	// 获取任务信息以获取用户 ID
+	task, err := s.repo.GetTaskByID(taskID)
+	if err != nil {
+		fmt.Printf("[Analysis] Failed to get task %d: %v\n", taskID, err)
+		return
+	}
 
 	// 更新状态为运行中
 	s.repo.UpdateTaskStatus(taskID, "running", 5)
@@ -211,85 +208,38 @@ func (s *AnalysisService) runAnalysis(taskID uint, filePath, fileName string) {
 	s.repo.UpdateTaskProgress(taskID, 10)
 	fmt.Printf("[Analysis] MCP server started successfully\n")
 
+	// 在 MCP 服务器启动后初始化 Agent（确保 session 已就绪）
+	// 每次分析都重新初始化 Agent 以确保使用正确的 MCP session
+	if s.apiKeyRepo != nil {
+		fmt.Printf("[Analysis] Initializing Agent for user: %s\n", task.UserID)
+		s.InitAgentForUser(task.UserID)
+	}
+
 	// 优先使用 LLM Agent 进行智能分析
-	if s.agent != nil {
-		fmt.Printf("[Analysis] Using LLM Agent for intelligent analysis\n")
-
-		// 调用 Agent 分析
-		result, err := s.agent.Analyze(context.Background(), filePath, fileName)
-		if err != nil {
-			fmt.Printf("[Analysis] Agent error: %v, falling back to basic analysis\n", err)
-			// 降级到基础分析
-			s.runBasicAnalysis(taskID, filePath, fileName, startTime)
-			return
-		}
-
-		s.repo.UpdateTaskProgress(taskID, 90)
-
-		// 生成报告
-		reportMD := s.agent.GenerateReport(fileName, result)
-
-		// 保存结果
-		analysisResult := &models.AnalysisResult{
-			FileName:     fileName,
-			FileSize:     0,
-			FileType:     "PE",
-			Architecture: "x86_64",
-			Bits:         64,
-			Endianness:   "Little",
-			EntryPoint:   0,
-			BaseAddress:  0,
-			AnalysisTime: result.Duration,
-		}
-
-		s.CompleteAnalysis(taskID, analysisResult, reportMD)
-		fmt.Printf("[Analysis] Agent analysis completed in %v\n", result.Duration)
+	if s.agent == nil {
+		errMsg := "未配置 LLM API Key，请先在 AgentHub 页面配置 API Key（支持 GLM/DeepSeek/OpenAI/Anthropic）"
+		fmt.Printf("[Analysis] Error: %s\n", errMsg)
+		s.FailAnalysis(taskID, errMsg)
 		return
 	}
 
-	// 降级到基础 MCP 分析
-	fmt.Printf("[Analysis] Using basic MCP analysis (no LLM Agent configured)\n")
-	s.runBasicAnalysis(taskID, filePath, fileName, startTime)
-}
+	fmt.Printf("[Analysis] Using LLM Agent for intelligent analysis\n")
 
-// runBasicAnalysis 基础 MCP 分析（不使用 LLM）
-func (s *AnalysisService) runBasicAnalysis(taskID uint, filePath, fileName string, startTime time.Time) {
-	// 1. 调用 IDA-Pro-MCP 分析二进制文件 (文件已在启动时加载)
-	s.repo.UpdateTaskProgress(taskID, 20)
-
-	analysisResult, err := s.mcpClient.AnalyzeBinary()
+	// 调用 Agent 分析
+	result, err := s.agent.Analyze(context.Background(), filePath, fileName)
 	if err != nil {
-		fmt.Printf("[Analysis] MCP analyze error: %v\n", err)
-		s.FailAnalysis(taskID, fmt.Sprintf("IDA Pro 分析失败: %v", err))
+		fmt.Printf("[Analysis] Agent error: %v\n", err)
+		s.FailAnalysis(taskID, fmt.Sprintf("LLM 分析失败: %v", err))
 		return
 	}
 
-	s.repo.UpdateTaskProgress(taskID, 50)
-	fmt.Printf("[Analysis] Binary analysis completed, result length: %d\n", len(analysisResult))
+	s.repo.UpdateTaskProgress(taskID, 90)
 
-	// 2. 获取函数列表
-	functions, _ := s.mcpClient.GetFunctions()
-	s.repo.UpdateTaskProgress(taskID, 60)
+	// 生成报告
+	reportMD := s.agent.GenerateReport(fileName, result)
 
-	// 3. 获取字符串
-	stringsData, _ := s.mcpClient.GetStrings()
-	s.repo.UpdateTaskProgress(taskID, 70)
-
-	// 4. 获取导入表
-	imports, _ := s.mcpClient.GetImports()
-	s.repo.UpdateTaskProgress(taskID, 80)
-
-	// 5. 获取导出表
-	exports, _ := s.mcpClient.GetExports()
-	s.repo.UpdateTaskProgress(taskID, 85)
-
-	// 6. 生成报告
-	reportMD := s.GenerateReportFromMCP(fileName, analysisResult, functions, stringsData, imports, exports)
-
-	s.repo.UpdateTaskProgress(taskID, 95)
-
-	// 7. 保存结果
-	result := &models.AnalysisResult{
+	// 保存结果
+	analysisResult := &models.AnalysisResult{
 		FileName:     fileName,
 		FileSize:     0,
 		FileType:     "PE",
@@ -298,70 +248,21 @@ func (s *AnalysisService) runBasicAnalysis(taskID uint, filePath, fileName strin
 		Endianness:   "Little",
 		EntryPoint:   0,
 		BaseAddress:  0,
-		AnalysisTime: time.Since(startTime),
+		AnalysisTime: result.Duration,
 	}
 
-	s.CompleteAnalysis(taskID, result, reportMD)
-
-	fmt.Printf("[Analysis] Task %d completed in %v\n", taskID, time.Since(startTime))
-}
-
-// GenerateReportFromMCP 从 MCP 结果生成报告
-func (s *AnalysisService) GenerateReportFromMCP(fileName, analysis, functions, stringsData, imports, exports string) string {
-	var sb strings.Builder
-
-	sb.WriteString("# 恶意文件分析报告\n\n")
-	sb.WriteString(fmt.Sprintf("**生成时间**: %s\n", time.Now().Format("2006-01-02 15:04:05")))
-	sb.WriteString(fmt.Sprintf("**文件名**: %s\n\n", fileName))
-
-	// 基本信息
-	sb.WriteString("## 基本信息\n\n")
-	if analysis != "" {
-		sb.WriteString(analysis)
-		sb.WriteString("\n\n")
-	}
-
-	// 导入函数
-	if imports != "" {
-		sb.WriteString("## 导入函数\n\n")
-		sb.WriteString("```\n")
-		sb.WriteString(imports)
-		sb.WriteString("\n```\n\n")
-	}
-
-	// 导出函数
-	if exports != "" {
-		sb.WriteString("## 导出函数\n\n")
-		sb.WriteString("```\n")
-		sb.WriteString(exports)
-		sb.WriteString("\n```\n\n")
-	}
-
-	// 函数列表
-	if functions != "" {
-		sb.WriteString("## 函数列表\n\n")
-		sb.WriteString("```\n")
-		sb.WriteString(functions)
-		sb.WriteString("\n```\n\n")
-	}
-
-	// 字符串
-	if stringsData != "" {
-		sb.WriteString("## 字符串\n\n")
-		sb.WriteString("```\n")
-		sb.WriteString(stringsData)
-		sb.WriteString("\n```\n\n")
-	}
-
-	sb.WriteString("---\n\n")
-	sb.WriteString("*报告由 SkillHub 恶意文件分析系统生成*\n")
-
-	return sb.String()
+	s.CompleteAnalysis(taskID, analysisResult, reportMD)
+	fmt.Printf("[Analysis] Agent analysis completed in %v\n", result.Duration)
 }
 
 // GetTask 获取任务详情
 func (s *AnalysisService) GetTask(id uint, userID string) (*models.AnalysisTask, error) {
 	return s.repo.GetTaskByIDAndUser(id, userID)
+}
+
+// GetTaskByID 仅通过 ID 获取任务详情（不验证用户）
+func (s *AnalysisService) GetTaskByID(id uint) (*models.AnalysisTask, error) {
+	return s.repo.GetTaskByID(id)
 }
 
 // GetTaskList 获取任务列表
@@ -481,6 +382,13 @@ func (s *AnalysisService) CompleteAnalysis(taskID uint, result *models.AnalysisR
 	reportPDF := ""
 	if task.FilePath != "" {
 		reportPDF = strings.TrimSuffix(task.FilePath, filepath.Ext(task.FilePath)) + ".pdf"
+		// 生成 PDF 文件
+		if err := utils.GeneratePDFReport(task.FileName, reportMD, reportPDF); err != nil {
+			fmt.Printf("[Analysis] Failed to generate PDF: %v\n", err)
+			reportPDF = "" // PDF 生成失败，清空路径
+		} else {
+			fmt.Printf("[Analysis] PDF report generated: %s\n", reportPDF)
+		}
 	}
 
 	// 更新任务状态

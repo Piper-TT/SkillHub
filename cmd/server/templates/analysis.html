@@ -358,15 +358,12 @@
     <div class="toast" id="toast"></div>
 
     <script>
+        // 单用户模式：使用固定的 default 用户
         const state = {
-            userID: localStorage.getItem('skillhub_user_id') || 'user-' + Math.random().toString(36).substr(2, 9),
+            userID: 'default',
             selectedFile: null,
             tasks: []
         };
-
-        if (!localStorage.getItem('skillhub_user_id')) {
-            localStorage.setItem('skillhub_user_id', state.userID);
-        }
 
         document.addEventListener('DOMContentLoaded', () => {
             setupUpload();
@@ -425,41 +422,65 @@
 
             const formData = new FormData();
             formData.append('file', state.selectedFile);
+            formData.append('agent_id', '1'); // 默认使用 ID 为 1 的 Agent
+
+            // 记录当前使用的 userID，确保上传和轮询使用相同的 ID
+            const currentUserID = state.userID;
+            console.log('[Analysis] Using userID:', currentUserID);
 
             try {
+                console.log('[Analysis] Uploading file:', state.selectedFile.name);
                 const response = await fetch('/api/analysis/upload', {
                     method: 'POST',
-                    headers: { 'X-User-ID': state.userID },
+                    headers: { 'X-User-ID': currentUserID },
                     body: formData
                 });
 
                 const result = await response.json();
+                console.log('[Analysis] Upload response:', result);
 
                 if (result.code === 0) {
                     showToast('文件已上传，正在分析...');
                     clearFile();
                     loadTasks();
-                    // 轮询任务状态
-                    pollTask(result.data.task_id);
+                    // 轮询任务状态，使用相同的 userID
+                    console.log('[Analysis] Starting poll for task:', result.data.task_id, 'with userID:', currentUserID);
+                    pollTask(result.data.task_id, currentUserID);
                 } else {
+                    console.error('[Analysis] Upload failed:', result);
                     showToast(result.message || '上传失败');
                     btn.disabled = false;
                     btn.textContent = '开始分析';
                 }
             } catch (error) {
+                console.error('[Analysis] Upload error:', error);
                 showToast('上传失败: ' + error.message);
                 btn.disabled = false;
                 btn.textContent = '开始分析';
             }
         }
 
-        async function pollTask(taskId) {
+        async function pollTask(taskId, userID) {
+            let pollCount = 0;
+            const maxPolls = 200; // 最多轮询 200 次 (10 分钟)
+
+            // 使用传入的 userID，确保与上传时一致
+            const pollUserID = userID || state.userID;
+
             const checkStatus = async () => {
+                pollCount++;
+                if (pollCount > maxPolls) {
+                    showToast('轮询超时，请刷新页面查看任务状态');
+                    console.error('[Analysis] Poll timeout after', maxPolls, 'attempts');
+                    return;
+                }
+
                 try {
                     const response = await fetch(`/api/analysis/${taskId}`, {
-                        headers: { 'X-User-ID': state.userID }
+                        headers: { 'X-User-ID': pollUserID }
                     });
                     const result = await response.json();
+                    console.log(`[Analysis] Poll #${pollCount} status:`, result);
 
                     if (result.code === 0) {
                         const task = result.data;
@@ -469,14 +490,26 @@
                             showToast('分析完成！点击下载报告');
                             return;
                         } else if (task.status === 'failed') {
-                            showToast('分析失败: ' + task.error_message);
+                            showToast('分析失败: ' + (task.error_message || '未知错误'));
+                            console.error('[Analysis] Task failed:', task.error_message);
                             return;
                         } else if (task.status === 'running' || task.status === 'pending') {
+                            // 显示进度
+                            if (task.progress > 0) {
+                                console.log(`[Analysis] Progress: ${task.progress}%`);
+                            }
                             setTimeout(checkStatus, 3000);
+                        } else {
+                            showToast('任务状态异常: ' + task.status);
                         }
+                    } else {
+                        console.error('[Analysis] API error:', result);
+                        showToast('查询任务状态失败: ' + result.message);
                     }
                 } catch (e) {
-                    console.error('Poll error:', e);
+                    console.error('[Analysis] Poll error:', e);
+                    // 继续轮询，可能是临时网络问题
+                    setTimeout(checkStatus, 5000);
                 }
             };
             checkStatus();
@@ -540,7 +573,41 @@
         }
 
         function downloadReport(taskId) {
-            window.open(`/api/analysis/${taskId}/pdf`, '_blank');
+            console.log('Downloading report for task:', taskId, 'User:', state.userID);
+            showToast('正在下载报告...');
+
+            // 使用 fetch 下载并传递 header
+            fetch(`/api/analysis/${taskId}/pdf`, {
+                headers: { 'X-User-ID': state.userID }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error('下载失败: ' + response.status + ' - ' + text);
+                    });
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                console.log('Blob size:', blob.size, 'Type:', blob.type);
+                if (blob.size === 0) {
+                    throw new Error('文件内容为空');
+                }
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `analysis_report_${taskId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+                showToast('报告下载完成！');
+            })
+            .catch(err => {
+                console.error('Download error:', err);
+                showToast('下载失败：' + err.message);
+            });
         }
 
         function showToast(message) {

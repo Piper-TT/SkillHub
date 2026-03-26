@@ -26,6 +26,7 @@ type AnalysisAgentConfig struct {
 	Provider string // "anthropic", "openai", "deepseek", "glm"
 	Model    string
 	MCPURL   string
+	MCPClient *MCPClient // 使用已初始化的 MCP 客户端
 }
 
 // NewAnalysisAgent 创建分析智能体
@@ -33,8 +34,14 @@ func NewAnalysisAgent(config *AnalysisAgentConfig) *AnalysisAgent {
 	// 创建工具注册中心
 	toolRegistry := NewToolRegistry()
 
-	// 创建 MCP 客户端和适配器
-	mcpClient := NewMCPClient(config.MCPURL)
+	// 使用传入的 MCP 客户端（已启动服务器并初始化 session）
+	var mcpClient *MCPClient
+	if config.MCPClient != nil {
+		mcpClient = config.MCPClient
+	} else {
+		// 向后兼容：如果没有传入 MCPClient，创建新的
+		mcpClient = NewMCPClient(config.MCPURL)
+	}
 	mcpAdapter := NewMCPToolAdapter(mcpClient)
 
 	// 注册 MCP 工具
@@ -110,7 +117,7 @@ func (a *AnalysisAgent) Analyze(ctx context.Context, filePath, fileName string) 
 			{Role: "user", Content: userMessage},
 		},
 		Tools:    tools,
-		MaxTurns: 15,
+		MaxTurns: 30, // 增加轮数以完成完整分析
 	}
 
 	resp, err := a.llmService.ChatWithTools(ctx, req)

@@ -71,8 +71,12 @@ func (h *AnalysisHandler) GetTask(c *gin.Context) {
 
 	task, err := h.svc.GetTask(uint(taskID), userID)
 	if err != nil {
-		utils.NotFound(c, "任务不存在")
-		return
+		// 如果按 userID 查不到，尝试只按 ID 查询（兼容性处理）
+		task, err = h.svc.GetTaskByID(uint(taskID))
+		if err != nil {
+			utils.NotFound(c, "任务不存在")
+			return
+		}
 	}
 
 	utils.Success(c, models.TaskStatusResponse{
