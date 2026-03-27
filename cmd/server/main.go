@@ -489,7 +489,7 @@ func getWorkDir() string {
 		dir = filepath.Dir(dir)
 	}
 
-	// 查找 go.mod 文件
+	// 查找 go.mod 文件（开发环境）
 	for {
 		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
 			return dir
@@ -499,6 +499,13 @@ func getWorkDir() string {
 			break
 		}
 		dir = parent
+	}
+
+	// Release环境：返回可执行文件所在目录
+	// 检查 internal/data 目录是否存在
+	execDir := filepath.Dir(execPath)
+	if _, err := os.Stat(filepath.Join(execDir, "internal", "data")); err == nil {
+		return execDir
 	}
 
 	return "."
