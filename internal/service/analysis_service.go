@@ -25,9 +25,9 @@ type AnalysisService struct {
 	maxSize    int64 // 最大文件大小 (bytes)
 	mcpClient  *MCPClient
 	llmSvc     *LLMService
-	agent      *AnalysisAgent          // LLM Agent
+	agent      *AnalysisAgent              // LLM Agent
 	apiKeyRepo repository.APIKeyRepository // API Key 仓库
-	idalibPath string                  // idalib-mcp.exe 路径
+	idalibPath string                      // idalib-mcp.exe 路径
 }
 
 // NewAnalysisService 创建分析服务
