@@ -92,8 +92,8 @@ func containsPathTraversal(filename string) bool {
 
 // hasInvalidChars 检查是否包含非法字符
 func hasInvalidChars(filename string) bool {
-	// 只允许字母、数字、下划线、连字符、点和空格
-	validPattern := regexp.MustCompile(`^[a-zA-Z0-9_\-\.\s]+$`)
+	// 允许 Unicode 字母、数字、下划线、连字符、点、空格、括号和中文
+	validPattern := regexp.MustCompile(`^[\p{L}\p{N}_\-\.\s\(\)（）]+$`)
 	return !validPattern.MatchString(filename)
 }
 

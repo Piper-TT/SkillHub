@@ -187,8 +187,8 @@ func (r *skillRepo) FindTopByDownloads(ctx context.Context, limit int) ([]models
 
 func (r *skillRepo) ReplaceAll(ctx context.Context, skills []models.Skill) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		// 清空现有数据
-		if err := tx.Exec("DELETE FROM skills").Error; err != nil {
+		// 只删除 ClawHub 来源的数据（FileName 为空），保留本地上传的 skill
+		if err := tx.Exec("DELETE FROM skills WHERE file_name = '' OR file_name IS NULL").Error; err != nil {
 			return err
 		}
 

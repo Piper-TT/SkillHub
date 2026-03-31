@@ -2403,18 +2403,38 @@
             modal.classList.add('active');
         }
 
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
+        function fallbackCopyText(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.cssText = 'position:fixed;left:-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+        }
+
+        function doCopy(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('已复制到剪贴板', 'success');
+                }).catch(() => {
+                    fallbackCopyText(text);
+                    showToast('已复制到剪贴板', 'success');
+                });
+            } else {
+                fallbackCopyText(text);
                 showToast('已复制到剪贴板', 'success');
-            });
+            }
+        }
+
+        function copyToClipboard(text) {
+            doCopy(text);
         }
 
         function copyCmd(elementId) {
             const el = document.getElementById(elementId);
             if (el) {
-                navigator.clipboard.writeText(el.textContent).then(() => {
-                    showToast('已复制到剪贴板', 'success');
-                });
+                doCopy(el.textContent.trim());
             }
         }
 
@@ -2475,9 +2495,7 @@
 
         function copyInstallCode() {
             const code = document.getElementById('installCode').textContent;
-            navigator.clipboard.writeText(code).then(() => {
-                showToast('已复制到剪贴板', 'success');
-            });
+            doCopy(code.trim());
         }
 
         document.getElementById('skillFile')?.addEventListener('change', function(e) {

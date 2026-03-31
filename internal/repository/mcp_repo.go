@@ -192,8 +192,8 @@ func (r *mcpRepo) FindTopByStars(ctx context.Context, limit int) ([]models.MCPSe
 
 func (r *mcpRepo) ReplaceAll(ctx context.Context, servers []models.MCPServer) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		// 清空现有数据
-		if err := tx.Exec("DELETE FROM mcp_servers").Error; err != nil {
+		// 只删除外部导入的数据（FileName 为空），保留本地上传的 MCP Server
+		if err := tx.Exec("DELETE FROM mcp_servers WHERE file_name = '' OR file_name IS NULL").Error; err != nil {
 			return err
 		}
 
