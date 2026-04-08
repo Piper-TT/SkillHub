@@ -337,8 +337,13 @@ func (c *MCPClient) bindSession() error {
 }
 
 // GetFunctions 获取函数列表
-func (c *MCPClient) GetFunctions() (string, error) {
-	result, err := c.CallTool("list_funcs", map[string]interface{}{})
+func (c *MCPClient) GetFunctions(offset, count int) (string, error) {
+	result, err := c.CallTool("list_funcs", map[string]interface{}{
+		"queries": map[string]interface{}{
+			"offset": offset,
+			"count":  count,
+		},
+	})
 	if err != nil {
 		return "", err
 	}
@@ -350,10 +355,11 @@ func (c *MCPClient) GetFunctions() (string, error) {
 	return "", nil
 }
 
-// GetStrings 获取字符串列表
+// GetStrings 获取字符串列表 (使用 find_regex 搜索所有字符串)
 func (c *MCPClient) GetStrings() (string, error) {
-	result, err := c.CallTool("find", map[string]interface{}{
-		"query": "strings",
+	result, err := c.CallTool("find_regex", map[string]interface{}{
+		"pattern": ".",
+		"limit":   200,
 	})
 	if err != nil {
 		return "", err
@@ -368,7 +374,10 @@ func (c *MCPClient) GetStrings() (string, error) {
 
 // GetImports 获取导入表
 func (c *MCPClient) GetImports() (string, error) {
-	result, err := c.CallTool("imports", map[string]interface{}{})
+	result, err := c.CallTool("imports", map[string]interface{}{
+		"offset": 0,
+		"count":  500,
+	})
 	if err != nil {
 		return "", err
 	}
@@ -380,9 +389,16 @@ func (c *MCPClient) GetImports() (string, error) {
 	return "", nil
 }
 
-// GetExports 获取导出表
+// GetExports 获取导出表 (使用 imports_query 获取，因为 export_funcs 需要地址)
 func (c *MCPClient) GetExports() (string, error) {
-	result, err := c.CallTool("export_funcs", map[string]interface{}{})
+	// 先通过 survey_binary 获取导出信息，或使用 entity_query
+	result, err := c.CallTool("entity_query", map[string]interface{}{
+		"queries": map[string]interface{}{
+			"kind":   "import",
+			"offset": 0,
+			"count":  500,
+		},
+	})
 	if err != nil {
 		return "", err
 	}
@@ -394,10 +410,13 @@ func (c *MCPClient) GetExports() (string, error) {
 	return "", nil
 }
 
-// GetSegments 获取节区信息
+// GetSegments 获取节区信息 (survey_binary 已包含，此方法提供独立查询)
 func (c *MCPClient) GetSegments() (string, error) {
 	result, err := c.CallTool("list_globals", map[string]interface{}{
-		"category": "segments",
+		"queries": map[string]interface{}{
+			"offset": 0,
+			"count":  100,
+		},
 	})
 	if err != nil {
 		return "", err
@@ -416,10 +435,10 @@ func (c *MCPClient) GetMetadata() (string, error) {
 	return "{}", nil
 }
 
-// DecompileFunction 反编译函数
-func (c *MCPClient) DecompileFunction(funcName string) (string, error) {
+// DecompileFunction 反编译函数 (参数可以是地址如 "0x401000" 或函数名如 "sub_401000")
+func (c *MCPClient) DecompileFunction(addr string) (string, error) {
 	result, err := c.CallTool("decompile", map[string]interface{}{
-		"func": funcName,
+		"addr": addr,
 	})
 	if err != nil {
 		return "", err
@@ -430,10 +449,24 @@ func (c *MCPClient) DecompileFunction(funcName string) (string, error) {
 	return "", nil
 }
 
-// GetXRefs 获取交叉引用
-func (c *MCPClient) GetXRefs(target string) (string, error) {
+// GetXRefs 获取交叉引用 (参数可以是地址如 "0x401000" 或函数名)
+func (c *MCPClient) GetXRefs(addr string) (string, error) {
 	result, err := c.CallTool("xrefs_to", map[string]interface{}{
-		"subject": target,
+		"addrs": addr,
+	})
+	if err != nil {
+		return "", err
+	}
+	if len(result.Content) > 0 {
+		return result.Content[0].Text, nil
+	}
+	return "", nil
+}
+
+// AnalyzeFunction 对单个函数进行综合分析（伪代码、字符串、常量、调用关系等）
+func (c *MCPClient) AnalyzeFunction(addr string) (string, error) {
+	result, err := c.CallTool("analyze_function", map[string]interface{}{
+		"addr": addr,
 	})
 	if err != nil {
 		return "", err

@@ -253,6 +253,10 @@ func (s *LLMService) GetSupportedModels(provider string) []string {
 		}
 	case "glm":
 		return []string{
+			"glm-5.1",
+			"glm-5",
+			"glm-5-turbo",
+			"glm-4.5-air",
 			"glm-4-flash",
 			"glm-4",
 			"glm-4-plus",

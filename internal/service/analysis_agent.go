@@ -77,11 +77,9 @@ type AnalysisResult struct {
 func (a *AnalysisAgent) Analyze(ctx context.Context, filePath, fileName string) (*AnalysisResult, error) {
 	startTime := time.Now()
 
-	// 首先设置文件路径到 MCP
-	// 通过调用 analyze_binary 来初始化 IDA 分析
-	_, err := a.mcpAdapter.Execute("analyze_binary", map[string]interface{}{
-		"file_path": filePath,
-	})
+	// 二进制文件已在 MCP 服务器启动时加载，无需再传 file_path
+	// 调用 analyze_binary (survey_binary) 进行初步分析
+	_, err := a.mcpAdapter.Execute("analyze_binary", map[string]interface{}{})
 	if err != nil {
 		fmt.Printf("[Agent] Failed to initialize MCP analysis: %v\n", err)
 		// 继续尝试，LLM 可能会重试
@@ -101,17 +99,17 @@ func (a *AnalysisAgent) Analyze(ctx context.Context, filePath, fileName string) 
 请对该文件进行全面的恶意软件分析，按照以下阶段执行:
 
 ### 阶段1: 静态特征收集
-1. 调用 analyze_binary 获取文件基础信息（架构、节区、熵值等）
-2. 调用 get_imports 分析导入表，识别危险 API
-3. 调用 get_strings 提取所有字符串，筛选可疑内容
+1. 调用 analyze_binary 获取全面的初步分析（文件元数据、节区、导入分类、top 字符串和函数）
+2. 调用 get_imports 获取完整导入表，识别危险 API
+3. 调用 get_strings 提取所有字符串，筛选可疑内容（URL、IP、注册表路径、命令行等）
 
 ### 阶段2: 代码分析
-4. 调用 get_functions 获取函数列表
-5. 根据阶段1的发现，选择可疑函数调用 decompile_function 进行反编译
+4. 调用 get_functions 获取完整函数列表
+5. 根据阶段1的发现，选择可疑函数调用 analyze_function 进行综合分析（包含反编译、调用关系、字符串引用）
 6. 分析反编译代码，识别恶意逻辑
 
 ### 阶段3: 关联分析
-7. 调用 get_xrefs 追踪关键 API 的调用来源
+7. 调用 get_xrefs 追踪关键 API 的调用来源（参数 addr 传地址或函数名）
 8. 将所有发现映射到 MITRE ATT&CK 框架
 
 ### 阶段4: 报告生成
@@ -190,27 +188,31 @@ func (a *AnalysisAgent) buildSystemPrompt(fileName string) string {
 
 # 可用工具详解
 
-## 1. analyze_binary - 二进制基础分析
-**返回字段解读**:
-- [architecture]: 架构 (x86/x64/ARM)，影响后续分析策略
-- [bits]: 位数 (32/64)，决定指针大小和调用约定
-- [entry_point]: 入口点地址，程序执行起点
-- [sections.entropy]: 节区熵值 (>7.0 可能加壳/加密)
-- [sections.permissions]: 可写+可执行(WX) 是可疑特征
-- [compile_time]: 编译时间戳，可用于家族关联
+**重要**: 二进制文件已在分析引擎中加载，无需传递文件路径参数。
+
+## 1. analyze_binary - 全面的初步分析（必须首先调用）
+**无参数**。返回完整的二进制概览：
+- 文件元数据（架构、MD5、SHA256、imagebase、大小）
+- 节区列表（含熵值和权限）
+- 入口点
+- 导入函数按类别分组（crypto/network/file_io/process/registry）
+- 按 xref 排序的 top 15 有趣字符串和函数
+- 调用图摘要
 
 **分析要点**:
-- 熵值 > 7.0 的节区 → 可能加壳，需要脱壳
-- WX 权限节区 → 代码注入/自修改代码特征
-- 异常的节区名称 (如 .UPX, .vmp0) → 壳标识
+- 熵值 > 7.0 的节区 → 可能加壳
+- WX 权限节区 → 代码注入特征
+- 异常节区名 (.UPX, .vmp0) → 壳标识
 
 ## 2. get_functions - 函数列表
+**参数**: offset (number, 默认 0), count (number, 默认 200)
 **重点关注**:
 - 函数名包含 sub_ 且无符号 → 可能是核心恶意代码
 - 大函数 (>500 字节) → 可能包含复杂逻辑
 - 入口点附近函数 → 程序初始化逻辑
 
 ## 3. get_strings - 字符串提取
+**无参数**。使用正则搜索所有字符串。
 **可疑字符串模式**:
   网络指标: http://, https://, ftp://, IP地址格式
   凭证相关: password, passwd, pwd, secret, key, token, credential
@@ -222,6 +224,7 @@ func (a *AnalysisAgent) buildSystemPrompt(fileName string) string {
   反分析: debugger, vmware, virtualbox, sandbox, analyze
 
 ## 4. get_imports - 导入表分析
+**无参数**。返回所有导入的 DLL 和 API。
 **危险 API 分类**:
 
 | 类别 | API 函数 | 风险等级 |
@@ -236,6 +239,7 @@ func (a *AnalysisAgent) buildSystemPrompt(fileName string) string {
 | 反调试 | IsDebuggerPresent, CheckRemoteDebuggerPresent | 高危 |
 
 ## 5. decompile_function - 函数反编译
+**参数**: addr (string, 必填) - 函数地址如 "0x401000" 或函数名如 "sub_401000"、"main"
 **何时调用**:
 - 函数名可疑或来自危险 API 的调用图
 - 字符串引用指向该函数
@@ -248,21 +252,28 @@ func (a *AnalysisAgent) buildSystemPrompt(fileName string) string {
 - 异或循环 → 简单字符串解密
 
 ## 6. get_xrefs - 交叉引用
+**参数**: addr (string, 必填) - 目标地址如 "0x401000" 或函数名
 **用途**: 追踪敏感 API 的调用来源，定位恶意代码位置
+
+## 7. analyze_function - 单函数综合分析（推荐优先使用）
+**参数**: addr (string, 必填) - 函数地址或函数名
+一次调用返回：伪代码（限 100 行）、top 10 字符串、top 10 常量、调用者、被调用者、交叉引用、基本块摘要。
+比分别调用 decompile + xrefs 更高效。
 
 # 分析决策树
 
 开始分析
   |
-  +-> 调用 analyze_binary
-  |     +-> 熵值高? → 标记"可能加壳"，降低置信度
+  +-> 调用 analyze_binary (无参数)
+  |     +-> 熵值高? → 标记"可能加壳"
   |     +-> 有 WX 节区? → 标记"代码注入特征"
+  |     +-> 查看导入分类和 top 字符串/函数
   |
-  +-> 调用 get_imports
+  +-> 调用 get_imports (无参数)
   |     +-> 有危险 API? → 记录并映射 ATT&CK
   |     +-> 导入表损坏? → 可能加壳/混淆
   |
-  +-> 调用 get_strings
+  +-> 调用 get_strings (无参数)
   |     +-> 发现 C2 URL/IP? → 提取为 IOC
   |     +-> 发现互斥量名? → 家族特征
   |     +-> 发现可疑路径? → 记录行为
@@ -270,11 +281,12 @@ func (a *AnalysisAgent) buildSystemPrompt(fileName string) string {
   +-> 调用 get_functions
   |     +-> 筛选可疑函数 (入口点、大函数、无符号)
   |
-  +-> 对可疑函数调用 decompile_function
+  +-> 对可疑函数调用 analyze_function (推荐) 或 decompile_function
+  |     +-> 参数 addr 传函数地址或函数名
   |     +-> 识别代码模式和恶意逻辑
   |
   +-> 调用 get_xrefs 追踪关键 API
-        +-> 定位恶意代码触发点
+        +-> 参数 addr 传地址或函数名
 
 # 报告输出格式
 
