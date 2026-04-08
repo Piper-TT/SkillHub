@@ -42,6 +42,7 @@ func (r *apiKeyRepo) FindByUserAndProvider(ctx context.Context, userID, provider
 	var apiKey models.UserAPIKey
 	err := r.db.WithContext(ctx).
 		Where("user_id = ? AND provider = ?", userID, provider).
+		Order("updated_at DESC").
 		First(&apiKey).Error
 	if err != nil {
 		return nil, err
