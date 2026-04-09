@@ -136,7 +136,7 @@ All routes under `/api`:
 - `POST /analysis/upload` - Upload file for analysis
 - `GET /analysis/tasks` - List analysis tasks
 - `GET /analysis/:id`, `/analysis/:id/result`, `/analysis/:id/report`
-- `GET /analysis/:id/pdf` - Download PDF report
+- `GET /analysis/:id/download` - Download analysis report (ZIP: PDF + MD)
 - `DELETE /analysis/:id` - Cancel task
 
 ### IDA Server Management
@@ -260,5 +260,5 @@ Single-page apps in `cmd/server/templates/`:
 - Real-time task status polling
 - Analysis progress indicator
 - Markdown report viewer
-- PDF report download
+- Report download (ZIP containing PDF + MD)
 - Task history list

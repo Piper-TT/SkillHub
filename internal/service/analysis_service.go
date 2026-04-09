@@ -41,7 +41,7 @@ func NewAnalysisService(repo *repository.AnalysisRepository, uploadDir string, m
 		maxSize:    maxSize,
 		mcpClient:  mcpClient,
 		llmSvc:     NewLLMService(),
-		idalibPath: "idalib-mcp.exe", // 默认路径，可通过配置修改
+		idalibPath: `C:\Users\tt\AppData\Local\Programs\Python\Python314\Scripts\idalib-mcp.exe`,
 	}
 }
 

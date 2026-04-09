@@ -576,12 +576,10 @@
             console.log('Downloading report for task:', taskId, 'User:', state.userID);
             showToast('正在下载报告...');
 
-            // 使用 fetch 下载并传递 header
-            fetch(`/api/analysis/${taskId}/pdf`, {
+            fetch(`/api/analysis/${taskId}/download`, {
                 headers: { 'X-User-ID': state.userID }
             })
             .then(response => {
-                console.log('Response status:', response.status);
                 if (!response.ok) {
                     return response.text().then(text => {
                         throw new Error('下载失败: ' + response.status + ' - ' + text);
@@ -590,14 +588,11 @@
                 return response.blob();
             })
             .then(blob => {
-                console.log('Blob size:', blob.size, 'Type:', blob.type);
-                if (blob.size === 0) {
-                    throw new Error('文件内容为空');
-                }
+                if (blob.size === 0) throw new Error('文件内容为空');
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `analysis_report_${taskId}.pdf`;
+                a.download = `analysis_report_${taskId}.zip`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);

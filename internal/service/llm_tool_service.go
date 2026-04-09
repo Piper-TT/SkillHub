@@ -44,7 +44,7 @@ func (s *LLMToolService) getOpenAIClient(provider, apiKey, customEndpoint string
 	case "deepseek":
 		config.BaseURL = "https://api.deepseek.com/v1"
 	case "glm":
-		config.BaseURL = "https://open.bigmodel.cn/api/paas/v4"
+		config.BaseURL = "https://open.bigmodel.cn/api/anthropic"
 	case "openai-compatible":
 		if customEndpoint != "" {
 			config.BaseURL = customEndpoint
@@ -69,10 +69,10 @@ type ChatWithToolsRequest struct {
 
 // ChatWithToolsResponse 带工具的聊天响应
 type ChatWithToolsResponse struct {
-	Content     string         // 最终回复内容
-	ToolCalls   []ToolCallInfo // 工具调用记录
-	TokensUsed  int            // 消耗的 token
-	Duration    time.Duration  // 总耗时
+	Content    string         // 最终回复内容
+	ToolCalls  []ToolCallInfo // 工具调用记录
+	TokensUsed int            // 消耗的 token
+	Duration   time.Duration  // 总耗时
 }
 
 // ToolCallInfo 工具调用信息

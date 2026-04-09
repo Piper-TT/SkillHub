@@ -1,8 +1,11 @@
 package handlers
 
 import (
+	"archive/zip"
+	"bytes"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 
 	"skillhub/internal/models"
@@ -190,9 +193,9 @@ func (h *AnalysisHandler) GetTaskReport(c *gin.Context) {
 	c.String(http.StatusOK, report)
 }
 
-// DownloadPDF 下载 PDF 报告
-// GET /api/analysis/:id/pdf
-func (h *AnalysisHandler) DownloadPDF(c *gin.Context) {
+// DownloadReport 下载分析报告 (ZIP: PDF + MD)
+// GET /api/analysis/:id/download
+func (h *AnalysisHandler) DownloadReport(c *gin.Context) {
 	userID := c.GetHeader("X-User-ID")
 	if userID == "" {
 		utils.Unauthorized(c, "未授权")
@@ -216,13 +219,31 @@ func (h *AnalysisHandler) DownloadPDF(c *gin.Context) {
 		return
 	}
 
-	if task.ReportPDF == "" {
-		utils.NotFound(c, "PDF 报告尚未生成")
-		return
+	// 创建 ZIP 缓冲区
+	buf := new(bytes.Buffer)
+	zipWriter := zip.NewWriter(buf)
+
+	baseName := fmt.Sprintf("analysis_report_%d", taskID)
+
+	// 添加 MD 文件
+	if task.ReportMD != "" {
+		w, _ := zipWriter.Create(baseName + ".md")
+		w.Write([]byte(task.ReportMD))
 	}
 
-	// 下载文件
-	c.FileAttachment(task.ReportPDF, fmt.Sprintf("analysis_report_%d.pdf", taskID))
+	// 添加 PDF 文件
+	if task.ReportPDF != "" {
+		if pdfData, err := os.ReadFile(task.ReportPDF); err == nil {
+			w, _ := zipWriter.Create(baseName + ".pdf")
+			w.Write(pdfData)
+		}
+	}
+
+	zipWriter.Close()
+
+	c.Header("Content-Type", "application/zip")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s.zip", baseName))
+	c.Data(http.StatusOK, "application/zip", buf.Bytes())
 }
 
 // CancelTask 取消任务

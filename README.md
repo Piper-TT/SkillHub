@@ -9,7 +9,7 @@ SkillHub 是一个基于 Go 的 Skill 与 MCP 服务器管理与分发平台，�
 - **SkillHub** - 12000+ 技能数据，含名称、描述、分类，支持本地上传
 - **MCPHub** - 3400+ MCP 服务器，支持配置一键复制
 - **AgentHub** - 智能体聊天平台，支持多 LLM Provider（Anthropic/OpenAI/DeepSeek/GLM）
-- **恶意文件分析** - 上传可疑文件进行自动化安全分析，支持 PDF 报告导出
+- **恶意文件分析** - 上传可疑文件进行自动化安全分析，支持报告导出（ZIP: PDF + MD）
 
 ### 通用功能
 
@@ -137,7 +137,7 @@ go run ./cmd/server/main.go
 3. 系统自动启动 IDA-Pro-MCP 进行二进制分析
 4. LLM Agent 智能调用分析工具（函数列表、字符串、导入导出表等）
 5. 生成专业的恶意软件分析报告
-6. 支持导出 PDF 报告
+6. 支持导出分析报告（ZIP 包含 PDF 和 MD 文件）
 
 **分析特性**:
 - 集成 IDA-Pro-MCP 进行深度二进制分析
@@ -249,7 +249,7 @@ logging:
 | GET | `/analysis/:id` | 获取任务详情 |
 | GET | `/analysis/:id/result` | 获取分析结果 |
 | GET | `/analysis/:id/report` | 获取分析报告 |
-| GET | `/analysis/:id/pdf` | 下载 PDF 报告 |
+| GET | `/analysis/:id/download` | 下载分析报告 (ZIP: PDF+MD) |
 | DELETE | `/analysis/:id` | 取消任务 |
 
 ### IDA 服务器管理 API

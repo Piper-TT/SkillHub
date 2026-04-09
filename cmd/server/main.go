@@ -174,7 +174,7 @@ func main() {
 		api.GET("/analysis/:id", analysisHandler.GetTask)
 		api.GET("/analysis/:id/result", analysisHandler.GetTaskResult)
 		api.GET("/analysis/:id/report", analysisHandler.GetTaskReport)
-		api.GET("/analysis/:id/pdf", analysisHandler.DownloadPDF)
+		api.GET("/analysis/:id/download", analysisHandler.DownloadReport)
 		api.DELETE("/analysis/:id", analysisHandler.CancelTask)
 
 		// IDA 服务器管理

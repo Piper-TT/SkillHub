@@ -72,7 +72,7 @@ func (s *LLMService) getOpenAIClient(provider, apiKey, customEndpoint string) *o
 	case "deepseek":
 		config.BaseURL = "https://api.deepseek.com/v1"
 	case "glm":
-		config.BaseURL = "https://open.bigmodel.cn/api/paas/v4"
+		config.BaseURL = "https://open.bigmodel.cn/api/anthropic"
 	case "openai-compatible":
 		if customEndpoint != "" {
 			config.BaseURL = customEndpoint

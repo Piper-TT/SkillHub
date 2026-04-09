@@ -22,10 +22,10 @@ type AnalysisAgent struct {
 
 // AnalysisAgentConfig 智能体配置
 type AnalysisAgentConfig struct {
-	APIKey   string
-	Provider string // "anthropic", "openai", "deepseek", "glm"
-	Model    string
-	MCPURL   string
+	APIKey    string
+	Provider  string // "anthropic", "openai", "deepseek", "glm"
+	Model     string
+	MCPURL    string
 	MCPClient *MCPClient // 使用已初始化的 MCP 客户端
 }
 
