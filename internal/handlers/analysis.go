@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"archive/zip"
-	"bytes"
 	"fmt"
 	"net/http"
 	"os"
@@ -219,31 +217,22 @@ func (h *AnalysisHandler) DownloadReport(c *gin.Context) {
 		return
 	}
 
-	// 创建 ZIP 缓冲区
-	buf := new(bytes.Buffer)
-	zipWriter := zip.NewWriter(buf)
-
-	baseName := fmt.Sprintf("analysis_report_%d", taskID)
-
-	// 添加 MD 文件
-	if task.ReportMD != "" {
-		w, _ := zipWriter.Create(baseName + ".md")
-		w.Write([]byte(task.ReportMD))
+	// 直接返回 PDF 文件
+	if task.ReportPDF == "" {
+		utils.BadRequest(c, "报告PDF未生成")
+		return
 	}
 
-	// 添加 PDF 文件
-	if task.ReportPDF != "" {
-		if pdfData, err := os.ReadFile(task.ReportPDF); err == nil {
-			w, _ := zipWriter.Create(baseName + ".pdf")
-			w.Write(pdfData)
-		}
+	pdfData, err := os.ReadFile(task.ReportPDF)
+	if err != nil {
+		utils.InternalError(c, "读取PDF报告失败")
+		return
 	}
 
-	zipWriter.Close()
-
-	c.Header("Content-Type", "application/zip")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s.zip", baseName))
-	c.Data(http.StatusOK, "application/zip", buf.Bytes())
+	fileName := fmt.Sprintf("analysis_report_%d.pdf", taskID)
+	c.Header("Content-Type", "application/pdf")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
+	c.Data(http.StatusOK, "application/pdf", pdfData)
 }
 
 // CancelTask 取消任务

@@ -439,6 +439,8 @@
 
                 if (result.code === 0) {
                     showToast('文件已上传，正在分析...');
+                    btn.disabled = false;
+                    btn.textContent = '开始分析';
                     clearFile();
                     loadTasks();
                     // 轮询任务状态，使用相同的 userID
@@ -590,7 +592,7 @@
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `analysis_report_${taskId}.zip`;
+                a.download = `analysis_report_${taskId}.pdf`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
