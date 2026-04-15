@@ -86,7 +86,7 @@ func main() {
 
 	// 初始化恶意文件分析依赖
 	analysisRepo := repository.NewAnalysisRepository(db)
-	analysisService := service.NewAnalysisService(analysisRepo, cfg.Server.UploadDir, cfg.Server.MaxUploadSize)
+	analysisService := service.NewAnalysisService(analysisRepo, cfg.Server.UploadDir, cfg.Server.MaxUploadSize, cfg.Analysis.IDALibPath)
 	analysisService.SetAPIKeyRepository(repository.NewAPIKeyRepository(db))
 	analysisHandler := handlers.NewAnalysisHandler(analysisService)
 

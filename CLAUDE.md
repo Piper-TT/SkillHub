@@ -219,7 +219,10 @@ All routes under `/api`:
 
 ## Configuration
 
-`config.yaml` controls server port, upload directory, database path, allowed file extensions, and logging. Uploads are stored in `./uploads` and served via `/uploads` static route.
+`config.yaml` controls server port, upload directory, database path, allowed file extensions, logging, reverse proxy targets, and analysis tool paths. Uploads are stored in `./uploads` and served via `/uploads` static route.
+
+**Analysis config**:
+- `analysis.idalib_path`: Path to `idalib-mcp.exe` for malware analysis (required for analysis feature)
 
 ## Database
 

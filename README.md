@@ -213,6 +213,15 @@ security:
 logging:
   level: info
   format: console
+
+analysis:
+  idalib_path: "C:\\path\\to\\idalib-mcp.exe"  # IDA Pro MCP 工具路径
+
+kernel:
+  service_url: "http://localhost:8081"  # 内核适配服务地址
+
+ti:
+  service_url: "http://localhost:8080"  # 威胁情报服务地址
 ```
 
 ## API 概览

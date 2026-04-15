@@ -23,3 +23,6 @@ kernel:
 
 ti:
   service_url: "http://localhost:8080"  # tiserver 威胁情报服务地址
+
+analysis:
+  idalib_path: "C:\\Users\\tt\\AppData\\Local\\Programs\\Python\\Python314\\Scripts\\idalib-mcp.exe"  # idalib-mcp.exe 路径

@@ -14,6 +14,11 @@ type Config struct {
 	Logging  LoggingConfig  `mapstructure:"logging"`
 	Kernel   KernelConfig   `mapstructure:"kernel"`
 	TI       TIConfig       `mapstructure:"ti"`
+	Analysis AnalysisConfig `mapstructure:"analysis"`
+}
+
+type AnalysisConfig struct {
+	IDALibPath string `mapstructure:"idalib_path"`
 }
 
 type KernelConfig struct {

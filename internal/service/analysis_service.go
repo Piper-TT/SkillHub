@@ -31,7 +31,7 @@ type AnalysisService struct {
 }
 
 // NewAnalysisService 创建分析服务
-func NewAnalysisService(repo *repository.AnalysisRepository, uploadDir string, maxSize int64) *AnalysisService {
+func NewAnalysisService(repo *repository.AnalysisRepository, uploadDir string, maxSize int64, idalibPath string) *AnalysisService {
 	// 初始化 MCP 客户端
 	mcpClient := NewMCPClient("http://127.0.0.1:8745/mcp")
 
@@ -41,7 +41,7 @@ func NewAnalysisService(repo *repository.AnalysisRepository, uploadDir string, m
 		maxSize:    maxSize,
 		mcpClient:  mcpClient,
 		llmSvc:     NewLLMService(),
-		idalibPath: `C:\Users\tt\AppData\Local\Programs\Python\Python314\Scripts\idalib-mcp.exe`,
+		idalibPath: idalibPath,
 	}
 }
 
