@@ -10,6 +10,14 @@ SkillHub 是一个基于 Go 的 Skill 与 MCP 服务器管理与分发平台，�
 - **MCPHub** - 3400+ MCP 服务器，支持配置一键复制
 - **AgentHub** - 智能体聊天平台，支持多 LLM Provider（Anthropic/OpenAI/DeepSeek/GLM）
 - **恶意文件分析** - 上传可疑文件进行自动化安全分析，支持报告导出（ZIP: PDF + MD）
+- **漏洞补丁查询** - 基于 LLM Tool Call 的漏洞数据库查询助手，支持导入 SQLite/CSV/JSON 漏洞数据，通过自然语言查询
+- **内核适配服务** - Linux 内核版本适配查询与文件收集（反向代理）
+- **威胁情报查询** - 威胁情报数据查询服务（反向代理）
+
+### 页面导航
+
+- Portal、SkillHub、MCPHub、AgentHub 为独立页面，各自有完整导航栏
+- Analysis、Kernel、TI、Chat 为 AgentHub 子页面，使用简洁页眉（"← 返回"按钮），返回 AgentHub
 
 ### 通用功能
 
@@ -36,13 +44,16 @@ SkillHub 是一个基于 Go 的 Skill 与 MCP 服务器管理与分发平台，�
 .
 ├── cmd/server/             # 服务入口、页面模板与静态资源
 │   ├── main.go
+│   ├── static/             # 静态资源 (FontAwesome)
 │   └── templates/
 │       ├── portal.html     # Portal 入口页面
 │       ├── index.html      # SkillHub 页面
 │       ├── mcp.html        # MCPHub 页面
 │       ├── agent.html      # AgentHub 页面
 │       ├── chat.html       # Agent 聊天页面
-│       └── analysis.html   # 恶意文件分析页面
+│       ├── analysis.html   # 恶意文件分析页面
+│       ├── kernel.html     # 内核适配服务页面
+│       └── ti.html         # 威胁情报查询页面
 ├── internal/
 │   ├── config/             # 配置加载
 │   ├── handlers/           # HTTP 处理器
@@ -56,7 +67,9 @@ SkillHub 是一个基于 Go 的 Skill 与 MCP 服务器管理与分发平台，�
 │   │   ├── mcp_client.go         # MCP 客户端
 │   │   ├── mcp_tool_adapter.go   # MCP 工具适配器
 │   │   ├── analysis_agent.go     # 恶意文件分析 Agent
-│   │   └── analysis_service.go   # 分析服务
+│   │   ├── analysis_service.go   # 分析服务
+│   │   ├── vuln_tool.go          # 漏洞数据库 SQL 查询工具
+│   │   └── vuln_service.go       # 漏洞数据导入服务
 │   ├── utils/              # 工具与校验
 │   │   └── pdf.go               # PDF 报告生成 (gofpdf)
 │   └── data/               # 技能数据
@@ -103,6 +116,8 @@ go run ./cmd/server/main.go
 - MCPHub: `http://localhost:8081/mcp`
 - AgentHub: `http://localhost:8081/agent`
 - 恶意文件分析: `http://localhost:8081/analysis`
+- 内核适配服务: `http://localhost:8081/kernel`
+- 威胁情报查询: `http://localhost:8081/ti`
 - 健康检查: `http://localhost:8081/api/health`
 
 ## 使用说明
@@ -129,6 +144,19 @@ go run ./cmd/server/main.go
    - API Key 使用 AES-GCM 加密存储
 3. 选择一个智能体开始聊天
 4. 支持会话历史、多轮对话、SSE 流式响应
+
+### 漏洞补丁查询
+
+1. 导入漏洞数据库：`POST /api/vuln/import` 上传 SQLite (.db/.sqlite)、CSV 或 JSON 文件
+2. 访问 AgentHub 页面 `/agent`，选择「漏洞补丁查询助手」
+3. 用自然语言提问，如「查询 2024 年的高危漏洞」「CVE-2024-1234 详情」
+4. LLM 自动调用工具查询数据库，返回结构化分析报告
+
+**查询特性**:
+- 支持导入 SQLite、CSV、JSON 三种格式的漏洞数据
+- LLM 自动发现数据库结构，构建 SQL 查询
+- 只读查询，安全防护（禁止写入操作）
+- 自动生成漏洞影响评估和修复建议
 
 ### 恶意文件分析
 
@@ -260,6 +288,25 @@ logging:
 | POST | `/ida/servers` | 注册 IDA 服务器 |
 | DELETE | `/ida/servers/:id` | 移除 IDA 服务器 |
 | POST | `/ida/servers/:id/heartbeat` | 服务器心跳 |
+
+### 漏洞数据库 API
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/vuln/status` | 获取漏洞数据库状态 |
+| POST | `/vuln/import` | 导入漏洞数据（SQLite/CSV/JSON） |
+
+### 内核适配 API（反向代理）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| ANY | `/kernel/*` | 代理到 kernel-build 服务 |
+
+### 威胁情报 API（反向代理）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| ANY | `/ti/*` | 代理到 tiserver 服务 |
 
 ## 构建
 

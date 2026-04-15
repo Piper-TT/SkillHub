@@ -207,6 +207,7 @@
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 16px;
+            align-items: stretch;
         }
 
         .agent-card {
@@ -218,6 +219,8 @@
             position: relative;
             overflow: hidden;
             cursor: pointer;
+            display: flex;
+            flex-direction: column;
         }
 
         .agent-card::before {
@@ -296,6 +299,7 @@
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            flex: 1;
         }
 
         .agent-stats {
@@ -504,6 +508,7 @@
                 <a href="/skills">SkillHub</a>
                 <a href="/mcp">MCPHub</a>
                 <a href="/agent" class="active">AgentHub</a>
+                <a href="/kernel">内核适配</a>
                 <a href="https://github.com/Piper-TT/SkillHub" target="_blank">GitHub</a>
             </div>
         </div>
@@ -707,6 +712,16 @@
             // 恶意文件分析助手跳转到专用分析页面
             if (slug === 'malware-analyzer') {
                 window.location.href = '/analysis';
+                return;
+            }
+            // 内核适配助手跳转到专用内核适配页面
+            if (slug === 'kernel-adapter') {
+                window.location.href = '/kernel';
+                return;
+            }
+            // 威胁情报分析助手跳转到专用威胁情报页面
+            if (slug === 'threat-intel-analyzer') {
+                window.location.href = '/ti';
                 return;
             }
             window.location.href = `/agent/${agentId}/chat`;

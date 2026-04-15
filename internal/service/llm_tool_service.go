@@ -132,10 +132,24 @@ func (s *LLMToolService) ChatWithTools(ctx context.Context, req *ChatWithToolsRe
 		})
 	}
 
-	// 确定模型
+	// 确定模型（兼容性检查）
 	model := req.Model
+	if model != "" && !s.isModelCompatibleWithProvider(model, req.Provider) {
+		fmt.Printf("[LLM ToolCall] Model %q incompatible with provider %q, using default\n", model, req.Provider)
+		model = ""
+	}
 	if model == "" {
-		model = s.GetDefaultModel(req.Provider)
+		switch req.Provider {
+		case "anthropic":
+			model = "claude-3-opus-20240229"
+		case "deepseek":
+			model = "deepseek-chat"
+		case "glm":
+			model = "glm-4-flash"
+		default:
+			model = "gpt-4o"
+		}
+		fmt.Printf("[LLM ToolCall] Using model: %s\n", model)
 	}
 
 	maxTurns := req.MaxTurns

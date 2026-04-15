@@ -6,12 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 SkillHub is a Go-based Skill and MCP Server management and distribution platform with a Web UI and REST API. It integrates **12000+ ClawHub skills** and **3400+ MCP servers**, supports local upload for team sharing.
 
-**Five main pages**:
+**Seven main pages**:
 - **Portal** (`/`): Unified entry page with 24-hour auto-refresh
 - **SkillHub** (`/skills`): Skill management and browsing
 - **MCPHub** (`/mcp`): MCP server management and browsing
 - **AgentHub** (`/agent`): AI Agent chat platform with multi-LLM support
 - **Analysis** (`/analysis`): Malware file analysis platform
+- **Kernel** (`/kernel`): Linux kernel adaptation service (reverse proxy)
+- **TI** (`/ti`): Threat intelligence query service (reverse proxy)
+
+**Page navigation pattern**:
+- Portal, SkillHub, MCPHub, AgentHub are standalone pages with full nav bars
+- Analysis, Kernel, TI, Chat are AgentHub sub-pages with simple header ("← 返回" → `/agent`)
 
 ## Build & Run Commands
 
@@ -47,8 +53,11 @@ internal/
 ├── handlers/          # HTTP handlers (Gin context, request/response)
 │   ├── skill.go       # Skill CRUD handlers
 │   ├── mcp.go         # MCP server handlers
-│   ├── agent.go       # Agent chat handlers (SSE streaming)
-│   └── analysis.go    # Malware analysis handlers
+│   ├── agent.go       # Agent chat handlers (SSE streaming + tool call support)
+│   ├── analysis.go    # Malware analysis handlers
+│   ├── kernel.go      # Kernel adaptation reverse proxy
+│   ├── ti.go          # Threat intelligence reverse proxy
+│   └── vuln.go        # Vulnerability database import handlers
 ├── service/           # Business logic layer
 │   ├── skill_service.go
 │   ├── mcp_service.go
@@ -60,6 +69,8 @@ internal/
 │   ├── mcp_tool_adapter.go  # Adapts MCP tools to ToolExecutor interface
 │   ├── analysis_agent.go    # LLM-powered malware analysis agent
 │   ├── analysis_service.go  # Analysis service orchestration
+│   ├── vuln_tool.go         # Vulnerability DB SQL query tools (ToolExecutor implementations)
+│   ├── vuln_service.go      # Vulnerability data import service (SQLite/CSV/JSON)
 │   └── refresh_service.go
 ├── repository/        # Data access layer (GORM)
 │   ├── skill_repo.go
@@ -145,6 +156,16 @@ All routes under `/api`:
 - `DELETE /ida/servers/:id` - Remove server
 - `POST /ida/servers/:id/heartbeat` - Server heartbeat
 
+### Kernel Adaptation (Reverse Proxy)
+- `ANY /api/kernel/*` - Proxy to kernel-build service
+
+### Threat Intelligence (Reverse Proxy)
+- `ANY /api/ti/*` - Proxy to tiserver service
+
+### Vulnerability Database
+- `GET /api/vuln/status` - Get vulnerability database status
+- `POST /api/vuln/import` - Import vulnerability data (SQLite/CSV/JSON file upload)
+
 ## Key Features
 
 ### AgentHub (AI Agent Chat)
@@ -153,6 +174,18 @@ All routes under `/api`:
 - Session management with history
 - Encrypted API key storage (AES-GCM)
 - Customizable agents with system prompts
+- **Tool Call support**: Agents can use registered tools (e.g., CVE agent queries vulnerability DB via SQL)
+
+### Vulnerability Patch Query Agent (CVE Agent)
+- Agent slug: `cve-patch-analyzer`
+- **Data-driven analysis**: LLM queries a user-provided vulnerability database via Tool Call
+- **4 registered tools**:
+  - `get_vuln_db_stats`: Database overview
+  - `list_vuln_tables`: List all tables
+  - `describe_vuln_table`: Table schema + sample data
+  - `query_vuln_db`: Execute SQL SELECT queries (read-only, safety-checked)
+- **Data import**: Upload SQLite (.db/.sqlite), CSV, or JSON files via `POST /api/vuln/import`
+- **Flow**: User asks question → LLM discovers DB schema → LLM builds SQL → Tool executes query → LLM generates natural language report
 
 ### Malware Analysis (LLM + MCP Integration)
 - **IDA-Pro-MCP Integration**: Auto-start MCP server for each analysis task

@@ -35,3 +35,16 @@ uploads/
 # Local config
 .claude/
 .gstack/
+
+# Runtime data
+data/
+server.log
+sessions.json
+release/
+
+# Test artifacts
+func_result.json
+survey_output.json
+survey_result.json
+test_final.pdf
+=

@@ -75,13 +75,26 @@ func main() {
 	apiKeyRepo := repository.NewAPIKeyRepository(db)
 	llmService := service.NewLLMService()
 	agentService := service.NewAgentService(agentRepo, sessionRepo, apiKeyRepo)
+
+	// 初始化漏洞数据库管理（需在 agentHandler 之前）
+	vulnDBManager := service.NewMultiVulnDBManager("./data/vuln")
+	defer vulnDBManager.Close()
+	vulnHandler := handlers.NewVulnHandler(vulnDBManager)
+
 	agentHandler := handlers.NewAgentHandler(agentService, llmService)
+	agentHandler.SetVulnDBManager(vulnDBManager)
 
 	// 初始化恶意文件分析依赖
 	analysisRepo := repository.NewAnalysisRepository(db)
 	analysisService := service.NewAnalysisService(analysisRepo, cfg.Server.UploadDir, cfg.Server.MaxUploadSize)
 	analysisService.SetAPIKeyRepository(repository.NewAPIKeyRepository(db))
 	analysisHandler := handlers.NewAnalysisHandler(analysisService)
+
+	// 初始化内核适配代理
+	kernelHandler := handlers.NewKernelHandler(cfg)
+
+	// 初始化威胁情报代理
+	tiHandler := handlers.NewTIHandler(cfg)
 
 	// 初始化刷新服务
 	refreshService := service.NewRefreshService(skillRepo)
@@ -182,6 +195,24 @@ func main() {
 		api.POST("/ida/servers", analysisHandler.RegisterIDAServer)
 		api.DELETE("/ida/servers/:id", analysisHandler.RemoveIDAServer)
 		api.POST("/ida/servers/:id/heartbeat", analysisHandler.ServerHeartbeat)
+
+		// 内核适配代理路由（转发到 kernel-build 服务）
+		kernelAPI := api.Group("/kernel")
+		{
+			kernelAPI.Any("/*action", kernelHandler.Proxy)
+		}
+
+		// 威胁情报代理路由（转发到 tiserver 服务）
+		tiAPI := api.Group("/ti")
+		{
+			tiAPI.Any("/*action", tiHandler.Proxy)
+		}
+
+		// 漏洞数据库管理路由
+		vulnAPI := api.Group("/vuln")
+		{
+			vulnAPI.GET("/status", vulnHandler.GetStatus)
+		}
 	}
 
 	// Portal 主页
@@ -239,6 +270,26 @@ func main() {
 		data, err := webFS.ReadFile("templates/analysis.html")
 		if err != nil {
 			c.String(http.StatusInternalServerError, "Failed to load analysis template")
+			return
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
+	})
+
+	// 内核适配界面
+	r.GET("/kernel", func(c *gin.Context) {
+		data, err := webFS.ReadFile("templates/kernel.html")
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to load kernel template")
+			return
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
+	})
+
+	// 威胁情报查询界面
+	r.GET("/ti", func(c *gin.Context) {
+		data, err := webFS.ReadFile("templates/ti.html")
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to load ti template")
 			return
 		}
 		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
@@ -784,27 +835,95 @@ func seedAgentData(db *gorm.DB) error {
 			UsageCount:  0,
 		},
 		{
-			Name:        "代码安全审查助手",
-			Slug:        "code-security-reviewer",
-			Icon:        "🔐",
+			Name:        "漏洞补丁查询助手",
+			Slug:        "cve-patch-analyzer",
+			Icon:        "🛡️",
 			Category:    "安全分析",
-			Description: "审查代码中的安全漏洞，包括注入、XSS、认证问题等",
-			SystemPrompt: `你是一个专业的代码安全审查助手。帮助开发者识别代码中的安全漏洞。
+			Description: "查询CVE漏洞信息和补丁详情，基于漏洞数据库进行智能分析，支持自然语言查询",
+			SystemPrompt: `你是一个专业的漏洞补丁查询助手。根据用户的意图，灵活使用工具查询漏洞信息。
 
-审查重点：
-- SQL 注入
-- XSS 跨站脚本
-- 命令注入
-- 路径遍历
-- 敏感信息泄露
-- 认证和授权问题
-- 加密使用不当
+	## 可用工具
 
-对每个问题提供：
-1. 漏洞描述
-2. 风险等级
-3. 修复建议
-4. 修复后代码示例`,
+	1. **query_policys_db** - 根据 CVE 编号查询漏洞基本信息
+	   - 参数：cve_id（CVE 编号，如 CVE-2025-8088）
+	   - 返回：按操作系统分组的受影响产品、版本条件、修复版本、受影响包列表
+	   - 用途：查询 CVE 影响了哪些系统、哪些包、哪些版本
+
+	2. **query_product_auth_db** - 查询操作系统的版本检测方法
+	   - 参数：product（必填，如 centos、tencentos）
+	   - 参数：system（可选，如 centos、Windows、Windowsx64）
+	   - 返回：该系统的版本检测命令（cmd）、文件路径（filepath）、注册表路径（registrypath）
+	   - 用途：获取在目标系统上检测软件版本的具体命令
+
+	## 工具选择策略（重要）
+
+	根据用户的问题选择工具，不要每次都调用所有工具：
+
+	### 场景 1：用户只问 CVE 基本信息
+	- "CVE-2021-3622 是什么"
+	- "帮我查一下 CVE-2025-8088"
+	- "这个 CVE 影响什么版本"
+	→ **只调用 query_policys_db**，返回受影响产品和版本即可
+
+	### 场景 2：用户问如何检测（最重要）
+	- "CentOS 7 怎么检测 CVE-2021-3622"
+	- "怎么查我系统上有没有受影响的版本"
+	- "检测命令是什么"
+	→ **先调 query_policys_db 获取该系统的受影响包和版本条件，再调 query_product_auth_db 获取检测命令**
+	→ 如果用户指定了系统，传入 system 参数精确过滤
+
+	### 场景 3：用户直接问某系统的检测方法
+	- "centos 怎么检测版本"
+	→ **只调用 query_product_auth_db**
+
+	## 检测方法输出规范（场景2必读）
+
+	当用户询问检测方法时，你的回答必须包含以下信息：
+
+	1. **具体受影响的软件包名**：从 query_policys_db 的返回中提取该操作系统下的包名（如 hivex, hivex-devel, perl-hivex 等）
+	2. **版本检测命令**：从 query_product_auth_db 获取的 cmd 字段
+	3. **如何判断**：明确告诉用户用检测命令查出哪个包的版本，然后与受影响版本比较
+
+	### 输出示例：
+	---
+	CentOS 7 上检测 CVE-2021-3622：
+
+	受影响的软件包：hivex, hivex-devel, perl-hivex, python-hivex, ruby-hivex, ocaml-hivex
+
+	检测方法：
+	使用以下命令列出已安装的软件包版本：
+	  rpm -qa --qf '%{NAME}|%{VERSION}-%{RELEASE}\n'
+
+	在输出中查找以下包名：
+	  - hivex
+	  - hivex-devel
+	  - perl-hivex
+	  - python-hivex
+	  - ruby-hivex
+	  - ocaml-hivex
+
+	判断条件：
+	已安装版本 < 1.3.10-6.12.el7_9 → 受影响，需要升级
+	已安装版本 >= 1.3.10-6.12.el7_9 -> 安全
+	---
+
+	## 数据含义
+
+	- **policys 库**（query_policys_db 返回）：按操作系统分组
+	  - 每组包含：OS名称、版本条件（已翻译为中文）、修复版本、受影响包列表
+
+	- **products_auth 库**（query_product_auth_db 返回）：
+	  - system: 操作系统
+	  - cmd: Linux 的检测命令（如 rpm -qa）
+	  - filepath: Windows 的文件路径
+	  - registrypath: Windows 的注册表路径
+
+	## 注意事项
+
+	- 始终基于数据库查询结果回答，不要凭记忆编造
+	- 如果数据库中没有相关数据，如实告知
+	- 不要每次都调用 query_product_auth_db，只在用户需要检测方法时才调用
+	- 检测方法必须明确指出要检查哪些具体的软件包，不要只给出一个通用的系统版本检测命令`,
 			Model:       "claude-3-opus-20240229",
 			Temperature: 0.3,
 			MaxTokens:   4096,
@@ -854,6 +973,27 @@ func seedAgentData(db *gorm.DB) error {
 - 横向移动
 - 数据外传
 - 恶意软件活动`,
+			Model:       "claude-3-opus-20240229",
+			Temperature: 0.3,
+			MaxTokens:   4096,
+			Verified:    true,
+			UsageCount:  0,
+		},
+		{
+			Name:        "内核适配助手",
+			Slug:        "kernel-adapter",
+			Icon:        "🧩",
+			Category:    "系统安全",
+			Description: "检查 Linux 内核版本适配性，查询 EDR 内核模块是否可用，支持降级匹配和文件收集",
+			SystemPrompt: `你是一个内核适配分析助手。帮助用户检查 Linux 内核版本是否适配 EDR 产品。
+
+功能：
+- 解析 uname -a 输出，提取内核版本和架构信息
+- 检查内核模块（netfilter_edr、sysmon_edr）是否已适配
+- 支持精确匹配和降级匹配
+- 分析适配风险等级
+
+注意：实际查询通过专用工具执行，你主要负责解读结果和提供建议。`,
 			Model:       "claude-3-opus-20240229",
 			Temperature: 0.3,
 			MaxTokens:   4096,

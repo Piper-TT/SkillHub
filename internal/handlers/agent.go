@@ -17,6 +17,7 @@ import (
 type AgentHandler struct {
 	agentSvc *service.AgentService
 	llmSvc   *service.LLMService
+	vulnMgr  *service.MultiVulnDBManager // 漏洞数据库管理器（可选）
 }
 
 // NewAgentHandler 创建处理器
@@ -25,6 +26,11 @@ func NewAgentHandler(agentSvc *service.AgentService, llmSvc *service.LLMService)
 		agentSvc: agentSvc,
 		llmSvc:   llmSvc,
 	}
+}
+
+// SetVulnDBManager 设置漏洞数据库管理器
+func (h *AgentHandler) SetVulnDBManager(mgr *service.MultiVulnDBManager) {
+	h.vulnMgr = mgr
 }
 
 // GetAgents 获取智能体列表
@@ -143,7 +149,40 @@ func (h *AgentHandler) Chat(c *gin.Context) {
 		return
 	}
 
-	// 构建 LLM 请求
+	// 设置 SSE headers
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+	c.Header("X-Accel-Buffering", "no")
+
+	flusher, ok := c.Writer.(http.Flusher)
+	if !ok {
+		utils.InternalError(c, "Streaming not supported")
+		return
+	}
+
+	// 检查是否需要工具调用（CVE 漏洞查询助手）
+	useTools := h.shouldUseTools(agent.Slug) && h.vulnMgr != nil && h.vulnMgr.AnyAvailable()
+	fmt.Printf("[Chat] slug=%s useTools=%v vulnMgr=%v anyAvail=%v\n", agent.Slug, useTools, h.vulnMgr != nil, h.vulnMgr != nil && h.vulnMgr.AnyAvailable())
+	if useTools {
+		h.chatWithTools(c, flusher, session, agent, provider, apiKey, messages, uint(agentID))
+		return
+	}
+
+	// 普通聊天流程
+	h.chatNormal(c, flusher, session, agent, provider, apiKey, messages, uint(agentID))
+}
+
+// shouldUseTools 判断是否需要使用工具
+func (h *AgentHandler) shouldUseTools(slug string) bool {
+	toolAgents := map[string]bool{
+		"cve-patch-analyzer": true,
+	}
+	return toolAgents[slug]
+}
+
+// chatNormal 普通聊天流程
+func (h *AgentHandler) chatNormal(c *gin.Context, flusher http.Flusher, session *models.Session, agent *models.Agent, provider, apiKey string, messages []models.ChatMessage, agentID uint) {
 	llmReq := &service.ChatRequest{
 		Provider:     provider,
 		APIKey:       apiKey,
@@ -154,59 +193,104 @@ func (h *AgentHandler) Chat(c *gin.Context) {
 		MaxTokens:    agent.MaxTokens,
 	}
 
-	// 流式调用 LLM
 	stream, err := h.llmSvc.StreamChat(c.Request.Context(), llmReq)
 	if err != nil {
-		utils.InternalError(c, "LLM error: "+err.Error())
+		c.SSEvent("error", gin.H{"message": "LLM error: " + err.Error()})
+		flusher.Flush()
 		return
 	}
 
-	// 设置 SSE headers
-	c.Header("Content-Type", "text/event-stream")
-	c.Header("Cache-Control", "no-cache")
-	c.Header("Connection", "keep-alive")
-	c.Header("X-Accel-Buffering", "no") // 禁用 nginx 缓冲
-
-	// 收集完整响应用于保存
 	var fullResponse string
-
-	// 流式响应
-	flusher, ok := c.Writer.(http.Flusher)
-	if !ok {
-		utils.InternalError(c, "Streaming not supported")
-		return
-	}
-
 	chunkCount := 0
 	for chunk := range stream {
 		if chunk.Error != nil {
-			fmt.Printf("[SSE] Error: %v\n", chunk.Error)
 			c.SSEvent("error", gin.H{"message": chunk.Error.Error()})
 			flusher.Flush()
 			return
 		}
-
 		if chunk.Done {
-			// 保存助手响应到会话
 			if fullResponse != "" {
 				h.agentSvc.AddMessageToSession(session, "assistant", fullResponse)
-				h.agentSvc.IncrementAgentUsage(uint(agentID))
+				h.agentSvc.IncrementAgentUsage(agentID)
 			}
-			fmt.Printf("[SSE] Done, total response length: %d, chunks sent: %d\n", len(fullResponse), chunkCount)
-			c.SSEvent("done", gin.H{
-				"session_id": session.ID,
-				"message":    "[DONE]",
-			})
+			c.SSEvent("done", gin.H{"session_id": session.ID, "message": "[DONE]"})
 			flusher.Flush()
 			return
 		}
-
 		chunkCount++
 		fullResponse += chunk.Content
-		fmt.Printf("[SSE] Chunk %d: %q\n", chunkCount, chunk.Content)
 		c.SSEvent("message", gin.H{"content": chunk.Content})
 		flusher.Flush()
 	}
+}
+
+// chatWithTools 带工具调用的聊天流程
+func (h *AgentHandler) chatWithTools(c *gin.Context, flusher http.Flusher, session *models.Session, agent *models.Agent, provider, apiKey string, messages []models.ChatMessage, agentID uint) {
+	// 构建工具注册中心
+	registry := service.NewToolRegistry()
+	registry.Register(service.NewPolicysQueryTool(h.vulnMgr))
+	registry.Register(service.NewProductAuthQueryTool(h.vulnMgr))
+
+	// 创建带工具的 LLM 服务
+	toolSvc := service.NewLLMToolService(registry)
+
+	// 构建请求
+	toolReq := &service.ChatWithToolsRequest{
+		Provider:     provider,
+		APIKey:       apiKey,
+		Model:        agent.Model,
+		SystemPrompt: agent.SystemPrompt,
+		Messages:     messages,
+		Tools:        registry.GetAllTools(),
+		MaxTurns:     10,
+	}
+
+	// 发送工具调用状态提示
+	c.SSEvent("status", gin.H{"message": "正在查询漏洞数据库..."})
+	flusher.Flush()
+
+	// 执行带工具的聊天
+	resp, err := toolSvc.ChatWithTools(c.Request.Context(), toolReq)
+	if err != nil {
+		c.SSEvent("error", gin.H{"message": "查询失败: " + err.Error()})
+		flusher.Flush()
+		return
+	}
+
+	// 发送工具调用信息
+	if len(resp.ToolCalls) > 0 {
+		for _, tc := range resp.ToolCalls {
+			c.SSEvent("tool_call", gin.H{
+				"name":   tc.Name,
+				"status": "completed",
+			})
+		}
+		flusher.Flush()
+	}
+
+	// 保存响应
+	if resp.Content != "" {
+		h.agentSvc.AddMessageToSession(session, "assistant", resp.Content)
+		h.agentSvc.IncrementAgentUsage(agentID)
+	}
+
+	// 流式发送最终结果（保留原始格式：换行、Markdown 等）
+	runes := []rune(resp.Content)
+	chunkSize := 4
+	for i := 0; i < len(runes); i += chunkSize {
+		end := i + chunkSize
+		if end > len(runes) {
+			end = len(runes)
+		}
+		c.SSEvent("message", gin.H{"content": string(runes[i:end])})
+		flusher.Flush()
+		if end < len(runes) {
+			time.Sleep(10 * time.Millisecond)
+		}
+	}
+
+	c.SSEvent("done", gin.H{"session_id": session.ID, "message": "[DONE]"})
+	flusher.Flush()
 }
 
 // GetSessions 获取用户的会话列表

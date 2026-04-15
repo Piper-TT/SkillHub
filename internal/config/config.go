@@ -12,6 +12,16 @@ type Config struct {
 	Database DatabaseConfig `mapstructure:"database"`
 	Security SecurityConfig `mapstructure:"security"`
 	Logging  LoggingConfig  `mapstructure:"logging"`
+	Kernel   KernelConfig   `mapstructure:"kernel"`
+	TI       TIConfig       `mapstructure:"ti"`
+}
+
+type KernelConfig struct {
+	ServiceURL string `mapstructure:"service_url"`
+}
+
+type TIConfig struct {
+	ServiceURL string `mapstructure:"service_url"`
 }
 
 type ServerConfig struct {
@@ -82,6 +92,8 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("security.max_filename_length", 255)
 	v.SetDefault("logging.level", "info")
 	v.SetDefault("logging.format", "console")
+	v.SetDefault("kernel.service_url", "http://localhost:8081")
+	v.SetDefault("ti.service_url", "http://localhost:8080")
 }
 
 // IsAllowedExtension 检查文件扩展名是否在白名单中

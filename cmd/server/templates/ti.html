@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>威胁情报查询 - AgentHub</title>
+    <link href="/static/fontawesome/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6366f1; --primary-light: #8b5cf6; --primary-dark: #4f46e5;
+            --secondary-color: #10b981; --warning-color: #f59e0b; --danger-color: #ef4444; --info-color: #3b82f6;
+            --white: #ffffff; --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb; --gray-300: #d1d5db; --gray-400: #9ca3af;
+            --gray-500: #6b7280; --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937; --gray-900: #111827;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05); --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1); --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+            --radius-sm: .375rem; --radius-md: .5rem; --radius-lg: .75rem; --radius-xl: 1rem; --radius-2xl: 1.5rem;
+            --transition-fast: .15s ease-in-out; --transition-normal: .3s ease-in-out;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: var(--gray-800); line-height: 1.6; font-size: 16px; min-height: 100vh; overflow-x: hidden; }
+        .header { background: white; border-bottom: 1px solid var(--gray-200); padding: 16px 24px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 100; }
+        .btn-back { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: white; border: 1px solid var(--gray-200); border-radius: 8px; font-size: 14px; color: var(--gray-500); text-decoration: none; transition: all 0.2s ease; }
+        .btn-back:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .header-title { font-size: 18px; font-weight: 600; flex: 1; }
+        .status-badge { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.9); border-radius: var(--radius-xl); border: 1px solid var(--gray-200); font-size: 14px; font-weight: 500; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--secondary-color); animation: pulse 2s infinite; }
+        .status-badge.online .status-dot { background: var(--secondary-color); }
+        .status-badge.offline .status-dot { background: var(--danger-color); }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .main-container { max-width: 1400px; margin: 0 auto; padding: 2rem; min-height: calc(100vh - 80px); }
+        .content-grid { display: grid; grid-template-columns: 1fr 380px; gap: 2rem; margin-bottom: 2rem; }
+        .main-content { display: flex; flex-direction: column; gap: 2rem; }
+        .sidebar { display: flex; flex-direction: column; gap: 2rem; }
+        .feature-card { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px) saturate(180%); border-radius: var(--radius-2xl); border: 1px solid rgba(255,255,255,0.3); box-shadow: var(--shadow-xl); overflow: hidden; transition: all var(--transition-normal); position: relative; }
+        .feature-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--gradient-primary); }
+        .feature-card:hover { transform: translateY(-4px); }
+        .card-header { padding: 2rem 2rem 1.5rem 2rem; display: flex; align-items: flex-start; gap: 1rem; }
+        .header-icon { width: 56px; height: 56px; background: var(--gradient-primary); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md); flex-shrink: 0; }
+        .header-icon i { color: var(--white); font-size: 24px; }
+        .header-content { flex: 1; }
+        .header-content h2 { font-size: 20px; font-weight: 600; color: var(--gray-800); margin-bottom: 0.5rem; }
+        .header-content p { font-size: 14px; color: var(--gray-500); line-height: 1.5; }
+        .header-actions { display: flex; gap: 0.5rem; }
+        .card-body { padding: 0 2rem 2rem 2rem; }
+        .input-wrapper { display: flex; gap: 0.75rem; margin-bottom: 1rem; }
+        .query-input { flex: 1; padding: 1rem 1.25rem; background: var(--white); border: 2px solid var(--gray-200); border-radius: var(--radius-xl); color: var(--gray-800); font-size: 16px; outline: none; transition: all var(--transition-fast); }
+        .query-input::placeholder { color: var(--gray-400); }
+        .query-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(99,102,241,0.1); }
+        .query-btn { padding: 1rem 2rem; background: var(--gradient-primary); border: none; border-radius: var(--radius-xl); color: var(--white); font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: all var(--transition-fast); box-shadow: var(--shadow-md); }
+        .query-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        .query-hint { display: flex; align-items: center; gap: 0.5rem; font-size: 14px; color: var(--gray-500); padding-left: 0.5rem; }
+        .query-hint i { color: var(--warning-color); }
+        .query-examples { margin-top: 1rem; padding: 1rem; background: var(--gray-50); border-radius: var(--radius-md); border: 1px solid var(--gray-200); }
+        .example-category { margin-bottom: 0.75rem; color: var(--gray-700); font-size: 0.9rem; }
+        .examples-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 0.75rem; }
+        .example-item { display: flex; align-items: center; padding: 0.5rem 0.75rem; background: var(--white); border-radius: var(--radius-sm); border: 1px solid var(--gray-200); transition: var(--transition-fast); cursor: pointer; }
+        .example-item:hover { border-color: var(--primary-color); box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+        .example-type { font-size: 0.75rem; font-weight: 600; color: var(--primary-color); background: rgba(99,102,241,0.1); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); min-width: 60px; text-align: center; margin-right: 0.75rem; flex-shrink: 0; }
+        .example-value { font-family: 'Monaco','Menlo',monospace; font-size: 0.8rem; color: var(--gray-600); word-break: break-all; flex: 1; }
+
+        .upload-area { border: 2px dashed var(--gray-300); border-radius: var(--radius-xl); padding: 3rem 2rem; text-align: center; background: var(--gray-50); transition: all var(--transition-normal); margin-bottom: 2rem; position: relative; overflow: hidden; }
+        .upload-area.dragover { border-color: var(--primary-color); background: rgba(99,102,241,0.05); transform: scale(1.02); }
+        .upload-icon { width: 80px; height: 80px; background: var(--gradient-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; box-shadow: var(--shadow-lg); }
+        .upload-icon i { color: var(--white); font-size: 32px; }
+        .upload-content h3 { font-size: 18px; font-weight: 600; color: var(--gray-800); margin-bottom: 0.5rem; }
+        .upload-content p { font-size: 14px; color: var(--gray-500); margin-bottom: 0.5rem; }
+        .file-input { display: none; }
+        .upload-btn { padding: 0.75rem 1.5rem; background: var(--white); border: 2px solid var(--gray-200); border-radius: var(--radius-lg); color: var(--gray-700); font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: all var(--transition-fast); }
+        .upload-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .password-section { margin-bottom: 2rem; }
+        .password-input { flex: 1; padding: 0.875rem 1rem; background: var(--white); border: 2px solid var(--gray-200); border-radius: var(--radius-lg); color: var(--gray-800); font-size: 14px; outline: none; }
+        .password-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+        .password-btn { padding: 0.875rem 1rem; background: var(--gray-100); border: 2px solid var(--gray-200); border-left: none; border-radius: 0 var(--radius-lg) 0 var(--radius-lg); color: var(--gray-500); cursor: pointer; width: 50px; }
+        .password-hint { display: flex; align-items: center; gap: 0.5rem; font-size: 12px; color: var(--gray-500); margin-top: 0.75rem; padding-left: 0.5rem; }
+
+        .file-list h4 { font-size: 16px; font-weight: 600; color: var(--gray-800); margin-bottom: 1rem; }
+        .file-items { max-height: 300px; overflow-y: auto; margin-bottom: 1.5rem; border-radius: var(--radius-lg); background: var(--gray-50); padding: 1rem; }
+        .file-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--white); border-radius: var(--radius-lg); margin-bottom: 0.75rem; box-shadow: var(--shadow-sm); }
+        .file-icon { width: 40px; height: 40px; background: var(--gradient-primary); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--white); flex-shrink: 0; }
+        .file-info { flex: 1; }
+        .file-name { font-size: 14px; font-weight: 500; color: var(--gray-800); margin-bottom: 2px; }
+        .file-size { font-size: 12px; color: var(--gray-500); }
+        .file-remove { width: 32px; height: 32px; background: var(--danger-color); border: none; border-radius: var(--radius-md); color: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .file-actions { display: flex; gap: 1rem; }
+        .process-btn, .clear-btn { padding: 0.875rem 1.5rem; border: none; border-radius: var(--radius-lg); font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: all var(--transition-fast); }
+        .process-btn { background: var(--gradient-success); color: var(--white); box-shadow: var(--shadow-md); }
+        .process-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        .clear-btn { background: var(--gray-100); color: var(--gray-600); border: 2px solid var(--gray-200); }
+        .clear-btn:hover { background: var(--gray-200); color: var(--gray-800); }
+
+        .status-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+        .status-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--gray-50); border-radius: var(--radius-lg); }
+        .status-icon { width: 40px; height: 40px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--white); flex-shrink: 0; }
+        .status-icon.success { background: var(--secondary-color); }
+        .status-icon.info { background: var(--info-color); }
+        .status-content { flex: 1; }
+        .status-label { font-size: 12px; color: var(--gray-500); margin-bottom: 2px; font-weight: 500; }
+        .status-value { font-size: 16px; font-weight: 600; color: var(--gray-800); }
+
+        .history-container { flex: 1; overflow-y: auto; padding: 0.5rem 0; min-height: 100px; max-height: 300px; }
+        .history-item { display: flex; flex-direction: column; padding: 1rem 0.875rem; margin-bottom: 0.75rem; background: var(--gray-50); border-radius: var(--radius-md); border-left: 3px solid var(--gray-300); transition: all 0.2s ease; }
+        .history-item:hover { background: var(--gray-100); transform: translateY(-1px); }
+        .history-item.hit { border-left-color: var(--danger-color); }
+        .history-item.miss { border-left-color: var(--secondary-color); }
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .history-type { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.625rem; background: var(--primary-color); color: white; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 500; }
+        .history-time { font-size: 0.75rem; color: var(--gray-500); }
+        .history-content { font-size: 0.875rem; color: var(--gray-700); margin-bottom: 0.5rem; word-break: break-all; }
+        .history-status { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 12px; font-weight: 500; }
+        .history-status.hit { background: rgba(239,68,68,0.1); color: var(--danger-color); }
+        .history-status.miss { background: rgba(16,185,129,0.1); color: var(--secondary-color); }
+        .empty-history { text-align: center; padding: 3rem 1rem; color: var(--gray-500); }
+        .empty-history i { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.5; }
+        .history-source { padding: 0.125rem 0.25rem; background: var(--gray-200); color: var(--gray-600); border-radius: var(--radius-sm); font-size: 0.625rem; font-weight: 500; text-transform: uppercase; }
+        .history-source.ti { background: #dbeafe; color: var(--info-color); }
+        .history-source.tiex { background: #fef3c7; color: var(--warning-color); }
+        .history-source.viruskiller { background: #fee2e2; color: var(--danger-color); }
+        .history-sources { display: flex; gap: 0.25rem; }
+        .history-error-message { font-size: 0.75rem; color: var(--danger-color); background: #fee2e2; padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); margin-top: 0.5rem; border: 1px solid #fecaca; }
+
+        .results-container { display: flex; flex-direction: column; gap: 2rem; }
+        .result-item { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1rem; transition: all var(--transition-fast); box-shadow: var(--shadow-sm); }
+        .result-item:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .result-header-left { display: flex; align-items: center; gap: 1rem; }
+        .result-header-right { display: flex; align-items: center; gap: 0.5rem; }
+        .result-source { padding: 0.25rem 0.75rem; border-radius: var(--radius-md); font-size: 12px; font-weight: 600; color: var(--white); text-transform: uppercase; }
+        .result-source.ti { background: var(--secondary-color); }
+        .result-source.tiex { background: var(--warning-color); }
+        .result-source.viruskiller { background: var(--primary-color); }
+        .result-source.file_analysis { background: var(--info-color); }
+        .result-line { font-size: 12px; color: var(--gray-500); background: var(--gray-100); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); }
+        .result-file { font-size: 14px; color: var(--gray-600); margin-bottom: 0.5rem; font-family: 'SF Mono','Monaco',monospace; }
+        .result-content { font-family: 'SF Mono','Monaco',monospace; font-size: 13px; color: var(--gray-800); background: var(--gray-50); padding: 1rem; border-radius: var(--radius-md); word-break: break-all; border-left: 4px solid var(--primary-color); }
+        .result-version { font-size: 12px; color: var(--gray-500); margin-bottom: 0.5rem; }
+        .ip-direction-badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: 999px; font-size: 12px; font-weight: 600; text-transform: uppercase; white-space: nowrap; }
+        .ip-direction-badge.inbound { background: linear-gradient(135deg,#e3f2fd,#bbdefb); color: #1565c0; border: 1px solid #90caf9; }
+        .ip-direction-badge.outbound { background: linear-gradient(135deg,#f3e5f5,#e1bee7); color: #7b1fa2; border: 1px solid #ce93d8; }
+        .block-recommendation-badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: 999px; font-size: 12px; font-weight: 600; }
+        .block-recommendation-badge.recommend-block { background: linear-gradient(135deg,#fee2e2,#fecaca); color: #dc2626; border: 1px solid #f87171; }
+        .block-recommendation-badge.no-block { background: linear-gradient(135deg,#dcfce7,#bbf7d0); color: #16a34a; border: 1px solid #86efac; }
+        .block-reason { margin-top: 0.75rem; padding: 0.75rem; background: var(--gray-50); border-left: 4px solid var(--info-color); border-radius: var(--radius-md); font-size: 14px; color: var(--gray-700); display: flex; align-items: flex-start; gap: 0.5rem; }
+        .threat-status { padding: 0.25rem 0.75rem; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; text-align: center; margin-top: 0.5rem; }
+        .threat-status.clean { background: var(--secondary-color); color: var(--white); }
+        .threat-status.threat-found { background: var(--danger-color); color: var(--white); }
+        .threat-details { margin-top: 0.5rem; padding: 0.5rem; background: var(--white); border-radius: var(--radius-sm); font-size: 12px; color: var(--gray-600); border: 1px solid var(--gray-200); }
+        .query-info-summary { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm); }
+        .query-summary-header { display: flex; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--gray-200); }
+        .query-summary-header h4 { margin: 0; font-size: 16px; font-weight: 600; color: var(--gray-800); display: flex; align-items: center; gap: 0.5rem; }
+        .query-summary-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .summary-item { display: flex; flex-direction: column; gap: 0.25rem; }
+        .summary-label { font-size: 12px; font-weight: 600; color: var(--gray-600); text-transform: uppercase; letter-spacing: 0.05em; }
+        .summary-value { font-size: 14px; font-weight: 500; color: var(--gray-800); word-break: break-all; }
+        .summary-value.hash-value { font-family: 'SF Mono','Monaco',monospace; color: var(--primary-color); background: var(--gray-50); padding: 0.375rem 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--gray-200); }
+        .success-status { color: var(--secondary-color) !important; }
+
+        .no-results, .error-state { text-align: center; padding: 4rem 2rem; color: var(--gray-500); }
+        .no-results i, .error-state i { font-size: 4rem; margin-bottom: 1.5rem; }
+        .error-state i, .error-state h3 { color: var(--danger-color); }
+        .no-results.success i, .no-results.success h3 { color: var(--info-color); }
+        .query-details { margin: 2rem 0; background: var(--gray-50); border-radius: var(--radius-lg); padding: 1.5rem; border: 1px solid var(--gray-200); }
+        .query-detail-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--gray-100); }
+        .query-detail-item:last-child { border-bottom: none; }
+        .detail-label { font-size: 14px; font-weight: 600; color: var(--gray-600); min-width: 80px; }
+        .detail-value { font-size: 14px; font-weight: 500; color: var(--gray-800); text-align: right; word-break: break-all; }
+
+        .export-btn, .refresh-btn { padding: 0.5rem 1rem; background: var(--gradient-success); border: none; border-radius: var(--radius-md); color: var(--white); font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.375rem; transition: all var(--transition-fast); box-shadow: var(--shadow-sm); white-space: nowrap; }
+        .refresh-btn { background: var(--gradient-primary); padding: 0.875rem; border-radius: var(--radius-lg); font-size: 14px; justify-content: center; width: auto; }
+        .export-btn:hover, .refresh-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .loading-spinner { text-align: center; background: var(--white); padding: 3rem; border-radius: var(--radius-2xl); box-shadow: var(--shadow-xl); }
+        .spinner { width: 48px; height: 48px; border: 4px solid var(--gray-200); border-top: 4px solid var(--primary-color); border-radius: 50%; margin: 0 auto 1.5rem auto; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .modal-content { background: var(--white); border-radius: var(--radius-2xl); box-shadow: var(--shadow-xl); width: 90%; max-width: 500px; overflow: hidden; }
+        .modal-header { padding: 2rem 2rem 1rem 2rem; border-bottom: 1px solid var(--gray-200); }
+        .modal-header h3 { font-size: 20px; font-weight: 600; color: var(--gray-800); }
+        .modal-body { padding: 2rem; }
+        .progress-bar { width: 100%; height: 8px; background: var(--gray-200); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1rem; }
+        .progress-fill { height: 100%; background: var(--gradient-primary); border-radius: var(--radius-lg); transition: width var(--transition-normal); width: 0%; }
+
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 0.75rem; }
+        .toast { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); padding: 1rem 1.5rem; min-width: 320px; display: flex; align-items: center; gap: 0.75rem; border-left: 4px solid var(--info-color); animation: slideInRight 0.3s ease-out; }
+        .toast.success { border-left-color: var(--secondary-color); }
+        .toast.error { border-left-color: var(--danger-color); }
+        .toast.warning { border-left-color: var(--warning-color); }
+        .toast.success i { color: var(--secondary-color); }
+        .toast.error i { color: var(--danger-color); }
+        .toast.warning i { color: var(--warning-color); }
+        .toast.info i { color: var(--info-color); }
+        .toast i { font-size: 18px; flex-shrink: 0; }
+        .toast span { font-size: 14px; font-weight: 500; color: var(--gray-800); }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        .details-btn { background: linear-gradient(135deg, var(--info-color) 0%, #2563eb 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: var(--radius-md); font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.375rem; transition: all 0.2s ease; box-shadow: var(--shadow-sm); }
+        .details-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+        @media (max-width: 1200px) { .content-grid { grid-template-columns: 1fr; } .sidebar { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); display: grid; } }
+        @media (max-width: 768px) { .main-container { padding: 1rem; } .content-grid, .sidebar { grid-template-columns: 1fr; } .examples-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="/agent" class="btn-back">← 返回</a>
+        <h1 class="header-title">🛡️ 威胁情报查询</h1>
+        <div class="status-badge" id="serviceStatus">
+            <div class="status-dot"></div>
+            <span>检查中...</span>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="content-grid">
+            <div class="main-content">
+                <div class="feature-card">
+                    <div class="card-header">
+                        <div class="header-icon"><i class="fas fa-magnifying-glass"></i></div>
+                        <div class="header-content">
+                            <h2>威胁情报查询</h2>
+                            <p>快速查询域名、IP地址和文件哈希的威胁情报信息</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="input-wrapper">
+                            <input type="text" id="queryInput" class="query-input" placeholder="请输入域名、IP地址或文件哈希...">
+                            <button class="query-btn" id="queryBtn"><i class="fas fa-search"></i><span>查询</span></button>
+                        </div>
+                        <div class="query-hint"><i class="fas fa-lightbulb"></i><span>支持域名、IPv4/IPv6地址、文件MD5- 系统将自动识别输入类型</span></div>
+                        <div class="query-examples">
+                            <div class="example-category"><strong>示例：</strong></div>
+                            <div class="examples-grid">
+                                <div class="example-item"><span class="example-type">恶意出站IP</span><span class="example-value">146.59.46.184</span></div>
+                                <div class="example-item"><span class="example-type">恶意入站IP</span><span class="example-value">107.148.62.106</span></div>
+                                <div class="example-item"><span class="example-type">恶意域名</span><span class="example-value">donate.ssl.xmrig.com</span></div>
+                                <div class="example-item"><span class="example-type">恶意文件</span><span class="example-value">511746937c98cc3693c350d91098ecae</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="card-header">
+                        <div class="header-icon"><i class="fas fa-cloud-arrow-up"></i></div>
+                        <div class="header-content">
+                            <h2>文件安全分析</h2>
+                            <p>上传文件进行MD5哈希计算和威胁情报查询</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-content">
+                                <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                                <h3>拖拽文件到此处或点击上传</h3>
+                                <p>支持单个文件或压缩包（ZIP, RAR, 7Z）</p>
+                                <input type="file" id="fileInput" class="file-input" multiple>
+                                <button class="upload-btn" onclick="document.getElementById('fileInput').click()"><i class="fas fa-plus"></i>选择文件</button>
+                            </div>
+                        </div>
+                        <div class="password-section" id="passwordSection" style="display:none;">
+                            <div class="input-wrapper">
+                                <input type="password" id="archivePassword" class="password-input" placeholder="压缩包密码（可选）">
+                                <button class="password-btn" id="showPasswordBtn"><i class="fas fa-eye"></i></button>
+                            </div>
+                            <div class="password-hint"><i class="fas fa-info-circle"></i><span>如果压缩包有密码保护，请输入密码</span></div>
+                        </div>
+                        <div class="file-list" id="fileList" style="display:none;">
+                            <h4>待处理文件</h4>
+                            <div class="file-items" id="fileItems"></div>
+                            <div class="file-actions">
+                                <button class="process-btn" id="processFilesBtn"><i class="fas fa-cogs"></i>开始分析</button>
+                                <button class="clear-btn" id="clearFilesBtn"><i class="fas fa-trash"></i>清空列表</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="feature-card">
+                    <div class="card-header">
+                        <div class="header-icon"><i class="fas fa-chart-line"></i></div>
+                        <div class="header-content">
+                            <h2>系统状态</h2>
+                            <p>实时系统运行状态</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="status-grid">
+                            <div class="status-item">
+                                <div class="status-icon success"><i class="fas fa-heartbeat"></i></div>
+                                <div class="status-content">
+                                    <div class="status-label">服务状态</div>
+                                    <div class="status-value" id="healthStatus">检查中...</div>
+                                </div>
+                            </div>
+                            <div class="status-item">
+                                <div class="status-icon info"><i class="fas fa-folder-open"></i></div>
+                                <div class="status-content">
+                                    <div class="status-label">监控目录</div>
+                                    <div class="status-value" id="watchDirsCount">加载中...</div>
+                                </div>
+                            </div>
+                            <div class="status-item">
+                                <div class="status-icon success"><i class="fas fa-clock"></i></div>
+                                <div class="status-content">
+                                    <div class="status-label">运行时间</div>
+                                    <div class="status-value" id="uptime">计算中...</div>
+                                </div>
+                            </div>
+                            <div class="status-item">
+                                <div class="status-icon info"><i class="fas fa-calendar-alt"></i></div>
+                                <div class="status-content">
+                                    <div class="status-label">当前时间</div>
+                                    <div class="status-value" id="currentTime">--:--:--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-card" style="flex:1;display:flex;flex-direction:column;">
+                    <div class="card-header">
+                        <div class="header-icon"><i class="fas fa-history"></i></div>
+                        <div class="header-content">
+                            <h2>查询历史</h2>
+                            <p>近10次查询记录</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="clear-btn" id="clearHistoryBtn" style="padding:0.5rem 1rem;font-size:12px;"><i class="fas fa-trash"></i>清空</button>
+                        </div>
+                    </div>
+                    <div class="card-body" style="flex:1;display:flex;flex-direction:column;">
+                        <div class="history-container" id="historyContainer">
+                            <div class="empty-history"><i class="fas fa-clock"></i><p>暂无查询历史</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-container">
+            <div id="resultsSection" style="display:none;">
+                <div class="feature-card">
+                    <div class="card-header">
+                        <div class="header-icon"><i class="fas fa-list-alt"></i></div>
+                        <div class="header-content">
+                            <h2>查询结果</h2>
+                            <p id="resultsCount">0 个结果</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="refresh-btn" id="refreshResultsBtn"><i class="fas fa-sync-alt"></i>重新查询</button>
+                            <button class="export-btn" id="exportResultsBtn"><i class="fas fa-download"></i>导出报告</button>
+                        </div>
+                    </div>
+                    <div class="card-body"><div id="resultsContainer"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="progressModal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header"><h3>文件处理中</h3></div>
+            <div class="modal-body">
+                <div style="display:flex;justify-content:space-between;margin-bottom:1rem;">
+                    <div id="progressText">准备处理文件...</div>
+                    <div id="progressStats">0 / 0</div>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay" style="display:none;">
+        <div class="loading-spinner"><div class="spinner"></div><p>处理中...</p></div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+    class TIApp {
+        constructor() {
+            this.apiBase = '/api/ti';
+            this.cache = new Map();
+            this.cacheTimeout = 5 * 60 * 1000;
+            this.uploadedFiles = new Map();
+            this.maxFileSize = 100 * 1024 * 1024;
+            this.supportedFormats = ['.zip', '.rar', '.7z', '.tar', '.gz'];
+            this.queryHistory = this.loadQueryHistory();
+            this.lastQueryInput = '';
+            this.init();
+        }
+
+        async init() {
+            this.serverUptimeOffset = 0; this.serverUptimeLoadTime = null;
+            this.bindEvents(); this.setupFileUpload(); this.updateCurrentTime();
+            await this.checkHealth(); await this.loadUptime(); this.updateHistoryDisplay();
+            setInterval(() => { this.updateCurrentTime(); this.loadUptime(); }, 1000);
+            setInterval(() => this.loadUptime(), 300000);
+        }
+
+        bindEvents() {
+            document.getElementById('queryBtn').addEventListener('click', () => this.performQuery());
+            document.getElementById('queryInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') this.performQuery(); });
+            document.getElementById('processFilesBtn').addEventListener('click', () => this.processFiles());
+            document.getElementById('clearFilesBtn').addEventListener('click', () => this.clearFileList());
+            document.getElementById('showPasswordBtn').addEventListener('click', () => this.togglePassword());
+            document.getElementById('exportResultsBtn').addEventListener('click', () => this.exportResults());
+            document.getElementById('refreshResultsBtn').addEventListener('click', () => this.retryLastQuery());
+            document.getElementById('clearHistoryBtn').addEventListener('click', () => this.clearQueryHistory());
+            document.querySelectorAll('.example-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.getElementById('queryInput').value = item.querySelector('.example-value').textContent;
+                    this.showToast('已填入示例', 'info');
+                });
+            });
+        }
+
+        detectInputType(input) {
+            input = input.trim();
+            if (!input) return null;
+            if (/^[a-fA-F0-9]{32}$/.test(input) || /^[a-fA-F0-9]{40}$/.test(input) || /^[a-fA-F0-9]{64}$/.test(input)) return 'filehash';
+            if (/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(input)) return 'ip';
+            if (/^[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?)*$/.test(input) && input.includes('.')) return 'domain';
+            return null;
+        }
+
+        setupFileUpload() {
+            const area = document.getElementById('uploadArea'); const input = document.getElementById('fileInput');
+            area.addEventListener('dragover', (e) => { e.preventDefault(); area.classList.add('dragover'); });
+            area.addEventListener('dragleave', (e) => { e.preventDefault(); if (!area.contains(e.relatedTarget)) area.classList.remove('dragover'); });
+            area.addEventListener('drop', (e) => { e.preventDefault(); area.classList.remove('dragover'); this.handleFileSelection(Array.from(e.dataTransfer.files)); });
+            input.addEventListener('change', (e) => this.handleFileSelection(Array.from(e.target.files)));
+        }
+
+        handleFileSelection(files) {
+            files.filter(f => f.size <= this.maxFileSize).forEach(f => {
+                this.uploadedFiles.set('f_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9), { file: f, name: f.name, size: f.size, type: this.supportedFormats.some(ext => f.name.toLowerCase().endsWith(ext)) ? 'archive' : 'file' });
+            });
+            this.renderFileList(); this.checkArchivePassword();
+            if (this.uploadedFiles.size > 0) this.showToast(`已添加文件`, 'success');
+        }
+
+        renderFileList() {
+            const list = document.getElementById('fileList'); const items = document.getElementById('fileItems');
+            if (this.uploadedFiles.size === 0) { list.style.display = 'none'; document.getElementById('passwordSection').style.display = 'none'; return; }
+            list.style.display = 'block';
+            document.getElementById('passwordSection').style.display = Array.from(this.uploadedFiles.values()).some(f => f.type === 'archive') ? 'block' : 'none';
+            items.innerHTML = '';
+            for (const [id, fd] of this.uploadedFiles) {
+                const div = document.createElement('div'); div.className = 'file-item';
+                div.innerHTML = `<div class="file-icon"><i class="fas fa-file-archive"></i></div><div class="file-info"><div class="file-name">${this.esc(fd.name)}</div><div class="file-size">${this.formatSize(fd.size)}</div></div><button class="file-remove" data-id="${id}"><i class="fas fa-times"></i></button>`;
+                div.querySelector('.file-remove').addEventListener('click', () => { this.uploadedFiles.delete(id); this.renderFileList(); });
+                items.appendChild(div);
+            }
+        }
+
+        clearFileList() { this.uploadedFiles.clear(); this.renderFileList(); document.getElementById('fileInput').value = ''; }
+        checkArchivePassword() { document.getElementById('passwordSection').style.display = Array.from(this.uploadedFiles.values()).some(f => f.type === 'archive') ? 'block' : 'none'; }
+        togglePassword() {
+            const p = document.getElementById('archivePassword'); const b = document.getElementById('showPasswordBtn');
+            if (p.type === 'password') { p.type = 'text'; b.innerHTML = '<i class="fas fa-eye-slash"></i>'; }
+            else { p.type = 'password'; b.innerHTML = '<i class="fas fa-eye"></i>'; }
+        }
+
+        async processFiles() {
+            if (this.uploadedFiles.size === 0) { this.showToast('请先上传文件', 'warning'); return; }
+            const password = document.getElementById('archivePassword').value;
+            document.getElementById('progressModal').style.display = 'flex';
+            let i = 0;
+            for (const [_, fd] of this.uploadedFiles) {
+                i++;
+                document.getElementById('progressText').textContent = `正在处理: ${fd.name}`;
+                document.getElementById('progressStats').textContent = `${i} / ${this.uploadedFiles.size}`;
+                document.getElementById('progressFill').style.width = `${(i / this.uploadedFiles.size) * 100}%`;
+                try {
+                    const formData = new FormData(); formData.append('file', fd.file); formData.append('password', password); formData.append('fileName', fd.name);
+                    await fetch(`${this.apiBase}/api/v1/analyze-file`, { method: 'POST', body: formData });
+                } catch (e) { this.showToast(`处理失败 ${fd.name}`, 'error'); }
+            }
+            setTimeout(() => { document.getElementById('progressModal').style.display = 'none'; this.clearFileList(); this.showToast('文件分析完成', 'success'); }, 500);
+        }
+
+        async performQuery() {
+            const input = document.getElementById('queryInput').value.trim();
+            if (!input) { this.showToast('请输入要查询的内容', 'error'); return; }
+            this.lastQueryInput = input;
+            const queryType = this.detectInputType(input);
+            if (!queryType) { this.showToast('无法识别输入类型', 'error'); return; }
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            try {
+                let data;
+                if (queryType === 'ip') {
+                    const [outbound, inbound] = await Promise.all([
+                        this.req(`${this.apiBase}/api/v1/query/ip`, { value: input }),
+                        this.req(`${this.apiBase}/api/v1/query/inbound_ip`, { value: input })
+                    ]);
+                    data = { query: { type: queryType, value: input }, hash: outbound.hash, results: [...(outbound.results || []), ...(inbound.results || [])] };
+                } else {
+                    data = await this.req(`${this.apiBase}/api/v1/query/${queryType}`, { value: input });
+                }
+                this.displayQueryResults(data);
+                const count = data.results ? data.results.length : 0;
+                this.showToast(`查询完成，${count > 0 ? count + ' 个结果' : '未找到匹配'}`, count > 0 ? 'success' : 'info');
+                this.addToHistory(queryType, input, data.results, this.extractSources(data.results));
+            } catch (error) {
+                this.showToast('查询失败: ' + error.message, 'error'); this.displayError(error.message);
+            } finally { document.getElementById('loadingOverlay').style.display = 'none'; }
+        }
+
+        retryLastQuery() { if (!this.lastQueryInput) return; document.getElementById('queryInput').value = this.lastQueryInput; this.performQuery(); }
+
+        async req(url, body) {
+            const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return r.json();
+        }
+
+        displayQueryResults(data) {
+            const section = document.getElementById('resultsSection'); const container = document.getElementById('resultsContainer'); const count = document.getElementById('resultsCount');
+            if (!data || !data.results || !Array.isArray(data.results)) { this.displayError('服务器响应异常'); return; }
+            count.textContent = `${data.results.length} 个结果`; container.innerHTML = ''; section.style.display = 'block'; section.classList.add('fade-in');
+            if (data.results.length === 0) {
+                container.innerHTML = `<div class="no-results success"><i class="fas fa-search"></i><h3>查询完成</h3><p>未找到匹配的威胁情报</p><div class="query-details"><div class="query-detail-item"><span class="detail-label">查询输入:</span><span class="detail-value">${this.esc(data.query?.value || '未知')}</span></div><div class="query-detail-item"><span class="detail-label">加盐哈希:</span><span class="detail-value hash-value">${this.esc(data.hash || '未知')}</span></div></div></div>`;
+                return;
+            }
+            const info = document.createElement('div'); info.className = 'query-info-summary';
+            info.innerHTML = `<div class="query-summary-header"><h4><i class="fas fa-info-circle"></i> 查询信息</h4></div><div class="query-summary-details"><div class="summary-item"><span class="summary-label">查询值:</span><span class="summary-value">${this.esc(data.query?.value || '未知')}</span></div><div class="summary-item"><span class="summary-label">加盐哈希:</span><span class="summary-value hash-value">${this.esc(data.hash || '未知')}</span></div></div>`;
+            container.appendChild(info);
+            data.results.forEach(r => { const div = document.createElement('div'); div.className = 'result-item';
+                let ipBadge = '', blockBadge = '', threatS = '', threatD = '';
+                if (r.ip_direction) { const d = r.ip_direction === 'inbound' ? '入站' : '出站'; ipBadge = `<div class="ip-direction-badge ${d}"><i class="fas fa-${d === 'inbound' ? 'arrow-down' : 'arrow-up'}"></i>${d}IP</div>`; }
+                if (r.hasOwnProperty('should_block')) { const c = r.should_block ? 'recommend-block' : 'no-block'; blockBadge = `<div class="block-recommendation-badge ${c}"><i class="fas fa-${r.should_block ? 'fa-shield-alt' : 'fa-check-circle'}"></i>${r.should_block ? '阻断' : '不阻断'}</div>`; }
+                if (r.source === 'file_analysis' && r.threat_found !== undefined) { threatS = `<div class="threat-status ${r.threat_found ? 'threat-found' : 'clean'}">${r.threat_found ? '威胁检测' : '无威胁'}</div>`; if (r.threat_info) threatD = `<div class="threat-details">${this.esc(r.threat_info)}</div>`; }
+                div.innerHTML = `<div class="result-header"><div class="result-header-left"><span class="result-source ${r.source || ''}">${(r.source || '').toUpperCase().replace('FILE_ANALYSIS','ANALYSIS')}</span><span class="result-line">第 ${r.line || 0} 行</span></div><div class="result-header-right">${ipBadge}${blockBadge}</div></div><div class="result-file">${this.esc(r.file)}</div>${r.version_info ? `<div class="result-version">版本: ${this.esc(r.version_info.version || '未知')} | 更新: ${this.esc(r.version_info.last_updated || '未知')}</div>` : ''}<div class="result-content">${this.esc(r.content)}</div>${threatS}${threatD}${r.block_reason ? `<div class="block-reason"><i class="fas fa-info-circle"></i> ${this.esc(r.block_reason)}</div>` : ''}`;
+                container.appendChild(div);
+            });
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        displayError(msg) { document.getElementById('resultsCount').textContent = '查询失败'; document.getElementById('resultsContainer').innerHTML = `<div class="error-state"><i class="fas fa-exclamation-triangle"></i><h3>查询失败</h3><p>${this.esc(msg)}</p></div>`; document.getElementById('resultsSection').style.display = 'block'; }
+
+        async checkHealth() {
+            try {
+                const r = await fetch(`${this.apiBase}/health`); const d = await r.json();
+                if (r.ok) { this.updateStatus('online', '运行正常'); document.getElementById('healthStatus').textContent = '运行正常'; } else throw 0;
+            } catch { this.updateStatus('offline', '服务异常'); document.getElementById('healthStatus').textContent = '服务异常'; }
+        }
+        updateStatus(s, t) { const el = document.getElementById('serviceStatus'); el.className = `status-badge ${s}`; el.querySelector('span').textContent = t; }
+        async loadUptime() { try { const r = await fetch(`${this.apiBase}/api/v1/uptime`); const d = await r.json(); if (d.success) { this.serverUptimeOffset = d.uptime_seconds; this.serverUptimeLoadTime = Date.now(); } } catch {} }
+        updateCurrentTime() { document.getElementById('currentTime').textContent = new Date().toLocaleTimeString('zh-CN', { hour12: false }); }
+        loadQueryHistory() { try { return JSON.parse(localStorage.getItem('tiQueryHistory') || '[]'); } catch { return []; } }
+        saveQueryHistory() { try { localStorage.setItem('tiQueryHistory', JSON.stringify(this.queryHistory)); } catch {} }
+
+        addToHistory(type, content, results, sources = []) {
+            this.queryHistory.unshift({ content, type, isHit: results && results.length > 0, sources, time: new Date().toLocaleString('zh-CN'), ts: Date.now() });
+            if (this.queryHistory.length > 10) this.queryHistory = this.queryHistory.slice(0, 10);
+            this.saveQueryHistory(); this.updateHistoryDisplay();
+        }
+
+        updateHistoryDisplay() {
+            const el = document.getElementById('historyContainer');
+            if (!this.queryHistory.length) { el.innerHTML = '<div class="empty-history"><i class="fas fa-clock"></i><p>暂无查询历史</p></div>'; return; }
+            el.innerHTML = this.queryHistory.map(h => {
+                const icons = { domain: 'fa-globe', ip: 'fa-server', filehash: 'fa-fingerprint' };
+                const labels = { domain: '域名', ip: 'IP查询', filehash: '文件哈希' };
+                const srcHtml = h.sources.length > 0 ? `<div class="history-sources">${h.sources.map(s => `<span class="history-source ${s.toLowerCase()}">${s}</span>`).join('')}</div>` : '';
+                return `<div class="history-item ${h.isHit ? 'hit' : 'miss'}"><div class="history-header"><span class="history-type ${h.type}"><i class="${icons[h.type] || 'fa-question'}"></i>${labels[h.type] || h.type}</span><span class="history-time">${h.time}</span></div><div class="history-content">${this.esc(h.content)}</div><div class="history-result"><span class="history-status ${h.isHit ? 'hit' : 'miss'}"><i class="fas fa-${h.isHit ? 'exclamation-triangle' : 'check-circle'}"></i>${h.isHit ? '命中' : '未命中'}</span>${srcHtml}</div>${h.errorMessage ? `<div class="history-error-message">错误: ${this.esc(h.errorMessage)}</div>` : ''}</div>`;
+            }).join('');
+        }
+
+        clearQueryHistory() { this.queryHistory = []; this.saveQueryHistory(); this.updateHistoryDisplay(); this.showToast('查询历史已清空', 'success'); }
+        extractSources(results) { if (!results) return []; const s = new Set(); results.forEach(r => { if (r.source) s.add(r.source.toUpperCase()); }); return Array.from(s); }
+        esc(t) { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+        formatSize(b) { if (!b) return '0 B'; const k = 1024; const s = ['B','KB','MB','GB']; const i = Math.floor(Math.log(b) / Math.log(k)); return parseFloat((b / Math.pow(k, i)).toFixed(2)) + ' ' + s[i]; }
+        exportResults() {
+            const c = document.getElementById('resultsContainer'); if (!c.children.length) return;
+            const items = c.querySelectorAll('.result-item'); const results = [];
+            items.forEach(item => { results.push({ source: item.querySelector('.result-source')?.textContent, line: item.querySelector('.result-line')?.textContent, file: item.querySelector('.result-file')?.textContent, content: item.querySelector('.result-content')?.textContent }); });
+            this.downloadAsFile(JSON.stringify({ exportTime: new Date().toISOString(), resultCount: results.length, results }, null, 2), `ti_results_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.json`, 'application/json');
+        }
+        downloadAsFile(content, filename, ct = 'text/plain') { const blob = new Blob([content], { type: ct }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(() => URL.revokeObjectURL(url), 100); }
+        showToast(msg, type = 'info') { const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' }; const container = document.getElementById('toastContainer'); const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i><span>${this.esc(msg)}</span>`; container.appendChild(toast); setTimeout(() => { if (toast.parentNode) toast.remove(); }, 5000); }
+    }
+
+    let app;
+    document.addEventListener('DOMContentLoaded', () => { app = new TIApp(); });
+    </script>
+</body>
+</html>

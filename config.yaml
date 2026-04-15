@@ -17,3 +17,9 @@ security:
 logging:
   level: info
   format: console  # console or json
+
+kernel:
+  service_url: "http://localhost:8081"  # kernel-build 服务地址
+
+ti:
+  service_url: "http://localhost:8080"  # tiserver 威胁情报服务地址
