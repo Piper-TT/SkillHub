@@ -526,8 +526,19 @@ func translatePolicysResult(rawJSON string) (string, error) {
 
 	for _, row := range rows {
 		productName, _ := row["product_name"].(string)
-		version, _ := row["version"].(string)
 		operatorSQL, _ := row["operator_sql"].(string)
+
+		// 兼容 single 表（version 列）和 double 表（left_version + right_version 列）
+		version, _ := row["version"].(string)
+		if version == "" {
+			leftVer, _ := row["left_version"].(string)
+			rightVer, _ := row["right_version"].(string)
+			if leftVer != "" && rightVer != "" {
+				version = leftVer + "|" + rightVer
+			} else if rightVer != "" {
+				version = rightVer
+			}
+		}
 
 		// 拆分 OS 和包名：centos-7#hivex → osName=centos-7, pkg=hivex
 		osName, pkgName := splitProductOS(productName)
