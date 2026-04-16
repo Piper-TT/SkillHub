@@ -31,15 +31,18 @@ func NewMultiVulnDBManager(dataDir string) *MultiVulnDBManager {
 
 // 数据库名称常量
 const (
-	DBPolicys      = "policys"
-	DBProductAuth  = "products_auth"
+	DBPolicys     = "policys"
+	DBProductAuth = "products_auth"
 )
 
-// dbFiles 数据库文件名映射
+// dbFiles 数据库文件名映射（相对于 data/ 目录）
 var dbFiles = map[string]string{
-	DBPolicys:     "policys.db",
-	DBProductAuth: "products_auth.db",
+	DBPolicys:     "vul-center\\vul\\policys.db",
+	DBProductAuth: "vul-agent\\vul\\products_auth.db",
 }
+
+// dataDir 实际指向项目根目录的 data/ 目录
+const vulnDataDir = "./data"
 
 // tryOpenAll 尝试打开所有已存在的数据库
 func (m *MultiVulnDBManager) tryOpenAll() {

@@ -28,47 +28,358 @@ func (t *PolicysQueryTool) Definition() *ToolDefinition {
 		Type: "function",
 		Function: &FunctionDef{
 			Name:        "query_policys_db",
-			Description: "根据 CVE 编号查询漏洞补丁策略数据库（policys），返回漏洞详细信息、受影响产品、版本和操作SQL。这是主数据库，包含 CVE 到补丁策略的完整映射。",
+			Description: "查询漏洞补丁策略数据库（policys）。支持两种模式：1) 按 CVE 编号精确查询，返回单个漏洞完整信息；2) 按产品名模糊搜索，返回该产品相关的所有漏洞列表。cve_id 和 product 至少提供一个。",
 			Parameters: map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
 					"cve_id": map[string]interface{}{
 						"type":        "string",
-						"description": "CVE 编号，例如 CVE-2025-8088",
+						"description": "CVE 编号，例如 CVE-2025-8088。提供时精确查询单个漏洞。",
+					},
+					"product": map[string]interface{}{
+						"type":        "string",
+						"description": "产品名称关键词，用于模糊搜索。例如 'apache'、'linux kernel'、'nginx'。返回匹配产品的所有漏洞列表。当没有 CVE 编号或想查看某产品的所有漏洞时使用。",
 					},
 				},
-				"required": []string{"cve_id"},
 			},
 		},
 	}
 }
 
 func (t *PolicysQueryTool) Execute(args map[string]interface{}) (string, error) {
-	cveID, ok := args["cve_id"].(string)
-	if !ok || cveID == "" {
-		return "", fmt.Errorf("缺少 cve_id 参数")
+	cveID, _ := args["cve_id"].(string)
+	product, _ := args["product"].(string)
+
+	if cveID == "" && product == "" {
+		return "", fmt.Errorf("请提供 cve_id 或 product 参数")
 	}
 
 	db := t.mgr.GetDB(DBPolicys)
 	if db == nil {
-		return "", fmt.Errorf("policys 数据库未加载，请确认 ./data/vuln/policys.db 文件存在")
+		return "", fmt.Errorf("policys 数据库未加载，请确认数据库文件存在")
 	}
 
-	// 安全处理：转义单引号防止 SQL 注入
+	// 模式1: 按产品名模糊搜索漏洞列表
+	if cveID == "" && product != "" {
+		return t.searchByProduct(db, product)
+	}
+
+	// 模式2: 按 CVE 精确查询
 	safeCVE := strings.ReplaceAll(cveID, "'", "''")
 
-	sqlStr := fmt.Sprintf(
-		`SELECT single.arch, single.vulid, single.operation, product.name AS product_name, version.version, op.sql AS operator_sql FROM single JOIN product ON single.product = product.id JOIN version ON single.mv = version.id LEFT JOIN operation op ON single.operation = op.id WHERE single.vulid IN (SELECT id FROM policys WHERE cve = '%s')`,
+	// 1. 查询漏洞基本信息（包含所有有意义的字段）
+	infoSQL := fmt.Sprintf(
+		`SELECT id, name, risk, cve, type, cnnvd, cnvd, cncve, bid, cvss_base, cvss_base_vector,
+		desc, advice, name_en, desc_en, advice_en, ref, published_date, creation_date,
+		threat_type, vendor, vuln_type, exploitdb, msf, ext FROM policys WHERE cve = '%s'`,
 		safeCVE,
 	)
-
-	rawResult, err := executeQuery(db, sqlStr)
+	infoResult, err := executeQuery(db, infoSQL)
 	if err != nil {
 		return "", err
 	}
 
-	// 解析原始结果并翻译 operator_sql
-	return translatePolicysResult(rawResult)
+	var sb strings.Builder
+
+	if infoResult == "查询结果为空，没有匹配的数据。" {
+		return fmt.Sprintf("未找到 CVE: %s 的记录。", cveID), nil
+	}
+
+	sb.WriteString("## 漏洞基本信息\n\n")
+
+	// 解析基本信息
+	var infoRows []map[string]interface{}
+	if err := json.Unmarshal([]byte(infoResult), &infoRows); err == nil && len(infoRows) > 0 {
+		info := infoRows[0]
+		vulnID := getFloat64(info, "id")
+		name, _ := info["name"].(string)
+		nameEn, _ := info["name_en"].(string)
+		risk, _ := info["risk"].(string)
+		vulnType, _ := info["type"].(string)
+		cnnvd, _ := info["cnnvd"].(string)
+		cnvd, _ := info["cnvd"].(string)
+		cncve, _ := info["cncve"].(string)
+		bid := getFloat64(info, "bid")
+		cvssBase, _ := info["cvss_base"].(string)
+		cvssVector, _ := info["cvss_base_vector"].(string)
+		desc, _ := info["desc"].(string)
+		descEn, _ := info["desc_en"].(string)
+		advice, _ := info["advice"].(string)
+		adviceEn, _ := info["advice_en"].(string)
+		ref, _ := info["ref"].(string)
+		publishedDate, _ := info["published_date"].(string)
+		creationDate, _ := info["creation_date"].(string)
+		threatType, _ := info["threat_type"].(string)
+		vendor, _ := info["vendor"].(string)
+		vulnTypeDetail, _ := info["vuln_type"].(string)
+		exploitdb, _ := info["exploitdb"].(string)
+		msf, _ := info["msf"].(string)
+		ext, _ := info["ext"].(string)
+
+		fmt.Fprintf(&sb, "- **CVE**: %s\n", cveID)
+		fmt.Fprintf(&sb, "- **漏洞名称**: %s\n", name)
+		if nameEn != "" {
+			fmt.Fprintf(&sb, "- **English Name**: %s\n", nameEn)
+		}
+		fmt.Fprintf(&sb, "- **风险等级**: %s\n", risk)
+		if vulnType != "" {
+			fmt.Fprintf(&sb, "- **分类**: %s\n", vulnType)
+		}
+		if cvssBase != "" {
+			fmt.Fprintf(&sb, "- **CVSS 评分**: %s\n", cvssBase)
+		}
+		if cvssVector != "" {
+			fmt.Fprintf(&sb, "- **CVSS 向量**: %s\n", cvssVector)
+		}
+		if threatType != "" {
+			fmt.Fprintf(&sb, "- **威胁类型**: %s\n", threatType)
+		}
+		if vendor != "" {
+			fmt.Fprintf(&sb, "- **厂商**: %s\n", vendor)
+		}
+		if vulnTypeDetail != "" {
+			fmt.Fprintf(&sb, "- **漏洞类型**: %s\n", vulnTypeDetail)
+		}
+		if cnnvd != "" {
+			fmt.Fprintf(&sb, "- **CNNVD**: %s\n", cnnvd)
+		}
+		if cnvd != "" {
+			fmt.Fprintf(&sb, "- **CNVD**: %s\n", cnvd)
+		}
+		if cncve != "" {
+			fmt.Fprintf(&sb, "- **CNCVE**: %s\n", cncve)
+		}
+		if bid > 0 {
+			fmt.Fprintf(&sb, "- **BID**: %.0f\n", bid)
+		}
+		if publishedDate != "" {
+			fmt.Fprintf(&sb, "- **发布日期**: %s\n", publishedDate)
+		}
+		if creationDate != "" {
+			fmt.Fprintf(&sb, "- **创建日期**: %s\n", creationDate)
+		}
+		if exploitdb != "" {
+			fmt.Fprintf(&sb, "- **ExploitDB**: %s\n", exploitdb)
+		}
+		if msf != "" {
+			fmt.Fprintf(&sb, "- **MSF**: %s\n", msf)
+		}
+		if ext != "" && ext != `{"poc": "0", "exp": "0", "poc_url": [], "exp_url": []}` {
+			fmt.Fprintf(&sb, "- **扩展信息**: %s\n", ext)
+		}
+		if ref != "" {
+			fmt.Fprintf(&sb, "- **参考链接**: %s\n", ref)
+		}
+		if desc != "" {
+			fmt.Fprintf(&sb, "- **描述**: %s\n", desc)
+		}
+		if descEn != "" {
+			fmt.Fprintf(&sb, "- **Description**: %s\n", descEn)
+		}
+		if advice != "" {
+			fmt.Fprintf(&sb, "- **修复建议**: %s\n", advice)
+		}
+		if adviceEn != "" {
+			fmt.Fprintf(&sb, "- **Advice**: %s\n", adviceEn)
+		}
+		sb.WriteString("\n")
+
+		// 2. 查询 single 表的受影响产品
+		singleSQL := fmt.Sprintf(
+			`SELECT single.arch, single.vulid, single.operation, product.name AS product_name, version.version, op.sql AS operator_sql FROM single JOIN product ON single.product = product.id JOIN version ON single.mv = version.id LEFT JOIN operation op ON single.operation = op.id WHERE single.vulid = %d`,
+			int(vulnID),
+		)
+		singleResult, err := executeQuery(db, singleSQL)
+		singleRaw := ""
+		if err == nil && singleResult != "查询结果为空，没有匹配的数据。" {
+			sb.WriteString("## 受影响产品版本（单版本条件）\n\n")
+			translated, _ := translatePolicysResult(singleResult)
+			sb.WriteString(translated)
+			singleRaw = singleResult
+		}
+
+		// 3. 查询 double 表的受影响产品
+		doubleSQL := fmt.Sprintf(
+			`SELECT double.arch, double.vulid, double.operation, product.name AS product_name, lv.version AS left_version, rv.version AS right_version, op.sql AS operator_sql FROM double JOIN product ON double.product = product.id JOIN version lv ON double.lv = lv.id JOIN version rv ON double.rv = rv.id LEFT JOIN operation op ON double.operation = op.id WHERE double.vulid = %d`,
+			int(vulnID),
+		)
+		doubleResult, err := executeQuery(db, doubleSQL)
+		doubleRaw := ""
+		if err == nil && doubleResult != "查询结果为空，没有匹配的数据。" {
+			sb.WriteString("## 受影响产品版本（范围条件）\n\n")
+			translated, _ := translatePolicysResult(doubleResult)
+			sb.WriteString(translated)
+			doubleRaw = doubleResult
+		}
+
+		// 4. 自动从 products_auth 查询版本检测方法
+		if t.mgr.GetDB(DBProductAuth) != nil {
+			osCommands := t.collectOSDetectionCommands(singleRaw, doubleRaw)
+			if osCommands != "" {
+				sb.WriteString("## 版本检测方法\n\n")
+				sb.WriteString(osCommands)
+			}
+		}
+	}
+
+	return sb.String(), nil
+}
+
+// searchByProduct 按产品名模糊搜索漏洞列表
+func (t *PolicysQueryTool) searchByProduct(db *sql.DB, product string) (string, error) {
+	safeKeyword := strings.ReplaceAll(product, "'", "''")
+
+	// 模糊匹配：搜索 policys 表的 name、name_en、vendor 字段
+	sqlStr := fmt.Sprintf(
+		`SELECT id, name, risk, cve, type, cvss_base, published_date, threat_type, vendor, vuln_type FROM policys WHERE name LIKE '%%%s%%' OR name_en LIKE '%%%s%%' OR vendor LIKE '%%%s%%' ORDER BY published_date DESC LIMIT 50`,
+		safeKeyword, safeKeyword, safeKeyword,
+	)
+
+	result, err := executeQuery(db, sqlStr)
+	if err != nil {
+		return "", err
+	}
+
+	if result == "查询结果为空，没有匹配的数据。" {
+		return fmt.Sprintf("未找到与「%s」相关的漏洞记录。", product), nil
+	}
+
+	// 格式化为可读列表
+	var rows []map[string]interface{}
+	if err := json.Unmarshal([]byte(result), &rows); err != nil {
+		return result, nil
+	}
+
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "找到 %d 条与「%s」相关的漏洞记录：\n\n", len(rows), product)
+	for i, row := range rows {
+		name, _ := row["name"].(string)
+		cve, _ := row["cve"].(string)
+		risk, _ := row["risk"].(string)
+		vulnType, _ := row["type"].(string)
+		cvss, _ := row["cvss_base"].(string)
+		published, _ := row["published_date"].(string)
+		vendor, _ := row["vendor"].(string)
+		vulnTypeDetail, _ := row["vuln_type"].(string)
+
+		fmt.Fprintf(&sb, "%d. **%s**\n", i+1, name)
+		fmt.Fprintf(&sb, "   CVE: %s | 风险: %s", cve, risk)
+		if cvss != "" {
+			fmt.Fprintf(&sb, " | CVSS: %s", cvss)
+		}
+		if vulnType != "" {
+			fmt.Fprintf(&sb, " | 分类: %s", vulnType)
+		}
+		if vendor != "" {
+			fmt.Fprintf(&sb, " | 厂商: %s", vendor)
+		}
+		if vulnTypeDetail != "" {
+			fmt.Fprintf(&sb, " | 漏洞类型: %s", vulnTypeDetail)
+		}
+		if published != "" {
+			fmt.Fprintf(&sb, " | 发布: %s", published)
+		}
+		sb.WriteString("\n")
+	}
+	fmt.Fprintf(&sb, "\n如需查看某个漏洞的详细信息，请使用 cve_id 参数查询。\n")
+
+	return sb.String(), nil
+}
+
+// collectOSDetectionCommands 从 single/double 查询结果中提取操作系统名，查询 products_auth 获取检测方法
+func (t *PolicysQueryTool) collectOSDetectionCommands(singleResult, doubleResult string) string {
+	osSet := make(map[string]bool)
+
+	// 从 single/double 结果中提取 product_name，解析出 OS 名称
+	collectOSFromJSON := func(jsonStr string) {
+		if jsonStr == "" || jsonStr == "查询结果为空，没有匹配的数据。" {
+			return
+		}
+		var rows []map[string]interface{}
+		if err := json.Unmarshal([]byte(jsonStr), &rows); err != nil {
+			return
+		}
+		for _, row := range rows {
+			productName, _ := row["product_name"].(string)
+			if productName == "" {
+				continue
+			}
+			// 拆分 os#package 格式，取得 OS 名称
+			osName, _ := splitProductOS(productName)
+			// 提取关键词（去版本后缀、别名映射）
+			keyword := extractProductKeyword(osName)
+			if keyword != "" {
+				osSet[keyword] = true
+			}
+		}
+	}
+
+	collectOSFromJSON(singleResult)
+	collectOSFromJSON(doubleResult)
+
+	if len(osSet) == 0 {
+		return ""
+	}
+
+	// 查询 products_auth 获取检测命令
+	authDB := t.mgr.GetDB(DBProductAuth)
+	if authDB == nil {
+		return ""
+	}
+
+	var sb strings.Builder
+	for osName := range osSet {
+		safeName := strings.ReplaceAll(osName, "'", "''")
+		sqlStr := fmt.Sprintf(`SELECT product, system, cmd, filepath, registrypath FROM data WHERE product LIKE '%%%s%%'`, safeName)
+		result, err := executeQuery(authDB, sqlStr)
+		if err != nil || result == "查询结果为空，没有匹配的数据。" {
+			continue
+		}
+
+		var rows []map[string]interface{}
+		if err := json.Unmarshal([]byte(result), &rows); err != nil {
+			continue
+		}
+
+		for _, row := range rows {
+			product, _ := row["product"].(string)
+			system, _ := row["system"].(string)
+			cmd, _ := row["cmd"].(string)
+			filepath, _ := row["filepath"].(string)
+			registrypath, _ := row["registrypath"].(string)
+
+			if cmd == "" && filepath == "" && registrypath == "" {
+				continue
+			}
+
+			displayName := product
+			if system != "" {
+				displayName = fmt.Sprintf("%s (%s)", product, system)
+			}
+
+			fmt.Fprintf(&sb, "### %s\n\n", displayName)
+			if cmd != "" {
+				fmt.Fprintf(&sb, "- **检测命令**: `%s`\n", cmd)
+			}
+			if filepath != "" {
+				fmt.Fprintf(&sb, "- **文件路径**: `%s`\n", filepath)
+			}
+			if registrypath != "" {
+				fmt.Fprintf(&sb, "- **注册表路径**: `%s`\n", registrypath)
+			}
+			sb.WriteString("\n")
+			break // 每个 OS 只显示第一条检测规则
+		}
+	}
+
+	return sb.String()
+}
+
+func getFloat64(m map[string]interface{}, key string) float64 {
+	if v, ok := m[key].(float64); ok {
+		return v
+	}
+	return 0
 }
 
 // --- product_auth 数据库查询工具 ---
@@ -265,7 +576,6 @@ func translatePolicysResult(rawJSON string) (string, error) {
 		g := groupMap[groupOrder[i]]
 		fmt.Fprintf(&sb, "%d. 【%s】\n", i+1, g.osName)
 		fmt.Fprintf(&sb, "   版本条件：%s\n", g.condition)
-		fmt.Fprintf(&sb, "   修复版本：%s\n", g.version)
 		if len(g.packages) <= 8 {
 			fmt.Fprintf(&sb, "   受影响包：%s\n", strings.Join(g.packages, ", "))
 		} else {

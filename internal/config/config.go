@@ -46,8 +46,9 @@ type SecurityConfig struct {
 }
 
 type LoggingConfig struct {
-	Level  string `mapstructure:"level"`
-	Format string `mapstructure:"format"`
+	Level   string `mapstructure:"level"`
+	Format  string `mapstructure:"format"`
+	LogFile string `mapstructure:"log_file"`
 }
 
 var cfg *Config
@@ -97,6 +98,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("security.max_filename_length", 255)
 	v.SetDefault("logging.level", "info")
 	v.SetDefault("logging.format", "console")
+	v.SetDefault("logging.log_file", "server.log")
 	v.SetDefault("kernel.service_url", "http://localhost:8081")
 	v.SetDefault("ti.service_url", "http://localhost:8080")
 }
