@@ -178,14 +178,21 @@ All routes under `/api`:
 
 ### Vulnerability Patch Query Agent (CVE Agent)
 - Agent slug: `cve-patch-analyzer`
-- **Data-driven analysis**: LLM queries a user-provided vulnerability database via Tool Call
-- **4 registered tools**:
-  - `get_vuln_db_stats`: Database overview
-  - `list_vuln_tables`: List all tables
-  - `describe_vuln_table`: Table schema + sample data
-  - `query_vuln_db`: Execute SQL SELECT queries (read-only, safety-checked)
+- **Data-driven analysis**: LLM queries vulnerability databases (policys + products_auth) via Tool Call
+- **2 registered tools**:
+  - `query_policys_db`: Query vulnerability policy database
+    - By CVE ID (`cve_id`): Returns full vuln info (CVSS, CNNVD, vendor, etc.) + affected products from both `single` and `double` tables + auto-attached detection commands from products_auth
+    - By product name (`product`): Fuzzy search across name/name_en/vendor fields, returns matching vuln list (up to 50)
+  - `query_product_auth_db`: Query version detection rules (cmd, filepath, registrypath) by product name with keyword extraction and alias mapping
+- **Database structure**:
+  - `policys.db` (in `data/vul-center/vul/`): Main vuln DB with CVE-to-product mapping, version conditions, affected packages
+  - `products_auth.db` (in `data/vul-agent/vul/`): Detection rules per OS (Linux cmd, Windows filepath/registrypath)
+  - `single` table: Single version conditions (e.g., version < X)
+  - `double` table: Range conditions (e.g., X ≤ version < Y)
+  - Product name format: `os-version#package` (e.g., `debian-12.0#tomcat10`, `centos-7#kernel`)
+- **Auto detection**: CVE query automatically extracts OS names from affected products and queries products_auth for detection commands
 - **Data import**: Upload SQLite (.db/.sqlite), CSV, or JSON files via `POST /api/vuln/import`
-- **Flow**: User asks question → LLM discovers DB schema → LLM builds SQL → Tool executes query → LLM generates natural language report
+- **Flow**: User asks question → LLM calls tools → tools query policys (single+double) + products_auth → LLM generates professional analysis report
 
 ### Malware Analysis (LLM + MCP Integration)
 - **IDA-Pro-MCP Integration**: Auto-start MCP server for each analysis task
@@ -223,6 +230,13 @@ All routes under `/api`:
 
 **Analysis config**:
 - `analysis.idalib_path`: Path to `idalib-mcp.exe` for malware analysis (required for analysis feature)
+
+**Logging config**:
+- `logging.log_file`: Log file path (default: `server.log`), stdout is redirected via pipe + MultiWriter
+
+**Vulnerability DB paths** (auto-loaded from `./data/`):
+- `data/vul-center/vul/policys.db`: Vulnerability policy database
+- `data/vul-agent/vul/products_auth.db`: Product version detection rules
 
 ## Database
 
