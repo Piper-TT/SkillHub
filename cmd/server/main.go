@@ -301,7 +301,7 @@ func main() {
 		Addr:         addr,
 		Handler:      r,
 		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		WriteTimeout: 0, // SSE 长连接 + Tool Call 多轮，不限制写超时
 		IdleTimeout:  60 * time.Second,
 	}
 
