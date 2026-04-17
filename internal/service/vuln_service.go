@@ -2,6 +2,7 @@ package service
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -159,5 +160,25 @@ func (m *MultiVulnDBManager) GetStatus() map[string]interface{} {
 			"table_count": tableCount,
 		}
 	}
+
+	// 读取漏洞库版本号
+	status["vuln_version"] = m.readVulnVersion()
+
 	return status
+}
+
+// readVulnVersion 读取漏洞库版本号
+func (m *MultiVulnDBManager) readVulnVersion() string {
+	ehashPath := filepath.Join(m.dataDir, "vul.pkg.ehash")
+	data, err := os.ReadFile(ehashPath)
+	if err != nil {
+		return ""
+	}
+	var v struct {
+		Version string `json:"version"`
+	}
+	if err := json.Unmarshal(data, &v); err != nil {
+		return ""
+	}
+	return v.Version
 }

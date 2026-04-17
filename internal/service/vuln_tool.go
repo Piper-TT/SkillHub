@@ -71,7 +71,7 @@ func (t *PolicysQueryTool) Execute(args map[string]interface{}) (string, error) 
 	infoSQL := fmt.Sprintf(
 		`SELECT id, name, risk, cve, type, cnnvd, cnvd, cncve, bid, cvss_base, cvss_base_vector,
 		desc, advice, name_en, desc_en, advice_en, ref, published_date, creation_date,
-		threat_type, vendor, vuln_type, exploitdb, msf, ext FROM policys WHERE cve = '%s'`,
+		threat_type, vendor, vuln_type, exploitdb, msf, ext FROM policys WHERE cve = '%s' LIMIT 10`,
 		safeCVE,
 	)
 	infoResult, err := executeQuery(db, infoSQL)
@@ -184,9 +184,13 @@ func (t *PolicysQueryTool) Execute(args map[string]interface{}) (string, error) 
 		}
 		sb.WriteString("\n")
 
-		// 2. 查询 single 表的受影响产品
+		// 2. 查询 single 表的受影响产品（子查询先过滤 vulid 减少 JOIN 参与量，加 LIMIT 防止过多结果）
 		singleSQL := fmt.Sprintf(
-			`SELECT single.arch, single.vulid, single.operation, product.name AS product_name, version.version, op.sql AS operator_sql FROM single JOIN product ON single.product = product.id JOIN version ON single.mv = version.id LEFT JOIN operation op ON single.operation = op.id WHERE single.vulid = %d`,
+			`SELECT s.arch, s.vulid, s.operation, p.name AS product_name, v.version, op.sql AS operator_sql
+			FROM (SELECT arch, vulid, operation, product, mv FROM single WHERE vulid = %d LIMIT 5000) s
+			JOIN product p ON s.product = p.id
+			JOIN version v ON s.mv = v.id
+			LEFT JOIN operation op ON s.operation = op.id`,
 			int(vulnID),
 		)
 		singleResult, err := executeQuery(db, singleSQL)
@@ -198,9 +202,14 @@ func (t *PolicysQueryTool) Execute(args map[string]interface{}) (string, error) 
 			singleRaw = singleResult
 		}
 
-		// 3. 查询 double 表的受影响产品
+		// 3. 查询 double 表的受影响产品（子查询先过滤 vulid 减少 JOIN 参与量，加 LIMIT 防止过多结果）
 		doubleSQL := fmt.Sprintf(
-			`SELECT double.arch, double.vulid, double.operation, product.name AS product_name, lv.version AS left_version, rv.version AS right_version, op.sql AS operator_sql FROM double JOIN product ON double.product = product.id JOIN version lv ON double.lv = lv.id JOIN version rv ON double.rv = rv.id LEFT JOIN operation op ON double.operation = op.id WHERE double.vulid = %d`,
+			`SELECT d.arch, d.vulid, d.operation, p.name AS product_name, lv.version AS left_version, rv.version AS right_version, op.sql AS operator_sql
+			FROM (SELECT arch, vulid, operation, product, lv, rv FROM double WHERE vulid = %d LIMIT 1000) d
+			JOIN product p ON d.product = p.id
+			JOIN version lv ON d.lv = lv.id
+			JOIN version rv ON d.rv = rv.id
+			LEFT JOIN operation op ON d.operation = op.id`,
 			int(vulnID),
 		)
 		doubleResult, err := executeQuery(db, doubleSQL)
@@ -330,7 +339,7 @@ func (t *PolicysQueryTool) collectOSDetectionCommands(singleResult, doubleResult
 	var sb strings.Builder
 	for osName := range osSet {
 		safeName := strings.ReplaceAll(osName, "'", "''")
-		sqlStr := fmt.Sprintf(`SELECT product, system, cmd, filepath, registrypath FROM data WHERE product LIKE '%%%s%%'`, safeName)
+		sqlStr := fmt.Sprintf(`SELECT product, system, cmd, filepath, registrypath FROM data WHERE product LIKE '%%%s%%' LIMIT 50`, safeName)
 		result, err := executeQuery(authDB, sqlStr)
 		if err != nil || result == "查询结果为空，没有匹配的数据。" {
 			continue
