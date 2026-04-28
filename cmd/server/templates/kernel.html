@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>内核适配服务 - AgentHub</title>
-    <link href="/static/fontawesome/css/all.min.css" rel="stylesheet">
+    <title>内核适配服务</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* 全局重置和基础样式 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         :root {
             --primary-color: #6366f1;
             --primary-light: #8b5cf6;
@@ -15,6 +18,7 @@
             --warning-color: #f59e0b;
             --danger-color: #ef4444;
             --info-color: #3b82f6;
+            --success-color: #10b981;
             --white: #ffffff;
             --gray-50: #f9fafb;
             --gray-100: #f3f4f6;
@@ -27,6 +31,7 @@
             --gray-800: #1f2937;
             --gray-900: #111827;
             --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -37,10 +42,12 @@
             --radius-lg: 0.75rem;
             --radius-xl: 1rem;
             --radius-2xl: 1.5rem;
+            --radius-full: 9999px;
             --transition-fast: 0.15s ease-in-out;
             --transition-normal: 0.3s ease-in-out;
+            --transition-slow: 0.5s ease-in-out;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -48,63 +55,141 @@
             line-height: 1.6;
             font-size: 16px;
             min-height: 100vh;
+            position: relative;
             overflow-x: hidden;
         }
-        .header {
-            background: white;
-            border-bottom: 1px solid var(--border-soft);
-            padding: 16px 24px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
+
+        /* 顶部导航栏 */
+        .top-navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 1000;
+            box-shadow: var(--shadow-sm);
         }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
         .btn-back {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: white;
+            gap: 6px;
+            padding: 6px 14px;
+            background: var(--gray-50);
             border: 1px solid var(--gray-200);
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: var(--radius-lg);
+            font-size: 13px;
+            font-weight: 500;
             color: var(--gray-500);
             text-decoration: none;
-            transition: all 0.2s ease;
+            transition: all var(--transition-fast);
         }
         .btn-back:hover {
             border-color: var(--primary-color);
             color: var(--primary-color);
         }
-        .header-title {
-            font-size: 18px;
-            font-weight: 600;
-            flex: 1;
+
+        .brand-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--gradient-primary);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-md);
         }
+
+        .brand-icon i {
+            color: var(--white);
+            font-size: 24px;
+        }
+
+        .brand-text h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 2px;
+        }
+
+        .brand-subtitle {
+            font-size: 14px;
+            color: var(--gray-500);
+            font-weight: 400;
+        }
+
         .status-badge {
-            display: flex; align-items: center; gap: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
             padding: 0.5rem 1rem;
             background: rgba(255, 255, 255, 0.9);
             border-radius: var(--radius-xl);
-            border: 1px solid var(--gray-200);
-            font-size: 14px; font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: var(--shadow-sm);
+            font-size: 14px;
+            font-weight: 500;
         }
+
         .status-dot {
-            width: 8px; height: 8px; border-radius: 50%;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
             background: var(--secondary-color);
             animation: pulse 2s infinite;
         }
+
         .status-badge.online .status-dot { background: var(--secondary-color); }
         .status-badge.offline .status-dot { background: var(--danger-color); }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-        .main-container { max-width: 1400px; margin: 0 auto; padding: 2rem; min-height: calc(100vh - 80px); }
-        .content-grid { display: grid; grid-template-columns: 1fr 380px; gap: 2rem; margin-bottom: 2rem; }
-        .main-content { display: flex; flex-direction: column; gap: 2rem; }
-        .sidebar { display: flex; flex-direction: column; gap: 2rem; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
 
+        /* 主容器 */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: calc(100vh - 80px);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* 功能卡片 */
         .feature-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px) saturate(180%);
@@ -115,49 +200,109 @@
             transition: all var(--transition-normal);
             position: relative;
         }
+
         .feature-card::before {
             content: '';
-            position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
             background: var(--gradient-primary);
         }
-        .feature-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-xl); }
 
-        .card-header { padding: 2rem 2rem 1.5rem 2rem; display: flex; align-items: flex-start; gap: 1rem; }
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .card-header {
+            padding: 2rem 2rem 1.5rem 2rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
         .header-icon {
-            width: 56px; height: 56px;
+            width: 56px;
+            height: 56px;
             background: var(--gradient-primary);
             border-radius: var(--radius-xl);
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: var(--shadow-md); flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-md);
+            flex-shrink: 0;
         }
-        .header-icon i { color: var(--white); font-size: 24px; }
+
+        .header-icon i {
+            color: var(--white);
+            font-size: 24px;
+        }
+
         .header-content { flex: 1; }
-        .header-content h2 { font-size: 20px; font-weight: 600; color: var(--gray-800); margin-bottom: 0.5rem; }
-        .header-content p { font-size: 14px; color: var(--gray-500); line-height: 1.5; }
-        .header-actions { display: flex; gap: 0.5rem; }
-        .card-body { padding: 0 2rem 2rem 2rem; }
+
+        .header-content h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 0.5rem;
+        }
+
+        .header-content p {
+            font-size: 14px;
+            color: var(--gray-500);
+            line-height: 1.5;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .card-body {
+            padding: 0 2rem 2rem 2rem;
+        }
+
+        /* 查询输入区域 */
+        .query-input-section { margin-bottom: 1rem; }
 
         .image-drop-zone {
-            position: relative; border: 2px dashed var(--gray-300);
-            border-radius: var(--radius-lg); padding: 1rem; margin-bottom: 0.75rem;
-            text-align: center; cursor: pointer; transition: all var(--transition-fast);
-            background: var(--gray-50); min-height: 48px;
-            display: flex; align-items: center; justify-content: center;
+            position: relative;
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            background: var(--gray-50);
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
         .image-drop-zone:hover { border-color: var(--primary-color); background: rgba(99, 102, 241, 0.04); }
         .image-drop-zone.dragover { border-color: var(--primary-color); background: rgba(99, 102, 241, 0.08); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+
         .image-drop-content { display: flex; align-items: center; gap: 0.5rem; color: var(--gray-400); font-size: 14px; }
-        .image-drop-content i { font-size: 18px; }
+        .image-drop-content i { font-size: 18px; color: var(--gray-400); }
+        .image-drop-zone.dragover .image-drop-content { color: var(--primary-color); }
+        .image-drop-zone.dragover .image-drop-content i { color: var(--primary-color); }
+
         .image-preview { position: relative; display: inline-block; max-width: 100%; }
         .image-preview img { max-height: 120px; max-width: 100%; border-radius: var(--radius-sm); object-fit: contain; }
         .image-preview-overlay { position: absolute; top: 4px; right: 4px; opacity: 0; transition: opacity var(--transition-fast); }
         .image-preview:hover .image-preview-overlay { opacity: 1; }
+
         .image-remove-btn {
             width: 28px; height: 28px; border-radius: 50%; border: none;
             background: rgba(0, 0, 0, 0.6); color: var(--white); cursor: pointer;
             display: flex; align-items: center; justify-content: center; font-size: 12px;
         }
         .image-remove-btn:hover { background: var(--danger-color); }
+
         .image-ocr-status {
             position: absolute; bottom: 0; left: 0; right: 0;
             background: rgba(0, 0, 0, 0.7); color: var(--white);
@@ -166,14 +311,17 @@
         }
 
         .input-wrapper { display: flex; gap: 0.75rem; margin-bottom: 1rem; }
+
         .query-input {
             flex: 1; padding: 1rem 1.25rem;
             background: var(--white); border: 2px solid var(--gray-200);
             border-radius: var(--radius-xl); color: var(--gray-800);
-            font-size: 16px; transition: all var(--transition-fast); outline: none;
+            font-size: 16px; font-weight: 400;
+            transition: all var(--transition-fast); outline: none;
         }
         .query-input::placeholder { color: var(--gray-400); }
         .query-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+
         .query-btn {
             padding: 1rem 2rem; background: var(--gradient-primary); border: none;
             border-radius: var(--radius-xl); color: var(--white);
@@ -182,188 +330,188 @@
             transition: all var(--transition-fast); box-shadow: var(--shadow-md);
         }
         .query-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        .query-btn:active { transform: translateY(0); }
+
         .query-hint { display: flex; align-items: center; gap: 0.5rem; font-size: 14px; color: var(--gray-500); padding-left: 0.5rem; }
         .query-hint i { color: var(--warning-color); }
 
         .query-examples { margin-top: 1rem; padding: 1rem; background: var(--gray-50); border-radius: var(--radius-md); border: 1px solid var(--gray-200); }
         .example-category { margin-bottom: 0.75rem; color: var(--gray-700); font-size: 0.9rem; }
         .examples-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 0.75rem; }
-        .example-item {
-            display: flex; align-items: center; padding: 0.5rem 0.75rem;
-            background: var(--white); border-radius: var(--radius-sm);
-            border: 1px solid var(--gray-200); transition: var(--transition-fast); cursor: pointer;
-        }
+        .example-item { display: flex; align-items: center; padding: 0.5rem 0.75rem; background: var(--white); border-radius: var(--radius-sm); border: 1px solid var(--gray-200); transition: var(--transition-fast); cursor: pointer; }
         .example-item:hover { border-color: var(--primary-color); box-shadow: var(--shadow-sm); transform: translateY(-1px); }
-        .example-type {
-            font-size: 0.75rem; font-weight: 600; color: var(--primary-color);
-            background: rgba(99, 102, 241, 0.1); padding: 0.25rem 0.5rem;
-            border-radius: var(--radius-sm); min-width: 60px; text-align: center;
-            margin-right: 0.75rem; flex-shrink: 0;
-        }
-        .example-value { font-family: 'Monaco', 'Menlo', monospace; font-size: 0.8rem; color: var(--gray-600); word-break: break-all; flex: 1; }
+        .example-type { font-size: 0.75rem; font-weight: 600; color: var(--primary-color); background: rgba(99, 102, 241, 0.1); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); min-width: 60px; text-align: center; margin-right: 0.75rem; flex-shrink: 0; }
+        .example-value { font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; font-size: 0.8rem; color: var(--gray-600); word-break: break-all; flex: 1; }
 
-        /* File upload */
-        .upload-area {
-            border: 2px dashed var(--gray-300); border-radius: var(--radius-xl);
-            padding: 3rem 2rem; text-align: center; background: var(--gray-50);
-            transition: all var(--transition-normal); margin-bottom: 2rem; position: relative; overflow: hidden;
-        }
-        .upload-area.dragover { border-color: var(--primary-color); background: rgba(99, 102, 241, 0.05); transform: scale(1.02); }
-        .upload-icon {
-            width: 80px; height: 80px; background: var(--gradient-primary);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 1.5rem auto; box-shadow: var(--shadow-lg);
-        }
-        .upload-icon i { color: var(--white); font-size: 32px; }
-        .upload-content h3 { font-size: 18px; font-weight: 600; color: var(--gray-800); margin-bottom: 0.5rem; }
-        .upload-content p { font-size: 14px; color: var(--gray-500); margin-bottom: 0.5rem; }
-        .file-input { display: none; }
-        .upload-btn {
-            padding: 0.75rem 1.5rem; background: var(--white);
-            border: 2px solid var(--gray-200); border-radius: var(--radius-lg);
-            color: var(--gray-700); font-size: 14px; font-weight: 500; cursor: pointer;
-            display: inline-flex; align-items: center; gap: 0.5rem; transition: all var(--transition-fast);
-        }
-        .upload-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
-
-        .uname-section { margin-bottom: 2rem; }
-        .uname-input {
-            width: 100%; padding: 0.75rem; border-radius: var(--radius-lg);
-            border: 1px solid var(--gray-300); resize: vertical; font-size: 14px; outline: none;
-        }
-        .uname-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
-
-        .file-list h4 { font-size: 16px; font-weight: 600; color: var(--gray-800); margin-bottom: 1rem; }
-        .file-items { max-height: 300px; overflow-y: auto; margin-bottom: 1.5rem; border-radius: var(--radius-lg); background: var(--gray-50); padding: 1rem; }
-        .file-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--white); border-radius: var(--radius-lg); margin-bottom: 0.75rem; box-shadow: var(--shadow-sm); }
-        .file-icon { width: 40px; height: 40px; background: var(--gradient-primary); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--white); flex-shrink: 0; }
-        .file-info { flex: 1; }
-        .file-name { font-size: 14px; font-weight: 500; color: var(--gray-800); margin-bottom: 2px; }
-        .file-size { font-size: 12px; color: var(--gray-500); }
-        .file-remove {
-            width: 32px; height: 32px; background: var(--danger-color); border: none;
-            border-radius: var(--radius-md); color: var(--white); cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .file-actions { display: flex; gap: 1rem; }
-        .process-btn, .clear-btn {
-            padding: 0.875rem 1.5rem; border: none; border-radius: var(--radius-lg);
-            font-size: 14px; font-weight: 600; cursor: pointer;
-            display: flex; align-items: center; gap: 0.5rem; transition: all var(--transition-fast);
-        }
-        .process-btn { background: var(--gradient-success); color: var(--white); box-shadow: var(--shadow-md); }
-        .process-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
-        .clear-btn { background: var(--gray-100); color: var(--gray-600); border: 2px solid var(--gray-200); }
-        .clear-btn:hover { background: var(--gray-200); color: var(--gray-800); }
-
-        /* Status */
-        .status-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
-        .status-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--gray-50); border-radius: var(--radius-lg); }
-        .status-icon { width: 40px; height: 40px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--white); flex-shrink: 0; }
-        .status-icon.success { background: var(--secondary-color); }
-        .status-icon.info { background: var(--info-color); }
-        .status-content { flex: 1; }
-        .status-label { font-size: 12px; color: var(--gray-500); margin-bottom: 2px; font-weight: 500; }
-        .status-value { font-size: 16px; font-weight: 600; color: var(--gray-800); }
-
-        /* History */
-        .history-container { flex: 1; overflow-y: auto; padding: 0.5rem 0; min-height: 100px; max-height: 300px; }
-        .history-item {
-            display: flex; flex-direction: column; padding: 1rem 0.875rem; margin-bottom: 0.75rem;
-            background: var(--gray-50); border-radius: var(--radius-md);
-            border-left: 3px solid var(--gray-300); transition: all 0.2s ease;
-        }
-        .history-item:hover { background: var(--gray-100); transform: translateY(-1px); }
-        .history-item.success-status { border-left-color: var(--secondary-color); }
-        .history-item.error-status { border-left-color: var(--danger-color); }
-        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-        .history-type {
-            display: inline-flex; align-items: center; gap: 0.25rem;
-            padding: 0.25rem 0.625rem; background: var(--primary-color); color: white;
-            border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 500;
-        }
-        .history-time { font-size: 0.75rem; color: var(--gray-500); }
-        .history-content { font-size: 0.875rem; color: var(--gray-700); margin-bottom: 0.5rem; word-break: break-all; }
-        .history-status {
-            display: inline-flex; align-items: center; gap: 0.5rem;
-            padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 12px; font-weight: 500;
-        }
-        .history-status.ok { background: rgba(16, 185, 129, 0.1); color: var(--secondary-color); }
-        .history-status.fail { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
-        .empty-history { text-align: center; padding: 3rem 1rem; color: var(--gray-500); }
-        .empty-history i { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.5; }
-
-        /* Results */
+        /* 结果容器 */
         .results-container { display: flex; flex-direction: column; gap: 2rem; }
-        .result-item {
-            background: var(--white); border: 1px solid var(--gray-200);
-            border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1rem;
-            transition: all var(--transition-fast); box-shadow: var(--shadow-sm);
-        }
-        .result-item:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-        .result-item.kernel-check-merged { background: var(--white); border: 1px solid var(--gray-200); padding: 0; overflow: hidden; }
-        .result-item.kernel-check-merged .result-header { background: var(--gray-50); padding: 1rem 1.5rem; border-bottom: 1px solid var(--gray-200); }
-        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .result-header-left { display: flex; align-items: center; gap: 1rem; }
-        .result-source {
-            padding: 0.25rem 0.75rem; border-radius: var(--radius-md);
-            font-size: 12px; font-weight: 600; color: var(--white); text-transform: uppercase;
-        }
-        .result-source.remote_check { background: var(--primary-color); }
-        .result-line { font-size: 12px; color: var(--gray-500); background: var(--gray-100); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); }
-
-        .kernel-modules-container { padding: 1.5rem; }
-        .kernel-module-item {
-            background: var(--white); border: 1px solid var(--gray-200);
-            border-radius: var(--radius-lg); margin-bottom: 1rem; padding: 1.25rem; transition: all var(--transition-fast);
-        }
-        .kernel-module-item:last-child { margin-bottom: 0; }
-        .kernel-module-item:hover { box-shadow: var(--shadow-sm); border-color: var(--primary-color); }
-        .module-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .module-title { display: flex; align-items: center; gap: 0.75rem; color: var(--gray-800); font-weight: 600; font-size: 1.1rem; }
-        .module-title i { color: var(--primary-color); }
-        .module-status-badge {
-            display: flex; align-items: center; gap: 0.5rem;
-            padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.875rem; font-weight: 500;
-        }
-        .module-status-badge.success { background: rgba(16, 185, 129, 0.1); color: var(--secondary-color); }
-        .module-status-badge.degraded { background: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
-        .module-status-badge.error { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
-        .module-detail-row { background: var(--gray-50); padding: 0.75rem 1rem; border-radius: var(--radius-md); font-size: 0.9rem; }
-        .download-info { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-        .download-label { color: var(--gray-600); font-weight: 500; }
-        .download-link-text { color: var(--primary-color); text-decoration: none; word-break: break-all; }
-        .download-link-text:hover { text-decoration: underline; }
-        .warning-msg { color: var(--warning-color); display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
-        .error-msg { color: var(--danger-color); display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
+        .results-section, .analysis-section { width: 100%; }
 
         .export-btn, .refresh-btn {
             padding: 0.5rem 1rem; background: var(--gradient-success); border: none;
             border-radius: var(--radius-md); color: var(--white);
             font-size: 12px; font-weight: 500; cursor: pointer;
-            display: flex; align-items: center; gap: 0.375rem; transition: all var(--transition-fast);
-            box-shadow: var(--shadow-sm); white-space: nowrap;
+            display: flex; align-items: center; gap: 0.375rem;
+            transition: all var(--transition-fast); box-shadow: var(--shadow-sm); white-space: nowrap;
         }
-        .refresh-btn { background: var(--gradient-primary); padding: 0.875rem; border-radius: var(--radius-lg); font-size: 14px; justify-content: center; width: auto; }
         .export-btn:hover, .refresh-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
 
-        .no-results, .error-state { text-align: center; padding: 4rem 2rem; color: var(--gray-500); }
-        .no-results i, .error-state i { font-size: 4rem; margin-bottom: 1.5rem; }
-        .error-state i { color: var(--danger-color); }
+        /* 结果项 */
+        .result-item, .analysis-item {
+            background: var(--white); border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1rem;
+            transition: all var(--transition-fast); box-shadow: var(--shadow-sm);
+        }
+        .result-item:hover, .analysis-item:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
 
-        /* Loading */
-        .loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px);
-            display: flex; align-items: center; justify-content: center; z-index: 2000;
-        }
-        .loading-spinner { text-align: center; background: var(--white); padding: 3rem; border-radius: var(--radius-2xl); box-shadow: var(--shadow-xl); }
-        .spinner {
-            width: 48px; height: 48px; border: 4px solid var(--gray-200);
-            border-top: 4px solid var(--primary-color); border-radius: 50%;
-            margin: 0 auto 1.5rem auto; animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .result-item.kernel-check-merged { background: var(--white); border: 1px solid var(--gray-200); padding: 0; overflow: hidden; }
+        .result-item.kernel-check-merged .result-header { background: var(--gray-50); padding: 1rem 1.5rem; border-bottom: 1px solid var(--gray-200); }
+
+        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .result-header-left { display: flex; align-items: center; gap: 1rem; }
+        .result-header-right { display: flex; align-items: center; gap: 0.5rem; }
+
+        .result-source { padding: 0.25rem 0.75rem; border-radius: var(--radius-md); font-size: 12px; font-weight: 600; color: var(--white); text-transform: uppercase; }
+        .result-source.remote_check { background: var(--primary-color); }
+        .result-source.ti { background: var(--secondary-color); }
+        .result-source.tiex { background: var(--warning-color); }
+        .result-source.viruskiller { background: var(--primary-color); }
+        .result-source.error { background: var(--danger-color); }
+        .result-source.analysis, .result-source.file_analysis { background: var(--info-color); }
+
+        .result-line { font-size: 12px; color: var(--gray-500); background: var(--gray-100); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); }
+        .result-file { font-size: 14px; color: var(--gray-600); margin-bottom: 0.5rem; font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; }
+        .result-content { font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; font-size: 13px; color: var(--gray-800); background: var(--gray-50); padding: 1rem; border-radius: var(--radius-md); word-break: break-all; border-left: 4px solid var(--primary-color); }
+
+        .kernel-modules-container { padding: 1.5rem; }
+        .kernel-module-item { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); margin-bottom: 1rem; padding: 1.25rem; transition: all var(--transition-fast); }
+        .kernel-module-item:last-child { margin-bottom: 0; }
+        .kernel-module-item:hover { box-shadow: var(--shadow-sm); border-color: var(--primary-color); }
+        .module-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .module-title { display: flex; align-items: center; gap: 0.75rem; color: var(--gray-800); font-weight: 600; font-size: 1.1rem; }
+        .module-title i { color: var(--primary-color); }
+
+        .module-status-badge { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.75rem; border-radius: var(--radius-full); font-size: 0.875rem; font-weight: 500; }
+        .module-status-badge.success { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
+        .module-status-badge.error { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
+        .module-status-badge.degraded { background: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
+
+        .module-detail-row { background: var(--gray-50); padding: 0.75rem 1rem; border-radius: var(--radius-md); font-size: 0.9rem; }
+        .download-info { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .download-label { color: var(--gray-600); font-weight: 500; }
+        .download-link-text { color: var(--primary-color); text-decoration: none; word-break: break-all; }
+        .download-link-text:hover { text-decoration: underline; }
+        .error-msg { color: var(--danger-color); display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
+        .warning-msg { color: var(--warning-color); display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
+
+        /* 文件上传区域 */
+        .upload-area { border: 2px dashed var(--gray-300); border-radius: var(--radius-xl); padding: 3rem 2rem; text-align: center; background: var(--gray-50); transition: all var(--transition-normal); margin-bottom: 2rem; position: relative; overflow: hidden; }
+        .upload-area.dragover { border-color: var(--primary-color); background: rgba(99, 102, 241, 0.05); transform: scale(1.02); }
+        .upload-content { position: relative; z-index: 1; }
+        .upload-icon { width: 80px; height: 80px; background: var(--gradient-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; box-shadow: var(--shadow-lg); }
+        .upload-icon i { color: var(--white); font-size: 32px; }
+        .upload-content h3 { font-size: 18px; font-weight: 600; color: var(--gray-800); margin-bottom: 0.5rem; }
+        .upload-content p { font-size: 14px; color: var(--gray-500); margin-bottom: 0.5rem; }
+        .file-limit { font-size: 12px; color: var(--gray-400); margin-bottom: 1.5rem !important; }
+        .file-input { display: none; }
+        .upload-btn { padding: 0.75rem 1.5rem; background: var(--white); border: 2px solid var(--gray-200); border-radius: var(--radius-lg); color: var(--gray-700); font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: all var(--transition-fast); }
+        .upload-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
+
+        .uname-section { margin-bottom: 2rem; }
+        .uname-input { width: 100%; min-height: 120px; padding: 1rem; background: var(--white); border: 2px solid var(--gray-200); border-radius: var(--radius-lg); color: var(--gray-800); font-size: 14px; font-family: inherit; resize: vertical; transition: all var(--transition-fast); outline: none; }
+        .uname-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+
+        .password-hint { display: flex; align-items: center; gap: 0.5rem; font-size: 12px; color: var(--gray-500); margin-top: 0.75rem; padding-left: 0.5rem; }
+
+        .auto-headers-toggle { margin-top: 1rem; padding: 0.75rem 0.9rem; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); background: var(--gray-50); }
+        .toggle-row { display: flex; align-items: center; gap: 0.6rem; cursor: pointer; user-select: none; }
+        .toggle-row input[type="checkbox"] { width: 18px; height: 18px; }
+        .toggle-label { font-weight: 600; color: var(--gray-800); }
+        .toggle-hint { margin-top: 0.35rem; font-size: 13px; color: var(--gray-600); line-height: 1.4; }
+
+        .file-list h4 { font-size: 16px; font-weight: 600; color: var(--gray-800); margin-bottom: 1rem; }
+        .file-items { max-height: 300px; overflow-y: auto; margin-bottom: 1.5rem; border-radius: var(--radius-lg); background: var(--gray-50); padding: 1rem; }
+        .file-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--white); border-radius: var(--radius-lg); margin-bottom: 0.75rem; box-shadow: var(--shadow-sm); transition: all var(--transition-fast); }
+        .file-item:hover { box-shadow: var(--shadow-md); }
+        .file-icon { width: 40px; height: 40px; background: var(--gradient-secondary); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--white); flex-shrink: 0; }
+        .file-info { flex: 1; }
+        .file-name { font-size: 14px; font-weight: 500; color: var(--gray-800); margin-bottom: 2px; }
+        .file-size { font-size: 12px; color: var(--gray-500); }
+        .file-remove { width: 32px; height: 32px; background: var(--danger-color); border: none; border-radius: var(--radius-md); color: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition-fast); }
+        .file-remove:hover { background: #dc2626; transform: scale(1.05); }
+        .file-actions { display: flex; gap: 1rem; }
+        .process-btn, .clear-btn { padding: 0.875rem 1.5rem; border: none; border-radius: var(--radius-lg); font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: all var(--transition-fast); }
+        .process-btn { background: var(--gradient-success); color: var(--white); box-shadow: var(--shadow-md); }
+        .process-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        .clear-btn { background: var(--gray-100); color: var(--gray-600); border: 2px solid var(--gray-200); }
+        .clear-btn:hover { background: var(--gray-200); color: var(--gray-800); }
+
+        /* 历史卡片 */
+        .history-card { flex: 1; display: flex; flex-direction: column; height: 400px; }
+        .history-card .card-body { flex: 1; display: flex; flex-direction: column; padding: 0 2rem 1.5rem 2rem; }
+        .history-container { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0.5rem 0; min-height: 200px; max-height: 300px; scroll-behavior: smooth; scrollbar-gutter: stable; position: relative; }
+        .history-container::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 10px; background: linear-gradient(to bottom, rgba(249, 250, 251, 0.8), transparent); pointer-events: none; z-index: 1; border-radius: var(--radius-md) var(--radius-md) 0 0; }
+        .history-container::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 10px; background: linear-gradient(to top, rgba(249, 250, 251, 0.8), transparent); pointer-events: none; z-index: 1; border-radius: 0 0 var(--radius-md) var(--radius-md); }
+
+        .history-item { display: flex; flex-direction: column; padding: 1rem 0.875rem; margin-bottom: 0.75rem; background: var(--gray-50); border-radius: var(--radius-md); border-left: 3px solid var(--gray-300); transition: all 0.2s ease; animation: fadeInUp 0.3s ease; min-height: 110px; }
+        .history-item:hover { background: var(--gray-100); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+        .history-item.success-status { border-left-color: var(--success-color); }
+        .history-item.error-status { border-left-color: var(--danger-color); background: #fef2f2; }
+        .history-item.error-status:hover { background: #fee2e2; }
+        .history-item.running-status { border-left-color: var(--info-color); }
+        .history-item.pending-status { border-left-color: var(--warning-color); }
+        .history-item.failed { border-left-color: var(--danger-color); background: #fef2f2; }
+        .history-item.failed:hover { background: #fee2e2; }
+        .history-item.hit { border-left-color: var(--danger-color); background: #fef2f2; }
+        .history-item.hit:hover { background: #fee2e2; }
+        .history-item.miss { border-left-color: var(--secondary-color); }
+
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .history-type { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.625rem; background: var(--primary-color); color: white; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 500; }
+        .history-type.file { background: var(--info-color); }
+        .history-type.domain { background: var(--primary-color); }
+        .history-type.ip { background: var(--warning-color); }
+        .history-type.adaptation { background: var(--primary-color); }
+        .history-time { font-size: 0.75rem; color: var(--gray-500); }
+        .history-content { font-size: 0.875rem; color: var(--gray-700); margin-bottom: 0.5rem; word-break: break-all; line-height: 1.5; }
+        .history-detail { font-size: 0.75rem; color: var(--gray-500); margin-bottom: 0.5rem; word-break: break-all; }
+        .history-result { display: flex; gap: 0.5rem; align-items: center; font-size: 0.75rem; margin-top: 0.25rem; }
+        .history-status { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.75rem; border-radius: var(--radius-full); font-size: 12px; font-weight: 500; }
+        .history-status.success-status { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
+        .history-status.error-status { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
+        .history-status.running-status { background: rgba(59, 130, 246, 0.1); color: var(--info-color); }
+        .history-status.pending-status { background: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
+        .history-status.ok { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
+        .history-status.fail { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
+        .history-error-message { font-size: 0.75rem; color: var(--danger-color); background: #fee2e2; padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); margin-top: 0.5rem; border: 1px solid #fecaca; }
+
+        .empty-history { text-align: center; padding: 3rem 1rem; color: var(--gray-500); height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .empty-history i { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.5; color: var(--gray-400); }
+        .empty-history p { font-size: 0.875rem; margin: 0; }
+
+        /* 空状态和错误状态 */
+        .no-results, .error-state { text-align: center; padding: 4rem 2rem; color: var(--gray-500); }
+        .no-results i, .error-state i { font-size: 4rem; margin-bottom: 1.5rem; color: var(--gray-300); }
+        .no-results h3, .error-state h3 { font-size: 18px; font-weight: 600; color: var(--gray-600); margin-bottom: 0.5rem; }
+        .no-results p, .error-state p { font-size: 14px; color: var(--gray-500); }
+        .error-state i { color: var(--danger-color); }
+        .error-state h3 { color: var(--danger-color); }
+        .no-results.success i { color: var(--info-color); }
+        .no-results.success h3 { color: var(--info-color); }
+        .no-results.adaptation-pending { background: #fffbeb; border: 1px solid #fcd34d; border-radius: var(--radius-lg); padding: 2rem 1.5rem; }
+        .no-results.adaptation-pending i { color: var(--warning-color); }
+        .no-results.adaptation-pending h3 { color: var(--warning-color); }
+
+        .detail-value.warning-status { color: var(--warning-color); font-weight: 600; }
+
+        .query-details { margin: 2rem 0; background: var(--gray-50); border-radius: var(--radius-lg); padding: 1.5rem; border: 1px solid var(--gray-200); }
+        .query-detail-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--gray-100); }
+        .query-detail-item:last-child { border-bottom: none; }
+        .detail-label { font-size: 14px; font-weight: 600; color: var(--gray-600); min-width: 80px; }
+        .detail-value { font-size: 14px; font-weight: 500; color: var(--gray-800); text-align: right; word-break: break-all; }
+        .detail-value.hash-value { font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace; color: var(--primary-color); background: var(--gray-50); padding: 0.375rem 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--gray-200); }
+        .success-status { color: var(--secondary-color) !important; display: inline-flex; align-items: center; gap: 0.25rem; }
+        .success-status::before { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
 
         /* Modal */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
@@ -371,64 +519,134 @@
         .modal-header { padding: 2rem 2rem 1rem 2rem; border-bottom: 1px solid var(--gray-200); }
         .modal-header h3 { font-size: 20px; font-weight: 600; color: var(--gray-800); }
         .modal-body { padding: 2rem; }
+        .modal-close { background: none; border: none; color: var(--gray-500); font-size: 1.25rem; cursor: pointer; padding: 0.5rem; border-radius: var(--radius-md); transition: all 0.2s ease; }
+        .modal-close:hover { background: var(--gray-200); color: var(--gray-700); }
+
+        .kernel-collect-modal-content { max-width: 920px; max-height: 86vh; overflow: hidden; }
+        .kernel-collect-modal-content .modal-body { max-height: calc(86vh - 76px); overflow: auto; }
+        .kernel-collect-card { box-shadow: none; border: 1px solid var(--gray-200); }
+
+        .collect-result-modal { max-width: 420px; text-align: center; }
+        .collect-result-message { font-size: 1rem; line-height: 1.6; color: var(--gray-800); margin: 0.5rem 0 0; }
+        .collect-result-actions { margin-top: 1.75rem; display: flex; justify-content: center; }
+
+        .details-modal-content { max-width: 800px; max-height: 80vh; overflow-y: auto; }
+        .details-section { padding: 1.5rem; border-bottom: 1px solid var(--gray-100); }
+        .details-section:last-child { border-bottom: none; }
+        .details-section h4 { margin: 0 0 1rem 0; color: var(--gray-800); font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+        .details-section h4 i { color: var(--primary-color); }
+        .loading-text { color: var(--gray-500); font-style: italic; padding: 1rem 0; text-align: center; }
+
+        .system-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
+        .stats-item { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius-md); padding: 1rem; text-align: center; }
+        .stats-value { font-size: 2rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.25rem; }
+        .stats-label { font-size: 0.875rem; color: var(--gray-600); font-weight: 500; }
+
         .progress-bar { width: 100%; height: 8px; background: var(--gray-200); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1rem; }
-        .progress-fill { height: 100%; background: var(--gradient-primary); border-radius: var(--radius-lg); transition: width var(--transition-normal); width: 0%; }
+        .progress-fill { height: 100%; background: var(--gradient-primary); border-radius: var(--radius-lg); transition: width var(--transition-normal); width: 0%; position: relative; }
+        .progress-bar.is-indeterminate .progress-fill { width: 32%; transition: none; animation: collect-indeterminate 1.25s ease-in-out infinite; }
+        @keyframes collect-indeterminate { 0% { transform: translateX(-100%); } 100% { transform: translateX(320%); } }
+
+        .progress-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .progress-text { font-size: 16px; font-weight: 500; color: var(--gray-800); }
+        .progress-stats { font-size: 14px; color: var(--gray-500); font-weight: 500; }
+        .progress-details { font-size: 14px; color: var(--gray-600); line-height: 1.5; }
+
+        /* 加载遮罩 */
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .loading-spinner { text-align: center; background: var(--white); padding: 3rem; border-radius: var(--radius-2xl); box-shadow: var(--shadow-xl); }
+        .spinner { width: 48px; height: 48px; border: 4px solid var(--gray-200); border-top: 4px solid var(--primary-color); border-radius: 50%; margin: 0 auto 1.5rem auto; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-spinner p { font-size: 16px; font-weight: 500; color: var(--gray-600); }
 
         /* Toast */
         .toast-container { position: fixed; top: 20px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 0.75rem; }
-        .toast {
-            background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-xl);
-            padding: 1rem 1.5rem; min-width: 320px; display: flex; align-items: center; gap: 0.75rem;
-            border-left: 4px solid var(--info-color); animation: slideInRight 0.3s ease-out;
-        }
+        .toast { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); padding: 1rem 1.5rem; min-width: 320px; display: flex; align-items: center; gap: 0.75rem; border-left: 4px solid var(--info-color); animation: slideInRight 0.3s ease-out; }
         .toast.success { border-left-color: var(--secondary-color); }
         .toast.error { border-left-color: var(--danger-color); }
         .toast.warning { border-left-color: var(--warning-color); }
+        .toast i { font-size: 18px; flex-shrink: 0; }
         .toast.success i { color: var(--secondary-color); }
         .toast.error i { color: var(--danger-color); }
         .toast.warning i { color: var(--warning-color); }
         .toast.info i { color: var(--info-color); }
-        .toast i { font-size: 18px; flex-shrink: 0; }
         .toast span { font-size: 14px; font-weight: 500; color: var(--gray-800); }
+
         @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .fade-in { animation: fadeIn 0.3s ease-out; }
 
-        .details-btn {
-            background: linear-gradient(135deg, var(--info-color) 0%, #2563eb 100%);
-            color: white; border: none; padding: 0.5rem 1rem;
-            border-radius: var(--radius-md); font-size: 12px; font-weight: 500;
-            cursor: pointer; display: flex; align-items: center; gap: 0.375rem;
-            transition: all 0.2s ease; box-shadow: var(--shadow-sm);
-        }
+        .details-btn { background: linear-gradient(135deg, var(--info-color) 0%, #2563eb 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: var(--radius-md); font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.375rem; transition: all 0.2s ease; box-shadow: var(--shadow-sm); }
         .details-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
 
+        /* 滚动条 */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--gray-100); border-radius: var(--radius-sm); }
+        ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: var(--radius-sm); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+        .history-container::-webkit-scrollbar { width: 6px; }
+        .history-container::-webkit-scrollbar-track { background: var(--gray-100); border-radius: var(--radius-sm); margin: 0.5rem 0; }
+        .history-container::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: var(--radius-sm); }
+
+        /* 响应式 */
         @media (max-width: 1200px) {
             .content-grid { grid-template-columns: 1fr; }
             .sidebar { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); display: grid; }
         }
         @media (max-width: 768px) {
             .main-container { padding: 1rem; }
-            .content-grid { grid-template-columns: 1fr; }
+            .nav-container { padding: 1rem; flex-direction: column; gap: 1rem; }
+            .brand-text h1 { font-size: 20px; }
+            .input-wrapper { flex-direction: column; }
+            .card-header { padding: 1.5rem 1.5rem 1rem 1.5rem; flex-direction: column; align-items: flex-start; gap: 1rem; }
+            .card-body { padding: 0 1.5rem 1.5rem 1.5rem; }
+            .file-actions { flex-direction: column; }
             .sidebar { grid-template-columns: 1fr; }
+            .toast { min-width: auto; margin: 0 1rem; }
+            .history-card { height: 350px; }
+            .history-container { max-height: 250px; min-height: 180px; }
+            .history-item { min-height: 100px; padding: 0.875rem 0.75rem; margin-bottom: 0.625rem; }
+            .examples-grid { grid-template-columns: 1fr; grid-template-rows: repeat(4, 1fr); }
+            .example-item { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+            .example-type { margin-right: 0; }
+        }
+        @media (max-width: 480px) {
+            .main-container { padding: 0.5rem; }
+            .nav-container { padding: 0.75rem; }
+            .feature-card { border-radius: var(--radius-xl); }
+            .card-header, .card-body { padding: 1rem; }
+            .upload-area { padding: 2rem 1rem; }
         }
     </style>
 </head>
 <body>
-    <header class="header">
-        <a href="/agent" class="btn-back">← 返回</a>
-        <h1 class="header-title">🔧 内核适配服务</h1>
-        <div class="status-badge" id="serviceStatus">
-            <div class="status-dot"></div>
-            <span>检查中...</span>
+    <!-- 顶部导航栏 -->
+    <nav class="top-navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="/agent" class="btn-back"><i class="fas fa-arrow-left"></i> 返回</a>
+                <div class="brand-icon"><i class="fas fa-microchip"></i></div>
+                <div class="brand-text">
+                    <h1>内核适配服务</h1>
+                    <span class="brand-subtitle">Kernel Adaptation Service</span>
+                </div>
+            </div>
+            <div class="nav-status">
+                <div class="status-badge" id="serviceStatus">
+                    <div class="status-dot"></div>
+                    <span>检查中...</span>
+                </div>
+            </div>
         </div>
-    </header>
+    </nav>
 
+    <!-- 主容器 -->
     <div class="main-container">
         <div class="content-grid">
+            <!-- 左侧主要功能区 -->
             <div class="main-content">
-                <!-- 内核适配查询卡片 -->
-                <div class="feature-card">
+                <div class="feature-card query-card">
                     <div class="card-header">
                         <div class="header-icon"><i class="fas fa-magnifying-glass"></i></div>
                         <div class="header-content">
@@ -437,70 +655,36 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="image-drop-zone" id="imageDropZone">
-                            <div class="image-drop-content" id="imageDropContent">
-                                <i class="fas fa-image"></i>
-                                <span>拖拽截图到此处，自动识别内核信息</span>
-                            </div>
-                            <div class="image-preview" id="imagePreview" style="display: none;">
-                                <img id="previewImg" src="" alt="预览">
-                                <div class="image-preview-overlay">
-                                    <button class="image-remove-btn" id="removeImageBtn" title="移除图片"><i class="fas fa-times"></i></button>
+                        <div class="query-input-section">
+                            <div class="image-drop-zone" id="imageDropZone">
+                                <div class="image-drop-content" id="imageDropContent">
+                                    <i class="fas fa-image"></i>
+                                    <span>拖拽截图到此处，自动识别内核信息</span>
                                 </div>
-                                <div class="image-ocr-status" id="ocrStatus" style="display: none;">
-                                    <i class="fas fa-spinner fa-spin"></i>
-                                    <span>正在识别...</span>
+                                <div class="image-preview" id="imagePreview" style="display: none;">
+                                    <img id="previewImg" src="" alt="预览">
+                                    <div class="image-preview-overlay">
+                                        <button class="image-remove-btn" id="removeImageBtn" title="移除图片"><i class="fas fa-times"></i></button>
+                                    </div>
+                                    <div class="image-ocr-status" id="ocrStatus" style="display: none;">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <span>正在识别...</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="input-wrapper">
-                            <input type="text" id="queryInput" class="query-input" placeholder="请输入 uname -a 命令的输出...">
-                            <button class="query-btn" id="queryBtn"><i class="fas fa-search"></i><span>查询</span></button>
-                        </div>
-                        <div class="query-hint"><i class="fas fa-lightbulb"></i><span>系统将自动识别内核版本、架构等信息</span></div>
-                        <div class="query-examples">
-                            <div class="example-category"><strong>示例：</strong></div>
-                            <div class="examples-grid">
-                                <div class="example-item"><span class="example-type">完整输出</span><span class="example-value">Linux localhost 5.15.0-125-generic x86_64</span></div>
-                                <div class="example-item"><span class="example-type">内核版本</span><span class="example-value">5.15.0-123-generic</span></div>
-                                <div class="example-item"><span class="example-type">架构</span><span class="example-value">x86_64</span></div>
-                                <div class="example-item"><span class="example-type">系统信息</span><span class="example-value">Linux localhost</span></div>
+                            <div class="input-wrapper">
+                                <input type="text" id="queryInput" class="query-input" placeholder="请输入 uname -a 命令的输出...">
+                                <button class="query-btn" id="queryBtn"><i class="fas fa-search"></i><span>查询</span></button>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 内核文件收集卡片 -->
-                <div class="feature-card">
-                    <div class="card-header">
-                        <div class="header-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                        <div class="header-content">
-                            <h2>内核文件收集</h2>
-                            <p>上传内核文件（如 .ko, .config, System.map 等）以供适配</p>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="upload-area" id="uploadArea">
-                            <div class="upload-content">
-                                <div class="upload-icon"><i class="fas fa-file-import"></i></div>
-                                <h3>拖拽文件到此处或点击上传</h3>
-                                <p>目前仅支持压缩包 (ZIP, TAR, 7Z)</p>
-                                <input type="file" id="fileInput" class="file-input" multiple>
-                                <button class="upload-btn" onclick="document.getElementById('fileInput').click()"><i class="fas fa-plus"></i>选择文件</button>
-                            </div>
-                        </div>
-                        <div class="uname-section" id="unameSection" style="display: none;">
-                            <label style="font-weight: 500; color: var(--gray-700); display: block; margin-bottom: 0.5rem;">
-                                <i class="fas fa-terminal"></i> 请输入 uname -a 命令的输出结果:
-                            </label>
-                            <textarea id="unameInput" class="uname-input" placeholder="例如: Linux localhost 5.15.0-125-generic #135-Ubuntu SMP ... x86_64" rows="3"></textarea>
-                        </div>
-                        <div class="file-list" id="fileList" style="display: none;">
-                            <h4>待上传文件</h4>
-                            <div class="file-items" id="fileItems"></div>
-                            <div class="file-actions">
-                                <button class="process-btn" id="processFilesBtn"><i class="fas fa-upload"></i>开始上传</button>
-                                <button class="clear-btn" id="clearFilesBtn"><i class="fas fa-trash"></i>清空列表</button>
+                            <div class="query-hint"><i class="fas fa-lightbulb"></i><span id="queryExample">系统将自动识别内核版本、架构等信息</span></div>
+                            <div class="query-examples">
+                                <div class="example-category"><strong>示例：</strong></div>
+                                <div class="examples-grid">
+                                    <div class="example-item"><span class="example-type">完整输出</span><span class="example-value">Linux localhost 5.15.0-125-generic x86_64</span></div>
+                                    <div class="example-item"><span class="example-type">内核版本</span><span class="example-value">5.15.0-123-generic</span></div>
+                                    <div class="example-item"><span class="example-type">架构</span><span class="example-value">x86_64</span></div>
+                                    <div class="example-item"><span class="example-type">系统信息</span><span class="example-value">Linux localhost</span></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -509,55 +693,20 @@
 
             <!-- 右侧信息面板 -->
             <div class="sidebar">
-                <div class="feature-card">
-                    <div class="card-header">
-                        <div class="header-icon"><i class="fas fa-chart-line"></i></div>
-                        <div class="header-content">
-                            <h2>系统状态</h2>
-                            <p>实时系统运行状态</p>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="status-grid">
-                            <div class="status-item">
-                                <div class="status-icon success"><i class="fas fa-heartbeat"></i></div>
-                                <div class="status-content">
-                                    <div class="status-label">服务状态</div>
-                                    <div class="status-value" id="healthStatus">检查中...</div>
-                                </div>
-                            </div>
-                            <div class="status-item">
-                                <div class="status-icon info"><i class="fas fa-clock"></i></div>
-                                <div class="status-content">
-                                    <div class="status-label">运行时间</div>
-                                    <div class="status-value" id="uptime">计算中...</div>
-                                </div>
-                            </div>
-                            <div class="status-item">
-                                <div class="status-icon info"><i class="fas fa-calendar-alt"></i></div>
-                                <div class="status-content">
-                                    <div class="status-label">当前时间</div>
-                                    <div class="status-value" id="currentTime">--:--:--</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="feature-card" style="flex:1;display:flex;flex-direction:column;">
+                <div class="feature-card history-card">
                     <div class="card-header">
                         <div class="header-icon"><i class="fas fa-history"></i></div>
                         <div class="header-content">
-                            <h2>查询历史</h2>
-                            <p>近10次查询记录</p>
+                            <h2>适配历史</h2>
+                            <p>近10次内核适配状态</p>
                         </div>
                         <div class="header-actions">
-                            <button class="clear-btn" id="clearHistoryBtn" style="padding:0.5rem 1rem;font-size:12px;"><i class="fas fa-trash"></i>清空</button>
+                            <button class="clear-btn" id="clearHistoryBtn" style="padding:0.5rem 1rem;font-size:12px;"><i class="fas fa-rotate"></i> 刷新</button>
                         </div>
                     </div>
-                    <div class="card-body" style="flex:1;display:flex;flex-direction:column;">
+                    <div class="card-body">
                         <div class="history-container" id="historyContainer">
-                            <div class="empty-history"><i class="fas fa-clock"></i><p>暂无查询历史</p></div>
+                            <div class="empty-history"><i class="fas fa-clock"></i><p>暂无适配历史</p></div>
                         </div>
                     </div>
                 </div>
@@ -566,7 +715,7 @@
 
         <!-- 结果展示区域 -->
         <div class="results-container">
-            <div id="resultsSection" style="display: none;">
+            <div class="results-section" id="resultsSection" style="display: none;">
                 <div class="feature-card">
                     <div class="card-header">
                         <div class="header-icon"><i class="fas fa-list-alt"></i></div>
@@ -575,8 +724,8 @@
                             <p id="resultsCount">0 个结果</p>
                         </div>
                         <div class="header-actions">
-                            <button class="refresh-btn" id="refreshResultsBtn"><i class="fas fa-sync-alt"></i>重新查询</button>
-                            <button class="export-btn" id="exportResultsBtn"><i class="fas fa-download"></i>下载内核文件</button>
+                            <button class="refresh-btn" id="refreshResultsBtn" style="background:var(--gradient-primary);padding:0.5rem 1rem;border-radius:var(--radius-md);font-size:12px;box-shadow:var(--shadow-sm);"><i class="fas fa-sync-alt"></i> 重新查询</button>
+                            <button class="export-btn" id="exportResultsBtn"><i class="fas fa-download"></i> 下载内核文件</button>
                         </div>
                     </div>
                     <div class="card-body"><div id="resultsContainer"></div></div>
@@ -588,13 +737,100 @@
     <!-- 进度条模态框 -->
     <div class="modal" id="progressModal" style="display: none;">
         <div class="modal-content">
-            <div class="modal-header"><h3>文件处理中</h3></div>
+            <div class="modal-header"><h3>适配处理中</h3></div>
             <div class="modal-body">
-                <div style="display:flex;justify-content:space-between;margin-bottom:1rem;">
-                    <div id="progressText">准备处理文件...</div>
-                    <div id="progressStats">0 / 0</div>
+                <div class="progress-info">
+                    <div class="progress-text" id="progressText">正在准备...</div>
+                    <div class="progress-stats" id="progressStats">0 / 0</div>
                 </div>
-                <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                <div class="progress-bar" id="progressBarTrack"><div class="progress-fill" id="progressFill"></div></div>
+                <div class="progress-details" id="progressDetails"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 内核文件收集（查询未命中时弹出） -->
+    <div class="modal" id="kernelCollectModal" style="display: none;">
+        <div class="modal-content kernel-collect-modal-content">
+            <div class="modal-header">
+                <h3>未找到适配结果</h3>
+                <button class="modal-close" id="closeKernelCollectModal" title="关闭"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="feature-card file-card kernel-collect-card">
+                    <div class="card-header">
+                        <div class="header-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <div class="header-content">
+                            <h2>内核文件收集</h2>
+                            <p>提交内核源码压缩包后，服务端将自动完成适配构建；将复用你刚刚输入的 uname -a</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-content">
+                                <div class="upload-icon"><i class="fas fa-file-import"></i></div>
+                                <h3>拖拽文件到此处或点击上传</h3>
+                                <p>目前仅支持压缩包 (ZIP, TAR, 7Z)</p>
+                                <p class="file-limit">不限文件大小</p>
+                                <input type="file" id="fileInput" class="file-input" multiple>
+                                <button class="upload-btn" onclick="document.getElementById('fileInput').click()"><i class="fas fa-plus"></i>选择文件</button>
+                            </div>
+                        </div>
+                        <div class="uname-section" id="unameSection" style="display: none;">
+                            <div style="flex-direction: column; gap: 0.5rem;">
+                                <label for="unameInput" style="font-weight: 500; color: var(--gray-700); display: block; margin-bottom: 0.5rem;">
+                                    <i class="fas fa-terminal"></i> uname -a 命令输出（将用于适配构建与后续自动查询）:
+                                </label>
+                                <textarea id="unameInput" class="uname-input" placeholder="例如: Linux localhost 5.15.0-125-generic #135-Ubuntu SMP ... x86_64" rows="3"></textarea>
+                            </div>
+                            <div class="password-hint"><i class="fas fa-info-circle"></i><span>uname -a 越完整越准确，适配结果越可靠</span></div>
+                        </div>
+                        <div class="auto-headers-toggle">
+                            <label class="toggle-row">
+                                <input type="checkbox" id="autoHeadersToggle">
+                                <span class="toggle-label">无头文件适配（自动下载内核头文件后再适配）</span>
+                            </label>
+                            <div class="toggle-hint">开启后可不上传文件；服务端将按 uname -a 自动下载头文件并触发适配构建。</div>
+                        </div>
+                        <div class="file-list" id="fileList" style="display: block;">
+                            <h4>待适配文件</h4>
+                            <div class="file-items" id="fileItems"></div>
+                            <div class="file-actions">
+                                <button class="process-btn" id="processFilesBtn"><i class="fas fa-gears"></i>开始适配</button>
+                                <button class="clear-btn" id="clearFilesBtn"><i class="fas fa-trash"></i>清空列表</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 内核收集适配结果 -->
+    <div class="modal" id="collectResultModal" style="display: none;">
+        <div class="modal-content collect-result-modal">
+            <div class="modal-header"><h3 id="collectResultTitle">提示</h3></div>
+            <div class="modal-body">
+                <p class="collect-result-message" id="collectResultMessage"></p>
+                <div class="collect-result-actions">
+                    <button type="button" class="process-btn" id="collectResultOkBtn">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 系统详情模态框 -->
+    <div class="modal" id="detailsModal" style="display: none;">
+        <div class="modal-content details-modal-content">
+            <div class="modal-header">
+                <h3>系统详情</h3>
+                <button class="modal-close" id="closeDetailsModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="details-section">
+                    <h4><i class="fas fa-chart-bar"></i> 系统统计</h4>
+                    <div class="system-stats" id="systemStats"><div class="loading-text">加载中...</div></div>
+                </div>
             </div>
         </div>
     </div>
@@ -609,66 +845,91 @@
 
     <script>
     // 内核适配前端应用（通过 /api/kernel/ 代理访问 kernel-build 服务）
-    class KernelApp {
+    class ThreatIntelApp {
         constructor() {
-            this.apiBase = '/api/kernel';
+            this.baseURL = '/api/kernel';
+
+            this.requestQueue = new Map();
             this.cache = new Map();
             this.cacheTimeout = 5 * 60 * 1000;
+            this.maxConcurrentRequests = 10;
+            this.activeRequests = new Set();
+            this.retryConfig = { maxRetries: 3, delay: 1000 };
+
+            this.debounceTimers = new Map();
+            this.debounceDelay = 300;
+
             this.uploadedFiles = new Map();
-            this.queryHistory = this.loadQueryHistory();
-            this.lastQueryInput = '';
-            this.supportedImageFormats = ['image/png', 'image/jpeg', 'image/jpg', 'image/bmp', 'image/webp'];
+            this.maxFileSize = Infinity;
             this.supportedFormats = ['.zip', '.rar', '.7z', '.tar', '.gz'];
-            this.init();
+            this.supportedImageFormats = ['image/png', 'image/jpeg', 'image/jpg', 'image/bmp', 'image/webp'];
+            this.processingQueue = [];
+            this.currentProgress = { current: 0, total: 0 };
+            this.droppedImageData = null;
+
+            this.adaptationJobs = [];
+            this._adaptationCompletedCacheBust = new Set();
+            this.maxHistoryItems = 10;
+
+            this.cacheHits = 0;
+            this.cacheMisses = 0;
+            this.lastQueryInput = '';
+            this._collectResultOnConfirm = null;
+
+            this.init().catch((e) => { console.error('初始化失败:', e); });
         }
 
         async init() {
+            this.serverStartTime = null;
+            this.serverUptimeOffset = 0;
+            this.serverUptimeLoadTime = null;
+
             this.bindEvents();
             this.setupFileUpload();
-            this.setupImageDrop();
             this.updateCurrentTime();
-            await this.checkHealth();
-            this.loadUptime();
-            this.updateHistoryDisplay();
-            setInterval(() => { this.updateCurrentTime(); this.loadUptime(); }, 1000);
-            setInterval(() => this.loadUptime(), 300000);
+            await this.loadServerUptime();
+            this.loadInitialData();
+            this.startPerformanceMonitoring();
         }
 
         bindEvents() {
             document.getElementById('queryBtn').addEventListener('click', () => this.performQuery());
             document.getElementById('queryInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') this.performQuery(); });
-            document.getElementById('refreshResultsBtn').addEventListener('click', () => this.retryLastQuery());
-            document.getElementById('exportResultsBtn').addEventListener('click', () => this.downloadKernelFile());
-            document.getElementById('clearHistoryBtn').addEventListener('click', () => this.clearQueryHistory());
+            document.getElementById('closeDetailsModal')?.addEventListener('click', () => this.hideSystemDetails());
+            document.getElementById('detailsModal')?.addEventListener('click', (e) => { if (e.target.id === 'detailsModal') this.hideSystemDetails(); });
+            document.getElementById('collectResultModal').addEventListener('click', (e) => { if (e.target.id === 'collectResultModal') this.hideCollectResultModal(); });
+            document.getElementById('kernelCollectModal')?.addEventListener('click', (e) => { if (e.target.id === 'kernelCollectModal') this.hideKernelCollectModal(); });
+            document.getElementById('closeKernelCollectModal')?.addEventListener('click', () => this.hideKernelCollectModal());
+            document.getElementById('autoHeadersToggle')?.addEventListener('change', () => { this.renderFileList(); this.checkUnameInput(); });
             document.getElementById('processFilesBtn').addEventListener('click', () => this.processFiles());
             document.getElementById('clearFilesBtn').addEventListener('click', () => this.clearFileList());
+            document.getElementById('collectResultOkBtn').addEventListener('click', () => this.hideCollectResultModal(true));
+            document.getElementById('exportResultsBtn')?.addEventListener('click', () => this.downloadKernelFile());
+            document.getElementById('refreshResultsBtn')?.addEventListener('click', () => this.retryLastQuery());
+            document.getElementById('clearHistoryBtn')?.addEventListener('click', () => this.loadAdaptationHistory(true));
+            this.setupExampleClicks();
+            this.setupImageDrop();
+        }
+
+        setupExampleClicks() {
             document.querySelectorAll('.example-item').forEach(item => {
                 item.addEventListener('click', () => {
-                    document.getElementById('queryInput').value = item.querySelector('.example-value').textContent;
-                    this.showToast('已填入示例', 'info');
+                    const exampleValue = item.querySelector('.example-value').textContent;
+                    document.getElementById('queryInput').value = exampleValue;
+                    this.showToast(`已填入示例: ${exampleValue}`, 'info');
+                    document.getElementById('queryInput').focus();
                 });
             });
         }
 
         setupImageDrop() {
             const dropZone = document.getElementById('imageDropZone');
+            const removeBtn = document.getElementById('removeImageBtn');
             dropZone.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('dragover'); });
             dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); if (!dropZone.contains(e.relatedTarget)) dropZone.classList.remove('dragover'); });
-            dropZone.addEventListener('drop', (e) => {
-                e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('dragover');
-                const files = Array.from(e.dataTransfer.files);
-                const imageFile = files.find(f => this.supportedImageFormats.includes(f.type));
-                if (imageFile) this.handleImageDrop(imageFile);
-                else this.showToast('请拖拽图片文件', 'warning');
-            });
-            dropZone.addEventListener('click', (e) => {
-                if (e.target.closest('.image-remove-btn')) return;
-                if (this.droppedImageData) return;
-                const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*';
-                input.onchange = (ev) => { const f = ev.target.files[0]; if (f && this.supportedImageFormats.includes(f.type)) this.handleImageDrop(f); };
-                input.click();
-            });
-            document.getElementById('removeImageBtn').addEventListener('click', (e) => { e.stopPropagation(); this.removeDroppedImage(); });
+            dropZone.addEventListener('drop', (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('dragover'); const files = Array.from(e.dataTransfer.files); const imageFile = files.find(f => this.supportedImageFormats.includes(f.type)); if (imageFile) this.handleImageDrop(imageFile); else if (files.length > 0) this.showToast('请拖拽图片文件（PNG、JPG、BMP、WebP）', 'warning'); });
+            dropZone.addEventListener('click', (e) => { if (e.target.closest('.image-remove-btn')) return; if (this.droppedImageData) return; const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.onchange = (ev) => { const file = ev.target.files[0]; if (file && this.supportedImageFormats.includes(file.type)) this.handleImageDrop(file); }; input.click(); });
+            removeBtn.addEventListener('click', (e) => { e.stopPropagation(); this.removeDroppedImage(); });
         }
 
         async handleImageDrop(file) {
@@ -682,13 +943,12 @@
             ocrStatus.style.display = 'flex';
             try {
                 const formData = new FormData(); formData.append('file', file);
-                const response = await fetch(`${this.apiBase}/api/v1/ocr`, { method: 'POST', body: formData });
+                const response = await fetch(`${this.baseURL}/api/v1/ocr`, { method: 'POST', body: formData });
                 const data = await response.json();
-                if (data.success && data.text) {
-                    document.getElementById('queryInput').value = data.text;
-                    this.showToast('图片识别成功', 'success');
-                } else { this.showToast('未能识别出有效文本', 'warning'); }
-            } catch (error) { this.showToast('OCR 请求失败', 'error'); }
+                if (data.success && data.text) { document.getElementById('queryInput').value = data.text; this.showToast('图片识别成功，已填入查询内容', 'success'); }
+                else if (data.error) { this.showToast(`OCR 识别失败: ${data.error}`, 'error'); }
+                else { this.showToast('未能识别出有效文本', 'warning'); }
+            } catch (error) { this.showToast('OCR 请求失败，请检查网络连接', 'error'); }
             finally { ocrStatus.style.display = 'none'; }
         }
 
@@ -696,225 +956,492 @@
             document.getElementById('imageDropContent').style.display = 'none';
             const preview = document.getElementById('imagePreview'); preview.style.display = 'inline-block';
             document.getElementById('previewImg').src = dataUrl;
+            document.getElementById('imageDropZone').classList.remove('dragover');
         }
 
         removeDroppedImage() {
             this.droppedImageData = null; document.getElementById('previewImg').src = '';
             document.getElementById('imagePreview').style.display = 'none';
             document.getElementById('imageDropContent').style.display = 'flex';
+            this.showToast('图片已移除', 'info');
         }
 
-        async checkHealth() {
-            try {
-                const resp = await fetch(`${this.apiBase}/health`);
-                if (resp.ok) {
-                    this.updateServiceStatus('online', '运行正常');
-                    document.getElementById('healthStatus').textContent = '运行正常';
-                } else throw new Error();
-            } catch {
-                this.updateServiceStatus('offline', '服务异常');
-                document.getElementById('healthStatus').textContent = '服务异常';
+        detectInputType(input) { return input.trim() ? 'ip' : null; }
+        isKernelVersion(input) { return input.trim().length > 0; }
+
+        setupFileUpload() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+            uploadArea.addEventListener('dragleave', (e) => { e.preventDefault(); if (!uploadArea.contains(e.relatedTarget)) uploadArea.classList.remove('dragover'); });
+            uploadArea.addEventListener('drop', (e) => { e.preventDefault(); uploadArea.classList.remove('dragover'); this.handleFileSelection(Array.from(e.dataTransfer.files)); });
+            fileInput.addEventListener('change', (e) => this.handleFileSelection(Array.from(e.target.files)));
+        }
+
+        handleFileSelection(files) {
+            const validFiles = files.filter(file => this.validateFile(file));
+            if (validFiles.length === 0) return;
+            validFiles.forEach(file => { const fileId = this.generateFileId(); this.uploadedFiles.set(fileId, { file, id: fileId, name: file.name, size: file.size, type: this.getFileType(file.name), status: 'pending' }); });
+            this.renderFileList();
+            this.checkUnameInput();
+            this.showToast(`已添加 ${validFiles.length} 个文件`, 'success');
+        }
+
+        checkUnameInput() {
+            const unameSection = document.getElementById('unameSection');
+            const autoToggle = document.getElementById('autoHeadersToggle');
+            const useAutoHeaders = !!(autoToggle && autoToggle.checked);
+            unameSection.style.display = (this.uploadedFiles.size > 0 || useAutoHeaders) ? 'block' : 'none';
+        }
+
+        validateFile(file) {
+            const ext = file.name.toLowerCase().substr(file.name.lastIndexOf('.'));
+            if (!this.supportedFormats.includes(ext)) { this.showToast(`不支持的文件格式: ${file.name}`, 'error'); return false; }
+            return true;
+        }
+
+        getFileType(filename) { const ext = filename.toLowerCase().substr(filename.lastIndexOf('.')); return this.supportedFormats.includes(ext) ? 'archive' : 'file'; }
+        generateFileId() { return 'file_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9); }
+
+        renderFileList() {
+            const fileList = document.getElementById('fileList');
+            const fileItems = document.getElementById('fileItems');
+            const clearBtn = document.getElementById('clearFilesBtn');
+            if (this.uploadedFiles.size === 0) {
+                fileItems.innerHTML = '<div class="empty-history" style="padding: 1.25rem 0.75rem;"><i class="fas fa-folder-open"></i><p style="margin: 0.4rem 0 0;">未选择文件</p></div>';
+                if (clearBtn) clearBtn.disabled = true;
+                return;
+            }
+            fileItems.innerHTML = '';
+            if (clearBtn) clearBtn.disabled = false;
+            for (const [fileId, fileData] of this.uploadedFiles) {
+                const div = document.createElement('div'); div.className = 'file-item'; div.dataset.fileId = fileId;
+                const fileIcon = fileData.type === 'archive' ? 'fas fa-file-archive' : 'fas fa-file';
+                const fileSize = this.formatFileSize(fileData.size);
+                div.innerHTML = `<div class="file-icon"><i class="${fileIcon}"></i></div><div class="file-info"><div class="file-name">${this.escapeHtml(fileData.name)}</div><div class="file-size">${fileSize} • ${fileData.type === 'archive' ? '压缩包' : '文件'}</div></div><button class="file-remove" onclick="app.removeFile('${fileId}')"><i class="fas fa-times"></i></button>`;
+                fileItems.appendChild(div);
             }
         }
 
-        updateServiceStatus(status, text) {
-            const el = document.getElementById('serviceStatus');
-            el.className = `status-badge ${status}`; el.querySelector('span').textContent = text;
-        }
+        removeFile(fileId) { this.uploadedFiles.delete(fileId); this.renderFileList(); this.checkUnameInput(); this.showToast('文件已移除', 'info'); }
+        clearFileList() { this.uploadedFiles.clear(); this.renderFileList(); this.checkUnameInput(); document.getElementById('fileInput').value = ''; this.showToast('文件列表已清空', 'info'); }
 
-        async loadUptime() {
+        formatFileSize(bytes) { if (bytes === 0) return '0 B'; const k = 1024; const sizes = ['B', 'KB', 'MB', 'GB']; const i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]; }
+
+        async processFiles() {
+            const unameInput = document.getElementById('unameInput').value.trim();
+            if (!unameInput) { this.showToast('请输入 uname -a 命令的输出结果', 'warning'); document.getElementById('unameInput').focus(); return; }
+            const autoToggle = document.getElementById('autoHeadersToggle');
+            const useAutoHeaders = !!(autoToggle && autoToggle.checked);
+            if (this.uploadedFiles.size === 0 && !useAutoHeaders) { this.showToast('请先添加待适配文件，或开启"无头文件适配"', 'warning'); return; }
+            if (this.uploadedFiles.size > 1) { this.showToast('当前一次只能提交一个内核适配任务，请保留一个文件后重试', 'warning'); return; }
+            const processBtn = document.getElementById('processFilesBtn');
+            processBtn.disabled = true;
             try {
-                const resp = await fetch(`${this.apiBase}/api/v1/uptime`);
-                const data = await resp.json();
-                if (data.success) document.getElementById('uptime').textContent = data.uptime_string || '运行中';
-            } catch {}
+                let job;
+                if (this.uploadedFiles.size === 0 && useAutoHeaders) {
+                    job = await this.collectKernelAuto(unameInput);
+                } else {
+                    const [, fileData] = [...this.uploadedFiles.entries()][0];
+                    this.showProgressModal();
+                    this.setProgressBarIndeterminate(false);
+                    this.updateCollectProgress({ text: `正在上传: ${fileData.name}`, percent: 5, fileLabel: '1 / 1' });
+                    job = await this.uploadKernelFile(fileData.file, unameInput, {
+                        onUploadProgress: (ratio) => { this.updateCollectProgress({ text: `正在上传: ${fileData.name}`, percent: Math.max(5, Math.min(98, Math.round((typeof ratio === 'number' ? ratio : 0) * 100))), fileLabel: '1 / 1' }); },
+                    });
+                    this.hideProgressModal();
+                }
+                this.hideKernelCollectModal();
+                this.uploadedFiles.clear(); this.renderFileList(); this.checkUnameInput();
+                document.getElementById('fileInput').value = '';
+                processBtn.disabled = false;
+                await this.loadAdaptationHistory();
+                this.invalidateKernelCheckCacheForQueryInput(unameInput);
+                this.showCollectResultModal({ title: '适配任务已提交', message: '适配已在后台执行，你可以继续进行其他查询。完成状态会显示在右侧适配历史中。' });
+            } catch (error) {
+                this.hideProgressModal(); processBtn.disabled = false;
+                this.showCollectResultModal({ title: '适配任务提交失败', message: error.message || '当前无法提交适配任务' });
+            }
         }
 
-        updateCurrentTime() {
-            document.getElementById('currentTime').textContent = new Date().toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        async uploadKernelFile(file, unameInfo, callbacks = {}) {
+            const formData = new FormData(); formData.append('file', file); formData.append('uname_info', unameInfo);
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `${this.baseURL}/api/v1/collect-kernel`);
+                xhr.responseType = 'json';
+                xhr.upload.onprogress = (e) => { if (e.lengthComputable && callbacks.onUploadProgress) callbacks.onUploadProgress(e.loaded / e.total); };
+                xhr.onload = () => { const ok = xhr.status >= 200 && xhr.status < 300; const body = xhr.response; if (ok) { resolve(body); return; } reject(new Error(body && body.error ? body.error : `HTTP ${xhr.status}`)); };
+                xhr.onerror = () => reject(new Error('网络连接失败'));
+                xhr.send(formData);
+            });
         }
+
+        async collectKernelAuto(unameInfo) {
+            const formData = new FormData(); formData.append('uname_info', unameInfo);
+            const response = await fetch(`${this.baseURL}/api/v1/collect-kernel-auto`, { method: 'POST', body: formData });
+            if (!response.ok) { const data = await response.json().catch(() => ({})); throw new Error(data.error || `HTTP ${response.status}`); }
+            return await response.json();
+        }
+
+        showCollectResultModal({ title, message, onConfirm }) {
+            this._collectResultOnConfirm = typeof onConfirm === 'function' ? onConfirm : null;
+            document.getElementById('collectResultTitle').textContent = title || '提示';
+            document.getElementById('collectResultMessage').textContent = message || '';
+            document.getElementById('collectResultModal').style.display = 'flex';
+        }
+
+        hideCollectResultModal(runCallback) {
+            document.getElementById('collectResultModal').style.display = 'none';
+            const cb = this._collectResultOnConfirm; this._collectResultOnConfirm = null;
+            if (runCallback && cb) Promise.resolve().then(() => cb()).catch((e) => console.error(e));
+        }
+
+        showKernelCollectModal(unameText) {
+            const modal = document.getElementById('kernelCollectModal'); if (!modal) return;
+            modal.style.display = 'flex';
+            const unameSection = document.getElementById('unameSection'); if (unameSection) unameSection.style.display = 'block';
+            const unameInput = document.getElementById('unameInput');
+            if (unameInput && unameText != null) { const txt = String(unameText).trim(); if (txt && !unameInput.value.trim()) unameInput.value = txt; }
+            this.renderFileList(); this.checkUnameInput();
+        }
+
+        hideKernelCollectModal() { const modal = document.getElementById('kernelCollectModal'); if (modal) modal.style.display = 'none'; }
+
+        shouldPromptCollectAfterQuery(data) {
+            if (!data || !Array.isArray(data.results)) return true;
+            if (data.results.length === 0) return true;
+            return !data.results.some((r) => { const vi = r && r.version_info; return vi && (vi.status === 'available' || vi.status === 'degraded'); });
+        }
+
+        setProgressBarIndeterminate(on) { const track = document.getElementById('progressBarTrack'); if (track) { if (on) track.classList.add('is-indeterminate'); else track.classList.remove('is-indeterminate'); } }
+
+        updateCollectProgress({ text, percent, fileLabel }) {
+            const pct = Math.max(0, Math.min(100, percent));
+            document.getElementById('progressText').textContent = text;
+            if (fileLabel != null) document.getElementById('progressStats').textContent = fileLabel;
+            document.getElementById('progressFill').style.width = `${pct}%`;
+            document.getElementById('progressDetails').textContent = text;
+        }
+
+        showProgressModal() { document.getElementById('progressModal').style.display = 'flex'; }
+        hideProgressModal() { document.getElementById('progressModal').style.display = 'none'; this.setProgressBarIndeterminate(false); }
 
         async performQuery() {
             const input = document.getElementById('queryInput').value.trim();
             if (!input) { this.showToast('请输入要查询的内容', 'error'); return; }
             this.lastQueryInput = input;
-            const cacheKey = `kernel_${input}`;
-            if (this.cache.has(cacheKey) && Date.now() - this.cache.get(cacheKey).ts < this.cacheTimeout) {
-                this.displayQueryResults(this.cache.get(cacheKey).data); return;
-            }
-            document.getElementById('loadingOverlay').style.display = 'flex';
-            try {
-                const resp = await fetch(`${this.apiBase}/api/v1/check-adaptation`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: 'kernel_check', value: input })
-                });
-                const data = await resp.json();
-                this.cache.set(cacheKey, { data, ts: Date.now() });
-                this.displayQueryResults(data);
-                const count = data.results ? data.results.length : 0;
-                this.showToast(`查询完成，${count > 0 ? count + ' 个适配规则' : '未找到匹配'}`, count > 0 ? 'success' : 'info');
-                this.addToHistory(input, data.results);
-            } catch (error) {
-                this.showToast('查询失败: ' + error.message, 'error');
-                this.displayError('查询失败: ' + error.message);
-            } finally { document.getElementById('loadingOverlay').style.display = 'none'; }
+            const queryKey = `query_unified_${input}`;
+            this.debounceRequest(queryKey, () => this.executeQuery(input));
         }
 
         retryLastQuery() {
             if (!this.lastQueryInput) { this.showToast('没有可重新执行的查询', 'warning'); return; }
-            document.getElementById('queryInput').value = this.lastQueryInput; this.performQuery();
+            document.getElementById('queryInput').value = this.lastQueryInput;
+            this.performQuery();
+        }
+
+        debounceRequest(key, callback) {
+            if (this.debounceTimers.has(key)) clearTimeout(this.debounceTimers.get(key));
+            this.debounceTimers.set(key, setTimeout(() => { this.debounceTimers.delete(key); callback(); }, this.debounceDelay));
+        }
+
+        async executeQuery(input) {
+            const trimmedInput = (input || '').trim();
+            const queryType = this.detectInputType(trimmedInput);
+            if (!queryType) { this.showToast('无法识别输入类型', 'error'); this.displayQueryError('输入格式不正确', 'client_error'); return; }
+
+            await this.loadAdaptationHistory(false);
+            const activeJob = this.getActiveAdaptationJobForInput(trimmedInput);
+            if (activeJob) { this.displayKernelAdaptationInProgress(trimmedInput, activeJob); this.showToast('该内核正在后台适配中', 'info'); return; }
+
+            const cacheKey = `${queryType}_${trimmedInput}`;
+            if (this.cache.has(cacheKey)) { const cached = this.cache.get(cacheKey); if (Date.now() - cached.timestamp < this.cacheTimeout) { this.recordCacheHit(); this.displayQueryResults(cached.data); this.showToast(`查询完成（缓存），找到 ${cached.data.results ? cached.data.results.length : 0} 个结果`, 'success'); return; } else { this.cache.delete(cacheKey); } }
+            this.recordCacheMiss();
+
+            if (this.activeRequests.size >= this.maxConcurrentRequests) { this.showToast('请求过多，请稍后再试', 'error'); return; }
+            const requestId = Date.now() + Math.random();
+            this.activeRequests.add(requestId);
+            this.showLoading(true);
+            try {
+                const data = await this.makeRequestWithRetry({ url: `${this.baseURL}/api/v1/check-adaptation`, method: 'POST', headers: { 'Content-Type': 'application/json' }, timeoutMs: 30000, body: JSON.stringify({ type: 'kernel_check', value: trimmedInput }) });
+                this.cache.set(cacheKey, { data, timestamp: Date.now() });
+                this.displayQueryResults(data);
+                const resultCount = data.results ? data.results.length : 0;
+                this.showToast(resultCount > 0 ? `查询完成，找到 ${resultCount} 个适配规则` : '查询完成，未找到匹配的适配规则', resultCount > 0 ? 'success' : 'info');
+                if (this.shouldPromptCollectAfterQuery(data)) this.showKernelCollectModal(input);
+            } catch (error) {
+                let errorType = 'network_error'; let errorMessage = error.message;
+                if (error.message.includes('HTTP 4')) { errorType = 'client_error'; errorMessage = '查询参数错误'; }
+                else if (error.message.includes('HTTP 5')) { errorType = 'server_error'; errorMessage = '服务器内部错误'; }
+                else if (error.name === 'AbortError' || error.message.includes('timeout')) { errorType = 'timeout_error'; errorMessage = '查询超时'; }
+                this.showToast(`查询失败: ${errorMessage}`, 'error');
+                this.displayQueryError(errorMessage, errorType);
+            } finally { this.activeRequests.delete(requestId); this.showLoading(false); }
         }
 
         displayQueryResults(data) {
-            const section = document.getElementById('resultsSection');
-            const container = document.getElementById('resultsContainer');
-            if (!data || !data.results || !Array.isArray(data.results)) { this.displayError('服务器响应异常'); return; }
-            document.getElementById('resultsCount').textContent = `${data.results.length} 个结果`;
-            container.innerHTML = ''; section.style.display = 'block'; section.classList.add('fade-in');
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const resultsCount = document.getElementById('resultsCount');
+            if (!data) { this.displayQueryError('服务器响应为空', 'server_error'); return; }
+            if (!data.hasOwnProperty('results')) { this.displayQueryError('缺少结果字段', 'server_error'); return; }
+            if (!Array.isArray(data.results)) { this.displayQueryError('未找到匹配的适配规则', 'server_error'); return; }
+            resultsCount.textContent = `${data.results.length} 个结果`;
+            resultsContainer.innerHTML = '';
+            resultsSection.style.display = 'block';
+            resultsSection.classList.add('fade-in');
             if (data.results.length === 0) {
-                container.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><h3>查询完成</h3><p>未找到匹配的适配规则</p></div>';
+                resultsContainer.innerHTML = `<div class="no-results success"><i class="fas fa-search"></i><h3>查询完成</h3><p>未找到匹配的适配规则</p></div>`;
                 return;
             }
-            // 内核适配检测结果聚合展示
-            const firstInfo = data.results[0].version_info;
-            if (firstInfo) {
-                const div = document.createElement('div'); div.className = 'result-item kernel-check-merged';
-                let modulesHtml = '';
-                data.results.forEach(r => {
-                    const info = r.version_info; const st = info.status;
-                    const cls = st === 'available' ? 'success' : st === 'degraded' ? 'degraded' : 'error';
-                    const icon = st === 'available' ? 'fa-check-circle' : st === 'degraded' ? 'fa-exclamation-triangle' : 'fa-times-circle';
-                    const txt = st === 'available' ? '已适配' : st === 'degraded' ? '降级适配' : '未适配';
-                    let detail = '';
-                    if (st === 'available') detail = `<div class="download-info"><span class="download-label"><i class="fas fa-link"></i> 下载链接:</span><a href="${info.download_url}" target="_blank" class="download-link-text">${this.esc(info.download_url)}</a></div>`;
-                    else if (st === 'degraded') detail = `<div class="download-info"><span class="download-label"><i class="fas fa-link"></i> 下载链接:</span><a href="${info.download_url}" target="_blank" class="download-link-text">${this.esc(info.download_url)}</a></div><div class="warning-msg"><i class="fas fa-exclamation-triangle"></i> ${this.esc(info.use_reason || '降级匹配结果，建议测试后使用')}</div>`;
-                    else detail = `<div class="error-msg"><i class="fas fa-exclamation-circle"></i> ${this.esc(info.recommendation || '暂无适配文件')}</div>`;
-                    modulesHtml += `<div class="kernel-module-item"><div class="module-header-row"><div class="module-title"><i class="fas fa-cube"></i><span>${this.esc(r.file)}</span></div><span class="module-status-badge ${cls}"><i class="fas ${icon}"></i> ${txt}</span></div><div class="module-detail-row">${detail}</div></div>`;
-                });
-                div.innerHTML = `<div class="result-header"><div class="result-header-left"><span class="result-source remote_check">KERNEL CHECK</span><span class="result-line">内核版本: ${this.esc(firstInfo.kernel_version)} (${this.esc(firstInfo.architecture)})</span></div></div><div class="kernel-modules-container">${modulesHtml}</div>`;
-                container.appendChild(div);
-            } else {
-                data.results.forEach((r, i) => {
-                    const div = document.createElement('div'); div.className = 'result-item';
-                    div.innerHTML = `<div class="result-header"><div class="result-header-left"><span class="result-source ${r.source || ''}">${(r.source || '').toUpperCase()}</span></div></div><div class="result-content">${this.esc(r.content || JSON.stringify(r))}</div>`;
-                    container.appendChild(div);
-                });
-            }
-            section.scrollIntoView({ behavior: 'smooth' });
+            const isKernelCheck = data.results.length > 0 && data.results[0].source === 'remote_check' && data.results[0].version_info;
+            if (isKernelCheck) { this.displayKernelCheckResults(data.results); resultsSection.scrollIntoView({ behavior: 'smooth' }); return; }
+            data.results.forEach((result, index) => { const resultElement = this.createResultElement(result, index); resultsContainer.appendChild(resultElement); });
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
         }
 
-        displayError(msg) {
-            const section = document.getElementById('resultsSection');
+        displayKernelCheckResults(results) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const resultsSection = document.getElementById('resultsSection');
+            resultsContainer.innerHTML = '';
+            resultsSection.style.display = 'block';
+            const div = document.createElement('div'); div.className = 'result-item kernel-check-merged';
+            const firstInfo = results[0].version_info;
+            let modulesHtml = '';
+            results.forEach(result => {
+                const info = result.version_info; const status = info.status;
+                const isAvailable = status === 'available'; const isDegraded = status === 'degraded';
+                const statusClass = isAvailable ? 'success' : (isDegraded ? 'degraded' : 'error');
+                const icon = isAvailable ? 'fa-check-circle' : (isDegraded ? 'fa-exclamation-triangle' : 'fa-times-circle');
+                const statusText = isAvailable ? '已适配' : (isDegraded ? '降级适配' : '未适配');
+                let detailHtml = '';
+                if (isAvailable) { detailHtml = `<div class="download-info"><span class="download-label"><i class="fas fa-link"></i> 下载链接:</span><a href="${info.download_url}" target="_blank" class="download-link-text">${info.download_url}</a></div>`; }
+                else if (isDegraded) { detailHtml = `<div class="download-info"><span class="download-label"><i class="fas fa-link"></i> 下载链接:</span><a href="${info.download_url}" target="_blank" class="download-link-text">${info.download_url}</a></div><div class="warning-msg"><i class="fas fa-exclamation-triangle"></i> ${this.escapeHtml(info.use_reason || '降级匹配结果，建议测试后使用')}</div>`; }
+                else { detailHtml = `<div class="error-msg"><i class="fas fa-exclamation-circle"></i> ${this.escapeHtml(info.recommendation || '暂无适配文件')}</div>`; }
+                modulesHtml += `<div class="kernel-module-item"><div class="module-header-row"><div class="module-title"><i class="fas fa-cube"></i><span class="module-name">${this.escapeHtml(result.file)}</span></div><span class="module-status-badge ${statusClass}"><i class="fas ${icon}"></i> ${statusText}</span></div><div class="module-detail-row">${detailHtml}</div></div>`;
+            });
+            div.innerHTML = `<div class="result-header"><div class="result-header-left"><span class="result-source remote_check">KERNEL CHECK</span><span class="result-line">内核版本: ${this.escapeHtml(firstInfo.kernel_version)} (${this.escapeHtml(firstInfo.architecture)})</span></div></div><div class="kernel-modules-container">${modulesHtml}</div>`;
+            resultsContainer.appendChild(div);
+        }
+
+        createResultElement(result, index) {
+            const div = document.createElement('div'); div.className = 'result-item'; div.style.animationDelay = `${index * 0.1}s`;
+            div.innerHTML = `<div class="result-header"><div class="result-header-left"><span class="result-source ${result.source}">${result.source.toUpperCase()}</span><span class="result-line">第 ${result.line} 行</span></div></div><div class="result-file">${this.escapeHtml(result.file)}</div><div class="result-content">${this.escapeHtml(result.content)}</div>`;
+            return div;
+        }
+
+        displayQueryError(message, errorType = 'error') {
+            const resultsSection = document.getElementById('resultsSection');
             document.getElementById('resultsCount').textContent = '查询失败';
-            document.getElementById('resultsContainer').innerHTML = `<div class="error-state"><i class="fas fa-exclamation-triangle"></i><h3>查询失败</h3><p>${this.esc(msg)}</p></div>`;
-            section.style.display = 'block';
+            document.getElementById('resultsContainer').innerHTML = `<div class="error-state ${errorType}"><i class="fas fa-exclamation-triangle"></i><h3>查询失败</h3><p>${this.escapeHtml(message)}</p></div>`;
+            resultsSection.style.display = 'block';
+        }
+
+        async makeRequestWithRetry(options, retries = 0) {
+            try {
+                const controller = new AbortController();
+                const timeoutMs = Number.isFinite(options.timeoutMs) ? options.timeoutMs : 10000;
+                const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+                const response = await fetch(options.url, { method: options.method, headers: options.headers, body: options.body, signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                return await response.json();
+            } catch (error) {
+                if (retries < this.retryConfig.maxRetries && (error.name === 'AbortError' || error.message.includes('Failed to fetch'))) {
+                    await new Promise(resolve => setTimeout(resolve, this.retryConfig.delay * Math.pow(2, retries)));
+                    return this.makeRequestWithRetry(options, retries + 1);
+                }
+                throw error;
+            }
         }
 
         async downloadKernelFile() {
-            const container = document.getElementById('resultsContainer');
-            if (!container.querySelector('.result-item')) { this.showToast('没有可下载的内核文件', 'warning'); return; }
-            const cacheKey = `kernel_${this.lastQueryInput}`;
-            const cached = this.cache.get(cacheKey);
-            if (!cached || !cached.data.results || !cached.data.results[0].version_info) { this.showToast('无法获取内核版本信息', 'error'); return; }
-            const info = cached.data.results[0].version_info;
-            this.showToast('正在打包下载...', 'info');
+            const resultsContainer = document.getElementById('resultsContainer');
+            if (!resultsContainer.querySelector('.result-item')) { this.showToast('没有可下载的内核文件', 'warning'); return; }
+            let kernelVersion = '', architecture = '';
+            if (this.lastQueryInput) {
+                const queryType = this.detectInputType(this.lastQueryInput);
+                const cacheKey = `${queryType}_${this.lastQueryInput}`;
+                if (this.cache.has(cacheKey)) {
+                    const cached = this.cache.get(cacheKey);
+                    if (cached.data && cached.data.results && cached.data.results.length > 0 && cached.data.results[0].version_info) {
+                        kernelVersion = cached.data.results[0].version_info.kernel_version;
+                        architecture = cached.data.results[0].version_info.architecture;
+                    }
+                }
+            }
+            if (!kernelVersion || !architecture) { this.showToast('无法获取内核版本信息，请重新查询', 'error'); return; }
+            this.showToast('正在打包下载内核文件，请稍候...', 'info');
             try {
-                const resp = await fetch(`${this.apiBase}/api/v1/download-package`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ kernel_version: info.kernel_version, architecture: info.architecture })
-                });
-                if (!resp.ok) throw new Error('下载失败');
-                const disposition = resp.headers.get('Content-Disposition');
-                let filename = `${info.kernel_version}_ko.7z`;
+                const response = await fetch(`${this.baseURL}/api/v1/download-package`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kernel_version: kernelVersion, architecture: architecture }) });
+                if (!response.ok) { const errorData = await response.json().catch(() => ({})); throw new Error(errorData.error || `HTTP ${response.status}`); }
+                const disposition = response.headers.get('Content-Disposition');
+                let filename = `${kernelVersion}_ko.7z`;
                 if (disposition) { const m = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/); if (m) filename = m[1].replace(/['"]/g, ''); }
-                const blob = await resp.blob(); const url = URL.createObjectURL(blob);
+                const blob = await response.blob(); const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click();
-                URL.revokeObjectURL(url); document.body.removeChild(a);
+                window.URL.revokeObjectURL(url); document.body.removeChild(a);
                 this.showToast('下载已开始', 'success');
-            } catch (e) { this.showToast('下载失败: ' + e.message, 'error'); }
+            } catch (error) { this.showToast(`下载失败: ${error.message}`, 'error'); }
         }
 
-        // File upload
-        setupFileUpload() {
-            const area = document.getElementById('uploadArea'); const input = document.getElementById('fileInput');
-            area.addEventListener('dragover', (e) => { e.preventDefault(); area.classList.add('dragover'); });
-            area.addEventListener('dragleave', (e) => { e.preventDefault(); if (!area.contains(e.relatedTarget)) area.classList.remove('dragover'); });
-            area.addEventListener('drop', (e) => { e.preventDefault(); area.classList.remove('dragover'); this.handleFileSelection(Array.from(e.dataTransfer.files)); });
-            input.addEventListener('change', (e) => this.handleFileSelection(Array.from(e.target.files)));
+        extractKernelVersionFromText(text) { if (!text) return ''; const m = String(text).match(/(\d+\.\d+\.\d+-[^\s#]+)/); return m ? m[1] : ''; }
+
+        adaptationJobMatchesQueryInput(job, queryInput) {
+            const q = (queryInput || '').trim(); if (!q || !job) return false;
+            const ju = (job.uname_info || '').trim(); if (q === ju) return true;
+            const qv = this.extractKernelVersionFromText(q);
+            const jv = (job.kernel_version || '').trim() || this.extractKernelVersionFromText(ju);
+            if (qv && jv && qv === jv) return true;
+            if (jv && (q.includes(jv) || ju.includes(q))) return true;
+            return false;
         }
 
-        handleFileSelection(files) {
-            files.filter(f => { const ext = f.name.toLowerCase().substr(f.name.lastIndexOf('.')); return this.supportedFormats.includes(ext); })
-            .forEach(f => { this.uploadedFiles.set('f_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9), { file: f, name: f.name, size: f.size }); });
-            this.renderFileList();
-            if (this.uploadedFiles.size > 0) this.showToast(`已添加文件`, 'success');
+        getActiveAdaptationJobForInput(queryInput) {
+            for (const job of this.adaptationJobs) {
+                if (job.status !== 'pending' && job.status !== 'running') continue;
+                if (this.adaptationJobMatchesQueryInput(job, queryInput)) return job;
+            }
+            return null;
         }
 
-        renderFileList() {
-            const list = document.getElementById('fileList'); const items = document.getElementById('fileItems');
-            if (this.uploadedFiles.size === 0) { list.style.display = 'none'; document.getElementById('unameSection').style.display = 'none'; return; }
-            list.style.display = 'block'; document.getElementById('unameSection').style.display = 'block';
-            items.innerHTML = '';
-            for (const [id, fd] of this.uploadedFiles) {
-                const div = document.createElement('div'); div.className = 'file-item';
-                div.innerHTML = `<div class="file-icon"><i class="fas fa-file-archive"></i></div><div class="file-info"><div class="file-name">${this.esc(fd.name)}</div><div class="file-size">${this.formatSize(fd.size)}</div></div><button class="file-remove" data-id="${id}"><i class="fas fa-times"></i></button>`;
-                div.querySelector('.file-remove').addEventListener('click', () => { this.uploadedFiles.delete(id); this.renderFileList(); });
-                items.appendChild(div);
+        invalidateKernelCheckCacheForQueryInput(queryInput) {
+            const q = (queryInput || '').trim(); if (!q) return;
+            const qt = this.detectInputType(q); if (!qt) return;
+            this.cache.delete(`${qt}_${q}`);
+        }
+
+        _bustCacheForCompletedAdaptationJobs(jobs) {
+            if (!Array.isArray(jobs)) return;
+            for (const job of jobs) {
+                if (job.status !== 'completed' && job.status !== 'failed') continue;
+                if (this._adaptationCompletedCacheBust.has(job.id)) continue;
+                this._adaptationCompletedCacheBust.add(job.id);
+                this.invalidateKernelCheckCacheForQueryInput(job.uname_info || '');
+                const kv = job.kernel_version || this.extractKernelVersionFromText(job.uname_info || '');
+                if (kv && kv.trim() && kv !== (job.uname_info || '').trim()) this.invalidateKernelCheckCacheForQueryInput(kv.trim());
             }
         }
 
-        clearFileList() { this.uploadedFiles.clear(); this.renderFileList(); document.getElementById('fileInput').value = ''; }
-
-        async processFiles() {
-            if (this.uploadedFiles.size === 0) { this.showToast('请先上传文件', 'warning'); return; }
-            const uname = document.getElementById('unameInput').value.trim();
-            if (!uname) { this.showToast('请输入 uname -a 输出', 'warning'); return; }
-            document.getElementById('progressModal').style.display = 'flex';
-            let i = 0;
-            for (const [_, fd] of this.uploadedFiles) {
-                i++;
-                document.getElementById('progressText').textContent = `正在上传: ${fd.name}`;
-                document.getElementById('progressStats').textContent = `${i} / ${this.uploadedFiles.size}`;
-                document.getElementById('progressFill').style.width = `${(i / this.uploadedFiles.size) * 100}%`;
-                try {
-                    const formData = new FormData(); formData.append('file', fd.file); formData.append('uname_info', uname);
-                    await fetch(`${this.apiBase}/api/v1/collect-kernel`, { method: 'POST', body: formData });
-                } catch (e) { this.showToast(`上传失败 ${fd.name}`, 'error'); }
-            }
-            setTimeout(() => { document.getElementById('progressModal').style.display = 'none'; this.clearFileList(); this.showToast('文件上传完成', 'success'); }, 500);
+        displayKernelAdaptationInProgress(queryInput, job) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const resultsCount = document.getElementById('resultsCount');
+            const statusText = job.status === 'running' ? '适配构建进行中' : '适配任务排队中';
+            resultsCount.textContent = '适配中';
+            resultsContainer.innerHTML = `<div class="no-results adaptation-pending"><i class="fas fa-gears"></i><h3>${statusText}</h3><p>该内核正在后台适配，请勿使用「缓存」结果判断；完成后请再次查询或查看右侧适配历史。</p><div class="query-details"><div class="query-detail-item"><span class="detail-label">查询输入:</span><span class="detail-value">${this.escapeHtml(queryInput)}</span></div><div class="query-detail-item"><span class="detail-label">任务状态:</span><span class="detail-value warning-status">${this.escapeHtml(job.status)}</span></div></div></div>`;
+            resultsSection.style.display = 'block'; resultsSection.classList.add('fade-in');
         }
 
-        // History
-        loadQueryHistory() { try { return JSON.parse(localStorage.getItem('kernelQueryHistory') || '[]'); } catch { return []; } }
-        saveQueryHistory() { try { localStorage.setItem('kernelQueryHistory', JSON.stringify(this.queryHistory)); } catch {} }
-
-        addToHistory(input, results) {
-            let isHit = results && results.length > 0 && results.some(r => r.version_info && (r.version_info.status === 'available' || r.version_info.status === 'degraded'));
-            this.queryHistory.unshift({ content: input, isHit, time: new Date().toLocaleString('zh-CN'), ts: Date.now() });
-            if (this.queryHistory.length > 10) this.queryHistory = this.queryHistory.slice(0, 10);
-            this.saveQueryHistory(); this.updateHistoryDisplay();
+        async loadAdaptationHistory(showToast = false) {
+            try {
+                const response = await fetch(`${this.baseURL}/api/v1/adaptation-jobs`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                this.adaptationJobs = Array.isArray(data.jobs) ? data.jobs : [];
+                this._bustCacheForCompletedAdaptationJobs(this.adaptationJobs);
+                this.updateHistoryDisplay();
+                if (showToast) this.showToast('适配历史已刷新', 'success');
+            } catch (error) { if (showToast) this.showToast(`刷新适配历史失败: ${error.message}`, 'error'); }
         }
 
         updateHistoryDisplay() {
-            const el = document.getElementById('historyContainer');
-            if (!this.queryHistory.length) { el.innerHTML = '<div class="empty-history"><i class="fas fa-clock"></i><p>暂无查询历史</p></div>'; return; }
-            el.innerHTML = this.queryHistory.map(h => `<div class="history-item ${h.isHit ? 'success-status' : 'error-status'}"><div class="history-header"><span class="history-type"><i class="fas fa-code-branch"></i> 内核版本</span><span class="history-time">${h.time}</span></div><div class="history-content">${this.esc(h.content)}</div><div class="history-status ${h.isHit ? 'ok' : 'fail'}"><i class="fas fa-${h.isHit ? 'check-circle' : 'times-circle'}"></i>${h.isHit ? '找到适配' : '未找到适配'}</div></div>`).join('');
+            const historyContainer = document.getElementById('historyContainer');
+            const jobs = Array.isArray(this.adaptationJobs) ? this.adaptationJobs : [];
+            if (jobs.length === 0) { historyContainer.innerHTML = '<div class="empty-history"><i class="fas fa-clock"></i><p>暂无适配历史</p></div>'; return; }
+            historyContainer.innerHTML = jobs.map(job => this.createAdaptationHistoryItem(job)).join('');
         }
 
-        clearQueryHistory() { this.queryHistory = []; this.saveQueryHistory(); this.updateHistoryDisplay(); this.showToast('查询历史已清空', 'success'); }
+        createAdaptationHistoryItem(job) {
+            const statusInfo = this.getAdaptationStatusInfo(job.status);
+            const kindText = job.kind === 'auto' ? '无头文件适配' : '上传适配';
+            const timeText = job.created_at ? new Date(job.created_at * 1000).toLocaleString('zh-CN') : '';
+            const title = job.kernel_version || this.extractKernelVersionFromText(job.uname_info) || '未知内核';
+            const detailParts = [];
+            if (job.architecture) detailParts.push(job.architecture);
+            if (job.distro && job.distro !== 'unknown') detailParts.push(job.distro);
+            if (job.filename) detailParts.push(job.filename);
+            const detail = detailParts.join(' / ');
+            const errorHtml = job.error ? `<div class="history-error-message">错误: ${this.escapeHtml(job.error)}</div>` : '';
+            return `<div class="history-item ${statusInfo.itemClass}"><div class="history-header"><span class="history-type adaptation"><i class="fas fa-gears"></i> ${kindText}</span><span class="history-time">${timeText}</span></div><div class="history-content">${this.escapeHtml(title)}</div>${detail ? `<div class="history-detail">${this.escapeHtml(detail)}</div>` : ''}<div class="history-result"><span class="history-status ${statusInfo.statusClass}"><i class="fas fa-${statusInfo.icon}"></i> ${statusInfo.text}</span></div>${errorHtml}</div>`;
+        }
 
-        esc(text) { if (!text) return ''; const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
-        formatSize(bytes) { if (!bytes) return '0 B'; const k = 1024; const s = ['B','KB','MB','GB']; const i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + s[i]; }
-        showToast(msg, type = 'info') {
+        getAdaptationStatusInfo(status) {
+            if (status === 'completed') return { text: '适配成功', icon: 'check-circle', itemClass: 'success-status', statusClass: 'success-status' };
+            if (status === 'failed') return { text: '适配失败', icon: 'times-circle', itemClass: 'error-status', statusClass: 'error-status' };
+            if (status === 'running') return { text: '适配中', icon: 'spinner', itemClass: 'running-status', statusClass: 'running-status' };
+            return { text: '等待中', icon: 'clock', itemClass: 'pending-status', statusClass: 'pending-status' };
+        }
+
+        async loadServerUptime() {
+            try {
+                const response = await fetch(`${this.baseURL}/api/v1/uptime`);
+                const data = await response.json();
+                if (data.success) { this.serverStartTime = new Date(data.start_time); this.serverUptimeOffset = data.uptime_seconds; this.serverUptimeLoadTime = Date.now(); this.updateUptime(); }
+                else { this.serverStartTime = new Date(); this.serverUptimeOffset = 0; this.serverUptimeLoadTime = Date.now(); }
+            } catch { this.serverStartTime = new Date(); this.serverUptimeOffset = 0; this.serverUptimeLoadTime = Date.now(); }
+        }
+
+        async loadInitialData() {
+            await this.checkHealthStatus();
+            this.updatePerformanceStats();
+            await this.loadAdaptationHistory();
+        }
+
+        async checkHealthStatus() {
+            try {
+                const response = await fetch(`${this.baseURL}/health`);
+                if (response.ok) { this.updateServiceStatus('online', '运行正常'); }
+                else throw new Error();
+            } catch { this.updateServiceStatus('offline', '服务异常'); }
+        }
+
+        updateServiceStatus(status, text) { const indicator = document.getElementById('serviceStatus'); if (!indicator) return; indicator.className = `status-badge ${status}`; indicator.querySelector('span').textContent = text; }
+
+        formatUptime() {
+            if (!this.serverStartTime || !this.serverUptimeLoadTime) return '加载中...';
+            const now = Date.now(); const elapsedSinceLoad = Math.floor((now - this.serverUptimeLoadTime) / 1000); const totalUptimeSeconds = this.serverUptimeOffset + elapsedSinceLoad;
+            const hours = Math.floor(totalUptimeSeconds / 3600); const minutes = Math.floor((totalUptimeSeconds % 3600) / 60); const seconds = totalUptimeSeconds % 60;
+            if (hours > 0) return `${hours}小时${minutes}分钟`; else if (minutes > 0) return `${minutes}分钟${seconds}秒`; else return `${seconds}秒`;
+        }
+
+        showLoading(show) { document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none'; }
+
+        showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
             const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
-            const container = document.getElementById('toastContainer'); const toast = document.createElement('div'); toast.className = `toast ${type}`;
-            toast.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i><span>${this.esc(msg)}</span>`;
-            container.appendChild(toast); setTimeout(() => { if (toast.parentNode) toast.remove(); }, 5000);
+            toast.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i><span>${this.escapeHtml(message)}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 5000);
         }
+
+        escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+
+        startPerformanceMonitoring() {
+            setInterval(() => { this.cleanupCache(); }, 60000);
+            setInterval(() => { this.loadAdaptationHistory(); }, 5000);
+            setInterval(() => { this.loadServerUptime(); }, 300000);
+            setInterval(() => { this.updateCurrentTime(); this.updateUptime(); }, 1000);
+        }
+
+        updateCurrentTime() { /* no-op for this page */ }
+        updateUptime() { /* updated via navbar status */ }
+        cleanupCache() { const now = Date.now(); for (const [key, value] of this.cache.entries()) { if (now - value.timestamp > this.cacheTimeout) this.cache.delete(key); } }
+        updatePerformanceStats() {}
+        recordCacheHit() { this.cacheHits = (this.cacheHits || 0) + 1; }
+        recordCacheMiss() { this.cacheMisses = (this.cacheMisses || 0) + 1; }
+
+        hideSystemDetails() { const modal = document.getElementById('detailsModal'); if (modal) modal.style.display = 'none'; }
     }
 
     let app;
-    document.addEventListener('DOMContentLoaded', () => { app = new KernelApp(); });
+    document.addEventListener('DOMContentLoaded', () => { app = new ThreatIntelApp(); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && app) { app.checkHealthStatus(); app.loadAdaptationHistory(); } });
+    window.addEventListener('online', () => { if (app) { app.showToast('网络连接已恢复', 'success'); app.checkHealthStatus(); } });
+    window.addEventListener('offline', () => { if (app) app.showToast('网络连接已断开', 'error'); });
     </script>
 </body>
 </html>
