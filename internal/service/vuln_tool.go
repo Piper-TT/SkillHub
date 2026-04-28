@@ -239,9 +239,10 @@ func (t *PolicysQueryTool) searchByProduct(db *sql.DB, product string) (string, 
 	safeKeyword := strings.ReplaceAll(product, "'", "''")
 
 	// 模糊匹配：搜索 policys 表的 name、name_en、vendor 字段
+	lowerKeyword := strings.ToLower(safeKeyword)
 	sqlStr := fmt.Sprintf(
-		`SELECT id, name, risk, cve, type, cvss_base, published_date, threat_type, vendor, vuln_type FROM policys WHERE name LIKE '%%%s%%' OR name_en LIKE '%%%s%%' OR vendor LIKE '%%%s%%' ORDER BY published_date DESC LIMIT 50`,
-		safeKeyword, safeKeyword, safeKeyword,
+		`SELECT id, name, risk, cve, type, cvss_base, published_date, threat_type, vendor, vuln_type FROM policys WHERE LOWER(name) LIKE '%%%s%%' OR LOWER(name_en) LIKE '%%%s%%' OR LOWER(vendor) LIKE '%%%s%%' ORDER BY published_date DESC LIMIT 50`,
+		lowerKeyword, lowerKeyword, lowerKeyword,
 	)
 
 	result, err := executeQuery(db, sqlStr)
@@ -338,8 +339,8 @@ func (t *PolicysQueryTool) collectOSDetectionCommands(singleResult, doubleResult
 
 	var sb strings.Builder
 	for osName := range osSet {
-		safeName := strings.ReplaceAll(osName, "'", "''")
-		sqlStr := fmt.Sprintf(`SELECT product, system, cmd, filepath, registrypath FROM data WHERE product LIKE '%%%s%%' LIMIT 50`, safeName)
+		safeName := strings.ToLower(strings.ReplaceAll(osName, "'", "''"))
+		sqlStr := fmt.Sprintf(`SELECT product, system, cmd, filepath, registrypath FROM data WHERE LOWER(product) LIKE '%%%s%%' LIMIT 50`, safeName)
 		result, err := executeQuery(authDB, sqlStr)
 		if err != nil || result == "查询结果为空，没有匹配的数据。" {
 			continue
@@ -443,10 +444,10 @@ func (t *ProductAuthQueryTool) Execute(args map[string]interface{}) (string, err
 	}
 
 	keyword := extractProductKeyword(product)
-	safeKeyword := strings.ReplaceAll(keyword, "'", "''")
+	safeKeyword := strings.ToLower(strings.ReplaceAll(keyword, "'", "''"))
 
-	// 构建查询：product 模糊匹配
-	sqlStr := fmt.Sprintf(`SELECT * FROM data WHERE product LIKE '%%%s%%'`, safeKeyword)
+	// 构建查询：product 模糊匹配（大小写不敏感）
+	sqlStr := fmt.Sprintf(`SELECT * FROM data WHERE LOWER(product) LIKE '%%%s%%'`, safeKeyword)
 
 	// 可选 system 参数，精确匹配操作系统
 	if sys, ok := args["system"].(string); ok && sys != "" {
