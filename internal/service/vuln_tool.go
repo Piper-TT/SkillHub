@@ -58,6 +58,7 @@ func (t *PolicysQueryTool) Execute(args map[string]interface{}) (string, error) 
 	if db == nil {
 		return "", fmt.Errorf("policys 数据库未加载，请确认数据库文件存在")
 	}
+	defer db.Close()
 
 	// 模式1: 按产品名模糊搜索漏洞列表
 	if cveID == "" && product != "" {
@@ -222,7 +223,7 @@ func (t *PolicysQueryTool) Execute(args map[string]interface{}) (string, error) 
 		}
 
 		// 4. 自动从 products_auth 查询版本检测方法
-		if t.mgr.GetDB(DBProductAuth) != nil {
+		if t.mgr.IsAvailable(DBProductAuth) {
 			osCommands := t.collectOSDetectionCommands(singleRaw, doubleRaw)
 			if osCommands != "" {
 				sb.WriteString("## 版本检测方法\n\n")
@@ -336,6 +337,7 @@ func (t *PolicysQueryTool) collectOSDetectionCommands(singleResult, doubleResult
 	if authDB == nil {
 		return ""
 	}
+	defer authDB.Close()
 
 	var sb strings.Builder
 	for osName := range osSet {
@@ -442,6 +444,7 @@ func (t *ProductAuthQueryTool) Execute(args map[string]interface{}) (string, err
 	if db == nil {
 		return "", fmt.Errorf("products_auth 数据库未加载，请确认 ./data/vuln/products_auth.db 文件存在")
 	}
+	defer db.Close()
 
 	keyword := extractProductKeyword(product)
 	safeKeyword := strings.ToLower(strings.ReplaceAll(keyword, "'", "''"))
