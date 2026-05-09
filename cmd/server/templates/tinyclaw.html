@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TinyClaw - Lightweight Security Agent</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #050810;
+            --bg-surface: #0a0f1a;
+            --bg-elevated: #111827;
+            --coral-bright: #ff4d4d;
+            --coral-mid: #e63946;
+            --coral-dark: #991b1b;
+            --cyan-bright: #00e5cc;
+            --cyan-mid: #14b8a6;
+            --cyan-glow: rgba(0, 229, 204, .4);
+            --text-primary: #f0f4ff;
+            --text-secondary: #8892b0;
+            --text-muted: #5a6480;
+            --border-subtle: rgba(136, 146, 176, .15);
+            --border-accent: rgba(255, 77, 77, .3);
+            --surface-card: rgba(10, 15, 26, .65);
+            --surface-card-strong: rgba(10, 15, 26, .8);
+            --surface-overlay: rgba(0, 0, 0, .3);
+            --surface-interactive: rgba(255, 255, 255, .1);
+            --surface-interactive-hover: rgba(255, 255, 255, .2);
+            --surface-cyan-soft: rgba(0, 229, 204, .15);
+            --shadow-coral-soft: rgba(255, 77, 77, .15);
+            --shadow-coral-mid: rgba(255, 77, 77, .25);
+            --shadow-coral-strong: rgba(255, 77, 77, .35);
+            --shadow-cyan-soft: rgba(0, 229, 204, .15);
+            --hero-title-start: #f0f4ff;
+            --hero-title-end: #00e5cc;
+            --logo-gradient-start: #ff4d4d;
+            --logo-gradient-end: #991b1b;
+            --logo-glow: rgba(255, 77, 77, .4);
+            --logo-glow-hover: rgba(0, 229, 204, .6);
+            --font-display: 'Inter', system-ui, sans-serif;
+            --font-body: 'Inter', system-ui, sans-serif;
+            --font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+        }
+
+        *, *:before, *:after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        ::selection { background: var(--coral-bright); color: var(--bg-deep); }
+
+        .stars {
+            position: fixed; inset: 0;
+            background-image:
+                radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,.8), transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,.5), transparent),
+                radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,.6), transparent),
+                radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,.4), transparent),
+                radial-gradient(1px 1px at 160px 120px, rgba(255,255,255,.7), transparent),
+                radial-gradient(2px 2px at 200px 60px, rgba(0,229,204,.6), transparent),
+                radial-gradient(1px 1px at 250px 150px, rgba(255,255,255,.5), transparent),
+                radial-gradient(2px 2px at 300px 40px, rgba(255,77,77,.4), transparent);
+            background-size: 350px 200px;
+            animation: twinkle 8s ease-in-out infinite alternate;
+            pointer-events: none; z-index: 0;
+        }
+        @keyframes twinkle { 0% { opacity: .4; } to { opacity: .7; } }
+
+        .nebula {
+            position: fixed; inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% 20%, rgba(255,77,77,.12), transparent 50%),
+                radial-gradient(ellipse 60% 60% at 80% 30%, rgba(0,229,204,.08), transparent 50%),
+                radial-gradient(ellipse 90% 70% at 50% 90%, rgba(255,77,77,.06), transparent 50%);
+            pointer-events: none; z-index: 0;
+        }
+
+        .btn-back {
+            position: fixed; top: 16px; left: 16px; z-index: 999;
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: 999px;
+            border: 1px solid var(--border-subtle);
+            background: var(--surface-card-strong);
+            color: var(--text-secondary);
+            font-size: .85rem; font-weight: 500;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+            transition: all .25s cubic-bezier(.4,0,.2,1);
+        }
+        .btn-back:hover {
+            border-color: var(--border-accent);
+            color: var(--text-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--shadow-coral-soft);
+        }
+
+        .container {
+            position: relative; z-index: 1;
+            max-width: 860px; margin: 0 auto;
+            padding: 60px 24px 40px;
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            margin-bottom: 56px;
+            animation: fadeInUp .8s ease-out;
+        }
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-icon {
+            width: 100px; height: 100px;
+            margin: 0 auto 24px;
+            animation: float 4s ease-in-out infinite;
+            cursor: pointer; transition: transform .3s ease;
+        }
+        .hero-icon:hover { animation: none; transform: scale(1.1); }
+        .hero-icon svg {
+            width: 100%; height: 100%;
+            filter: drop-shadow(0 0 20px var(--logo-glow));
+            transition: filter .3s ease;
+        }
+        .hero-icon:hover svg { filter: drop-shadow(0 0 30px var(--logo-glow-hover)); }
+        .hero-icon .eye-glow { animation: blink 3s ease-in-out infinite; }
+        .hero-icon .antenna { animation: wiggle 2s ease-in-out infinite; transform-origin: center; }
+        .hero-icon .claw-left { animation: clawSnap 4s ease-in-out infinite; transform-origin: right center; }
+        .hero-icon .claw-right { animation: clawSnap 4s ease-in-out infinite .2s; transform-origin: left center; }
+        @keyframes blink { 0%,90%,to { opacity:1 } 95% { opacity:.3 } }
+        @keyframes wiggle { 0%,to { transform:rotate(0) } 25% { transform:rotate(-3deg) } 75% { transform:rotate(3deg) } }
+        @keyframes clawSnap { 0%,85%,to { transform:rotate(0) } 90% { transform:rotate(-8deg) } 95% { transform:rotate(0) } }
+        @keyframes float { 0%,to { transform:translateY(0) } 50% { transform:translateY(-8px) } }
+
+        .title {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 10vw, 4.5rem);
+            font-weight: 700; letter-spacing: -.03em;
+            line-height: 1; margin-bottom: 12px;
+        }
+        .title-main {
+            background: linear-gradient(135deg, var(--hero-title-start) 0%, var(--coral-bright) 52%, var(--hero-title-end) 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; animation: gradientShift 6s ease infinite;
+        }
+        @keyframes gradientShift { 0%,to { background-position:0% 50% } 50% { background-position:100% 50% } }
+
+        .tagline {
+            font-family: var(--font-display);
+            font-size: 1.1rem; font-weight: 500;
+            color: var(--coral-bright);
+            letter-spacing: .15em; text-transform: uppercase;
+            margin-bottom: 20px;
+            animation: fadeInUp .8s ease-out .15s both;
+        }
+        .description {
+            font-size: 1.1rem; color: var(--text-secondary);
+            max-width: 620px; margin: 0 auto; line-height: 1.7;
+            animation: fadeInUp .8s ease-out .3s both;
+        }
+
+        /* Shared section styles */
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 1.4rem; font-weight: 600;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .claw-accent { color: var(--coral-bright); font-weight: 700; }
+
+        /* ===== Architecture Flow ===== */
+        .arch-flow {
+            margin-bottom: 56px;
+            animation: fadeInUp .8s ease-out .4s both;
+        }
+        .flow-diagram {
+            display: flex; align-items: center; gap: 0;
+            padding: 20px 0;
+            overflow-x: auto;
+        }
+        .flow-node {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px 14px; gap: 10px;
+            border-radius: 16px;
+            border: 1px solid var(--border-subtle);
+            background: var(--surface-card-strong);
+            backdrop-filter: blur(12px);
+            text-align: center;
+            transition: all .25s cubic-bezier(.4,0,.2,1);
+            min-width: 110px;
+            position: relative;
+        }
+        .flow-node:hover {
+            transform: translateY(-4px);
+            border-color: var(--cyan-bright);
+            box-shadow: 0 12px 40px var(--shadow-cyan-soft);
+        }
+        .flow-arrow {
+            display: flex; align-items: center; justify-content: center;
+            width: 36px; flex-shrink: 0;
+            color: var(--text-muted);
+        }
+        .flow-arrow svg {
+            filter: drop-shadow(0 0 4px var(--cyan-glow));
+        }
+        .flow-node-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .flow-node-icon svg { width: 26px; height: 26px; }
+        .flow-node-title {
+            font-family: var(--font-display);
+            font-size: .9rem; font-weight: 600; line-height: 1.2;
+        }
+        .flow-node-desc {
+            font-size: .75rem; color: var(--text-muted); line-height: 1.3;
+            max-width: 100px;
+        }
+        .icon-bg-chat { background: rgba(0,229,204,.12); }
+        .icon-bg-openclaw { background: rgba(255,77,77,.12); }
+        .icon-bg-cli { background: rgba(0,229,204,.12); }
+        .icon-bg-server { background: rgba(0,229,204,.12); }
+        .icon-bg-agent { background: rgba(255,77,77,.12); }
+        .flow-fan {
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            flex-shrink: 0;
+        }
+        .fan-connector {
+            width: 2px; height: 12px;
+            background: linear-gradient(to bottom, var(--cyan-bright), transparent);
+        }
+        .fan-nodes {
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .fan-node {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px 18px; gap: 10px;
+            border-radius: 14px;
+            border: 1px solid var(--border-subtle);
+            background: var(--surface-card-strong);
+            backdrop-filter: blur(12px);
+            text-align: center;
+            min-width: 110px;
+            transition: all .25s cubic-bezier(.4,0,.2,1);
+        }
+        .fan-node:hover {
+            transform: translateY(-3px);
+            border-color: var(--coral-bright);
+            box-shadow: 0 8px 20px var(--shadow-coral-soft);
+        }
+        .fan-node-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255,77,77,.12);
+        }
+        .fan-node-icon svg { width: 28px; height: 28px; }
+        .fan-node-label {
+            font-size: .8rem; color: var(--text-muted); font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .flow-diagram {
+                flex-direction: column; align-items: center; gap: 0;
+            }
+            .flow-arrow { transform: rotate(90deg); width: auto; height: 36px; }
+            .flow-fan { flex-direction: row; gap: 8px; }
+            .fan-connector { width: 12px; height: 2px; }
+            .fan-nodes { flex-direction: row; }
+        }
+
+        /* ===== Steps detail ===== */
+        .steps {
+            margin-bottom: 56px;
+            animation: fadeInUp .8s ease-out .5s both;
+        }
+        .step-card {
+            display: flex; gap: 20px;
+            padding: 24px;
+            border-radius: 18px;
+            border: 1px solid var(--border-subtle);
+            background: var(--surface-card-strong);
+            backdrop-filter: blur(12px);
+            margin-bottom: 16px;
+            transition: all .25s cubic-bezier(.4,0,.2,1);
+        }
+        .step-card:last-child { margin-bottom: 0; }
+        .step-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-accent);
+            box-shadow: 0 8px 24px var(--shadow-coral-soft);
+        }
+        .step-num {
+            width: 36px; height: 36px; flex-shrink: 0;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--coral-bright), var(--coral-dark));
+            color: #fff; font-size: .9rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .step-body { flex: 1; min-width: 0; }
+        .step-head {
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 8px;
+        }
+        .step-title {
+            font-family: var(--font-display);
+            font-size: 1.05rem; font-weight: 600;
+        }
+        .step-badge {
+            display: inline-flex; align-items: center;
+            padding: 2px 10px; border-radius: 999px;
+            border: 1px solid var(--border-subtle);
+            background: var(--surface-overlay);
+            color: var(--text-muted);
+            font-size: .7rem; font-weight: 600;
+            letter-spacing: .04em; text-transform: uppercase;
+        }
+        .step-desc {
+            font-size: .9rem; color: var(--text-secondary);
+            line-height: 1.6; margin-bottom: 14px;
+        }
+
+        /* Code block inside step */
+        .code-block {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px; overflow: hidden;
+        }
+        .code-header {
+            display: flex; align-items: center; gap: 8px;
+            padding: 12px 16px;
+            background: var(--surface-overlay);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .code-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .code-dot:nth-child(1) { background: #ff5f57; }
+        .code-dot:nth-child(2) { background: #febc2e; }
+        .code-dot:nth-child(3) { background: #28c840; }
+        .code-title {
+            font-size: .75rem; color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+        .os-switch {
+            display: flex; gap: 4px;
+            background: var(--surface-overlay);
+            padding: 3px; border-radius: 6px;
+            margin-left: auto;
+        }
+        .os-btn {
+            font-family: var(--font-mono);
+            font-size: .7rem; padding: 4px 10px;
+            border: none; border-radius: 4px;
+            background: transparent; color: var(--text-muted);
+            cursor: pointer; transition: all .15s ease;
+            display: inline-flex; align-items: center; gap: 4px;
+        }
+        .os-btn:hover { color: var(--text-secondary); }
+        .os-btn.active {
+            background: var(--coral-bright); color: var(--bg-deep); font-weight: 600;
+        }
+        .code-content {
+            padding: 14px 20px;
+            font-family: var(--font-mono);
+            font-size: .85rem; line-height: 1.7;
+        }
+        .code-line {
+            display: flex; align-items: center; gap: 8px; padding: 3px 0;
+        }
+        .code-line.comment { color: var(--text-muted); font-style: italic; }
+        .code-line.cmd { color: var(--cyan-bright); }
+        .code-line .code-prompt { color: var(--coral-bright); user-select: none; }
+        .copy-btn {
+            opacity: 0; margin-left: auto;
+            display: grid; place-items: center;
+            width: 26px; height: 26px;
+            border: none; border-radius: 6px;
+            background: var(--surface-interactive);
+            color: var(--text-muted);
+            cursor: pointer; transition: all .2s ease;
+            flex-shrink: 0;
+        }
+        .code-line:hover .copy-btn { opacity: 1; }
+        .copy-btn:hover { background: var(--surface-interactive-hover); color: var(--text-primary); }
+        .copy-btn.copied { opacity: 1; background: var(--surface-cyan-soft); color: var(--cyan-bright); }
+
+        /* ===== Features ===== */
+        .features {
+            margin-bottom: 56px;
+            animation: fadeInUp .8s ease-out .6s both;
+        }
+        .features-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+        }
+        @media (min-width: 640px) {
+            .features-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        .feature-card {
+            padding: 20px; border-radius: 14px;
+            border: 1px solid var(--border-subtle);
+            background: var(--surface-card);
+            backdrop-filter: blur(12px);
+            transition: all .25s cubic-bezier(.4,0,.2,1);
+        }
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--coral-bright);
+            box-shadow: 0 12px 40px rgba(255, 77, 77, .2);
+        }
+        .feature-icon {
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 12px; font-size: 24px; color: var(--coral-bright);
+        }
+        .feature-title {
+            font-family: var(--font-display);
+            font-size: 1rem; font-weight: 600;
+            color: var(--text-primary); margin-bottom: 6px; text-align: center;
+        }
+        .feature-desc {
+            font-size: .85rem; color: var(--text-muted); line-height: 1.5;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: auto; padding-top: 40px;
+            text-align: center; font-size: .9rem; color: var(--text-muted);
+            animation: fadeInUp .8s ease-out .75s both;
+        }
+        .footer a { color: var(--coral-bright); text-decoration: none; transition: color .2s ease; }
+        .footer a:hover { color: var(--cyan-bright); }
+
+        /* Toast */
+        .toast-wrap {
+            position: fixed; top: 20px; right: 20px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .toast {
+            padding: 10px 18px;
+            background: var(--surface-card-strong);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            font-size: .85rem; font-weight: 500; color: var(--text-primary);
+            display: flex; align-items: center; gap: 8px;
+            backdrop-filter: blur(12px);
+            animation: toastIn .25s ease;
+        }
+        .toast .fa-check-circle { color: var(--cyan-bright); }
+        .toast .fa-info-circle { color: var(--coral-bright); }
+        @keyframes toastIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 40px 16px 32px; }
+            .hero-icon { width: 80px; height: 80px; }
+            .step-card { flex-direction: column; gap: 12px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *:before, *:after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+    <div class="nebula"></div>
+
+    <a href="/agent" class="btn-back"><i class="fas fa-arrow-left"></i> 返回</a>
+
+    <main class="container">
+        <!-- Hero -->
+        <header class="hero">
+            <div class="hero-icon" aria-hidden="true">
+                <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M60 10 C30 10 15 35 15 55 C15 75 30 95 45 100 L45 110 L55 110 L55 100 C55 100 60 102 65 100 L65 110 L75 110 L75 100 C90 95 105 75 105 55 C105 35 90 10 60 10Z" fill="url(#lg)" class="claw-body"/>
+                    <path d="M20 45 C5 40 0 50 5 60 C10 70 20 65 25 55 C28 48 25 45 20 45Z" fill="url(#lg)" class="claw-left"/>
+                    <path d="M100 45 C115 40 120 50 115 60 C110 70 100 65 95 55 C92 48 95 45 100 45Z" fill="url(#lg)" class="claw-right"/>
+                    <path d="M45 15 Q35 5 30 8" stroke="var(--coral-bright)" stroke-width="2" stroke-linecap="round" class="antenna"/>
+                    <path d="M75 15 Q85 5 90 8" stroke="var(--coral-bright)" stroke-width="2" stroke-linecap="round" class="antenna"/>
+                    <circle cx="45" cy="35" r="6" fill="#050810"/><circle cx="75" cy="35" r="6" fill="#050810"/>
+                    <circle cx="46" cy="34" r="2" fill="#00e5cc" class="eye-glow"/>
+                    <circle cx="76" cy="34" r="2" fill="#00e5cc" class="eye-glow"/>
+                    <defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="var(--logo-gradient-start)"/>
+                        <stop offset="100%" stop-color="var(--logo-gradient-end)"/>
+                    </linearGradient></defs>
+                </svg>
+            </div>
+            <h1 class="title"><span class="title-main">TinyClaw</span></h1>
+            <p class="tagline">轻量级终端安全代理</p>
+            <p class="description">
+                三步完成部署：安装 RPCServer → 安装 TinyClaw → 安装 TinyClawCLI 技能<br>
+                即可接入 OpenClaw 及任何支持技能的 AI-IDE
+            </p>
+        </header>
+
+        <!-- Architecture Flow -->
+        <section class="arch-flow">
+            <div class="section-header">
+                <h2 class="section-title"><span class="claw-accent">架构</span>流程</h2>
+            </div>
+            <div class="flow-diagram">
+                <!-- 钉钉/飞书 -->
+                <div class="flow-node">
+                    <div class="flow-node-icon icon-bg-chat">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--cyan-bright)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                            <line x1="9" y1="9" x2="9.01" y2="9"/><line x1="12" y1="9" x2="12.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
+                        </svg>
+                    </div>
+                    <div class="flow-node-title">钉钉/飞书</div>
+                    <div class="flow-node-desc">交互式入口</div>
+                </div>
+                <!-- Arrow -->
+                <div class="flow-arrow">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </div>
+                <!-- OpenClaw -->
+                <div class="flow-node">
+                    <div class="flow-node-icon icon-bg-openclaw">
+                        <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" width="26" height="26">
+                            <path d="M60 15 C35 15 20 35 20 52 C20 70 35 85 50 90 L50 105 L58 105 L58 90 C58 90 60 92 62 90 L62 105 L70 105 L70 90 C85 85 100 70 100 52 C100 35 85 15 60 15Z" fill="var(--coral-bright)" opacity=".85"/>
+                            <circle cx="48" cy="38" r="4" fill="var(--bg-deep)"/><circle cx="72" cy="38" r="4" fill="var(--bg-deep)"/>
+                            <circle cx="49" cy="37" r="1.5" fill="var(--cyan-bright)"/><circle cx="73" cy="37" r="1.5" fill="var(--cyan-bright)"/>
+                        </svg>
+                    </div>
+                    <div class="flow-node-title">OpenClaw</div>
+                    <div class="flow-node-desc">AI 编排平台</div>
+                </div>
+                <!-- Arrow -->
+                <div class="flow-arrow">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </div>
+                <!-- CLI工具 -->
+                <div class="flow-node">
+                    <div class="flow-node-icon icon-bg-cli">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--cyan-bright)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+                        </svg>
+                    </div>
+                    <div class="flow-node-title">CLI 工具</div>
+                    <div class="flow-node-desc">TinyClawCLI 技能</div>
+                </div>
+                <!-- Arrow -->
+                <div class="flow-arrow">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </div>
+                <!-- Server -->
+                <div class="flow-node">
+                    <div class="flow-node-icon icon-bg-server">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--cyan-bright)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/>
+                            <line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+                        </svg>
+                    </div>
+                    <div class="flow-node-title">RPCServer</div>
+                    <div class="flow-node-desc">RPC 服务端</div>
+                </div>
+                <!-- Fan-out to Agents -->
+                <div class="flow-arrow">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </div>
+                <div class="flow-fan">
+                    <div class="fan-connector"></div>
+                    <div class="fan-nodes">
+                        <div class="fan-node">
+                            <div class="fan-node-icon">
+                                <svg viewBox="0 0 120 120" fill="none" width="28" height="28">
+                                    <path d="M60 20 C40 20 28 36 28 48 C28 62 40 72 50 76 L50 90 L56 90 L56 76 C56 76 60 78 64 76 L64 90 L70 90 L70 76 C80 72 92 62 92 48 C92 36 80 20 60 20Z" fill="var(--coral-bright)" opacity=".7"/>
+                                    <circle cx="50" cy="40" r="3" fill="var(--bg-deep)"/><circle cx="70" cy="40" r="3" fill="var(--bg-deep)"/>
+                                </svg>
+                            </div>
+                            <div class="fan-node-label">Agent</div>
+                        </div>
+                        <div class="fan-node">
+                            <div class="fan-node-icon">
+                                <svg viewBox="0 0 120 120" fill="none" width="28" height="28">
+                                    <path d="M60 20 C40 20 28 36 28 48 C28 62 40 72 50 76 L50 90 L56 90 L56 76 C56 76 60 78 64 76 L64 90 L70 90 L70 76 C80 72 92 62 92 48 C92 36 80 20 60 20Z" fill="var(--coral-bright)" opacity=".7"/>
+                                    <circle cx="50" cy="40" r="3" fill="var(--bg-deep)"/><circle cx="70" cy="40" r="3" fill="var(--bg-deep)"/>
+                                </svg>
+                            </div>
+                            <div class="fan-node-label">Agent</div>
+                        </div>
+                        <div class="fan-node">
+                            <div class="fan-node-icon">
+                                <svg viewBox="0 0 120 120" fill="none" width="28" height="28">
+                                    <path d="M60 20 C40 20 28 36 28 48 C28 62 40 72 50 76 L50 90 L56 90 L56 76 C56 76 60 78 64 76 L64 90 L70 90 L70 76 C80 72 92 62 92 48 C92 36 80 20 60 20Z" fill="var(--coral-bright)" opacity=".7"/>
+                                    <circle cx="50" cy="40" r="3" fill="var(--bg-deep)"/><circle cx="70" cy="40" r="3" fill="var(--bg-deep)"/>
+                                </svg>
+                            </div>
+                            <div class="fan-node-label">Agent</div>
+                        </div>
+                    </div>
+                    <div class="fan-node-label" style="color:var(--coral-bright);font-size:.7rem;margin-top:2px;">TinyClaw Agent × N</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Steps Detail -->
+        <section class="steps">
+            <div class="section-header">
+                <h2 class="section-title"><span class="claw-accent">快速</span>开始</h2>
+            </div>
+
+            <!-- Step 1 -->
+            <div class="step-card">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    <div class="step-head">
+                        <span class="step-title">安装 RPCServer</span>
+                        <span class="step-badge">必需</span>
+                    </div>
+                    <p class="step-desc">在目标主机上安装 RPC 服务端组件，提供安全能力 RPC 接口。</p>
+                    <div class="code-block" id="step1-code">
+                        <div class="code-header">
+                            <div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div>
+                            <span class="code-title">Terminal</span>
+                            <div class="os-switch">
+                                <button class="os-btn active" onclick="switchOS('step1','win',this)"><i class="fab fa-windows"></i> Windows</button>
+                                <button class="os-btn" onclick="switchOS('step1','linux',this)"><i class="fab fa-linux"></i> Linux</button>
+                            </div>
+                        </div>
+                        <div class="code-content" id="step1-win">
+                            <div class="code-line comment"><span>REM 一键安装 RPCServer</span></div>
+                            <div class="code-line cmd">
+                                <span class="code-prompt">&gt; </span><span>{{.RPCServerWinURL}}</span>
+                                <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+                            </div>
+                        </div>
+                        <div class="code-content" id="step1-linux" style="display:none">
+                            <div class="code-line comment"><span># 一键安装</span></div>
+                            <div class="code-line cmd">
+                                <span class="code-prompt">$ </span><span>{{.RPCServerLinuxURL}}</span>
+                                <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="step-card">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    <div class="step-head">
+                        <span class="step-title">安装 TinyClaw</span>
+                        <span class="step-badge">必需</span>
+                    </div>
+                    <p class="step-desc">安装 TinyClaw 代理本体，自动连接 RPCServer。</p>
+                    <div class="code-block" id="step2-code">
+                        <div class="code-header">
+                            <div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div>
+                            <span class="code-title">Terminal</span>
+                            <div class="os-switch">
+                                <button class="os-btn active" onclick="switchOS('step2','win',this)"><i class="fab fa-windows"></i> Windows</button>
+                                <button class="os-btn" onclick="switchOS('step2','linux',this)"><i class="fab fa-linux"></i> Linux</button>
+                            </div>
+                        </div>
+                        <div class="code-content" id="step2-win">
+                            <div class="code-line comment"><span>REM 一键安装 TinyClaw</span></div>
+                            <div class="code-line cmd">
+                                <span class="code-prompt">&gt; </span><span>{{.TinyClawWinURL}}</span>
+                                <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+                            </div>
+                        </div>
+                        <div class="code-content" id="step2-linux" style="display:none">
+                            <div class="code-line comment"><span># 一键安装</span></div>
+                            <div class="code-line cmd">
+                                <span class="code-prompt">$ </span><span>{{.TinyClawLinuxURL}}</span>
+                                <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="step-card">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                    <div class="step-head">
+                        <span class="step-title">安装 TinyClawCLI 技能</span>
+                        <span class="step-badge">技能</span>
+                    </div>
+                    <p class="step-desc">下载 TinyClawCLI 技能包，解压后安装到 AI-IDE 的技能目录中，即可通过自然语言调用安全能力。</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div>
+                            <span class="code-title">Terminal</span>
+                        </div>
+                        <div class="code-content">
+                            <div class="code-line comment"><span># 下载 TinyClawCLI 技能包</span></div>
+                            <div class="code-line cmd">
+                                <span class="code-prompt">$ </span><span>{{.SkillDownloadCmd}}</span>
+                                <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+                            </div>
+                            <div class="code-line comment"><span># 或直接发送安装指令给 AI 助手</span></div>
+                            <div class="code-line cmd">
+                                <span class="code-prompt">&gt; </span><span>{{.SkillPrompt}}</span>
+                                <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section class="features">
+            <div class="section-header">
+                <h2 class="section-title">核心<span class="claw-accent">特性</span></h2>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-feather"></i></div>
+                    <div class="feature-title">轻量无感</div>
+                    <div class="feature-desc">极低资源占用，静默运行，不影响主机正常使用</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                    <div class="feature-title">快速部署</div>
+                    <div class="feature-desc">三步完成安装，支持批量下发，分钟级覆盖全量主机</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-plug"></i></div>
+                    <div class="feature-title">AI 原生</div>
+                    <div class="feature-desc">技能化接口，通过自然语言驱动，接入任意 AI-IDE</div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            TinyClaw &copy; 2026 &middot; <a href="/agent">SkillHub</a>
+        </footer>
+    </main>
+
+    <div class="toast-wrap" id="toastWrap"></div>
+
+    <script>
+        const COPY_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
+        const CHECK_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+        function switchOS(step, os, btn) {
+            const parent = btn.closest('.code-header');
+            parent.querySelectorAll('.os-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(step + '-win').style.display = os === 'win' ? '' : 'none';
+            document.getElementById(step + '-linux').style.display = os === 'linux' ? '' : 'none';
+        }
+
+        function copyCmd(btn) {
+            const line = btn.parentElement;
+            const spans = line.querySelectorAll('span:not(.code-prompt)');
+            const text = Array.from(spans).map(s => s.textContent).join('').trim();
+            navigator.clipboard.writeText(text).then(() => {
+                btn.classList.add('copied');
+                btn.innerHTML = CHECK_SVG;
+                toast('已复制到剪贴板', 'success');
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = COPY_SVG;
+                }, 2000);
+            });
+        }
+
+        function toast(msg, type) {
+            const el = document.createElement('div');
+            el.className = 'toast';
+            el.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'info-circle') + '"></i> ' + msg;
+            document.getElementById('toastWrap').appendChild(el);
+            setTimeout(() => el.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

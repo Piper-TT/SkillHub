@@ -26,3 +26,12 @@ ti:
 
 analysis:
   idalib_path: "C:\\Users\\tt\\AppData\\Local\\Programs\\Python\\Python314\\Scripts\\idalib-mcp.exe"  # idalib-mcp.exe 路径
+
+tinyclaw:
+  download_url: "http://10.50.6.49/edr/tinyclaw"
+  rpcserver_win_url: "iwr -useb http://10.50.6.49/edr/tinyclaw/install_rpc.ps1 | iex"
+  rpcserver_linux_url: "curl -fsSL http://10.50.6.49/edr/tinyclaw/install_rpc.sh | sudo bash"
+  tinyclaw_win_url: "iwr -useb http://10.50.6.49/edr/tinyclaw/install.ps1 | iex"
+  tinyclaw_linux_url: "curl -fsSL http://10.50.6.49/edr/tinyclaw/install.sh | sudo bash"
+  skill_download_cmd: "curl -L -o tinyclawskill.zip http://10.50.6.49/edr/tinyclaw/tinyclawskill.zip"
+  skill_prompt: "安装 TinyClawCLI 安全技能，连接本地 TinyClaw 服务"

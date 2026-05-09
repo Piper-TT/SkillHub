@@ -15,10 +15,27 @@ type Config struct {
 	Kernel   KernelConfig   `mapstructure:"kernel"`
 	TI       TIConfig       `mapstructure:"ti"`
 	Analysis AnalysisConfig `mapstructure:"analysis"`
+	Refresh  RefreshConfig  `mapstructure:"refresh"`
+	TinyClaw TinyClawConfig `mapstructure:"tinyclaw"`
+}
+
+type TinyClawConfig struct {
+	DownloadURL       string `mapstructure:"download_url"`
+	RPCServerWinURL   string `mapstructure:"rpcserver_win_url"`
+	RPCServerLinuxURL string `mapstructure:"rpcserver_linux_url"`
+	TinyClawWinURL    string `mapstructure:"tinyclaw_win_url"`
+	TinyClawLinuxURL  string `mapstructure:"tinyclaw_linux_url"`
+	SkillDownloadCmd  string `mapstructure:"skill_download_cmd"`
+	SkillPrompt       string `mapstructure:"skill_prompt"`
 }
 
 type AnalysisConfig struct {
 	IDALibPath string `mapstructure:"idalib_path"`
+}
+
+type RefreshConfig struct {
+	Enabled  bool `mapstructure:"enabled"`
+	Interval int  `mapstructure:"interval"` // hours
 }
 
 type KernelConfig struct {
@@ -101,6 +118,15 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("logging.log_file", "server.log")
 	v.SetDefault("kernel.service_url", "http://localhost:8081")
 	v.SetDefault("ti.service_url", "http://localhost:8080")
+	v.SetDefault("refresh.enabled", false)
+	v.SetDefault("refresh.interval", 24)
+	v.SetDefault("tinyclaw.download_url", "https://tinyclaw.example.com")
+	v.SetDefault("tinyclaw.rpcserver_win_url", "iwr -useb http://10.50.6.49/edr/tinyclaw/install_rpc.ps1 | iex")
+	v.SetDefault("tinyclaw.rpcserver_linux_url", "curl -fsSL http://10.50.6.49/edr/tinyclaw/install_rpc.sh | sudo bash")
+	v.SetDefault("tinyclaw.tinyclaw_win_url", "iwr -useb http://10.50.6.49/edr/tinyclaw/install.ps1 | iex")
+	v.SetDefault("tinyclaw.tinyclaw_linux_url", "curl -fsSL http://10.50.6.49/edr/tinyclaw/install.sh | sudo bash")
+	v.SetDefault("tinyclaw.skill_download_cmd", "curl -L -o tinyclawskill.zip http://10.50.6.49/edr/tinyclaw/tinyclawskill.zip")
+	v.SetDefault("tinyclaw.skill_prompt", "安装 TinyClawCLI 安全技能，连接本地 TinyClaw 服务")
 }
 
 // IsAllowedExtension 检查文件扩展名是否在白名单中

@@ -5,6 +5,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io/fs"
 	"net/http"
 	"os"
@@ -64,10 +65,10 @@ func main() {
 	skillService := service.NewSkillService(skillRepo, cfg.Server.UploadDir)
 	service.SetGlobalService(skillService)
 
-	// 初始化 MCP 依赖
-	mcpRepo := repository.NewMCPRepository(db)
-	mcpService := service.NewMCPService(mcpRepo)
-	mcpHandler := handlers.NewMCPHandler(mcpService)
+	// 初始化 ServerHub 依赖
+	serverRepo := repository.NewServerRepository(db)
+	serverService := service.NewServerService(serverRepo)
+	serverHandler := handlers.NewServerHandler(serverService)
 
 	// 初始化 AgentHub 依赖
 	agentRepo := repository.NewAgentRepository(db)
@@ -155,14 +156,14 @@ func main() {
 		// 初始化（仅用于开发测试）
 		api.POST("/init", skillHandler.InitUploadDir)
 
-		// MCP API 路由
-		api.GET("/mcp", mcpHandler.GetServers)
-		api.GET("/mcp/categories", mcpHandler.GetCategories)
-		api.GET("/mcp/stats", mcpHandler.GetStats)
-		api.GET("/mcp/:id", mcpHandler.GetServerByID)
-		api.POST("/mcp/upload", mcpHandler.UploadServer)
-		api.GET("/mcp/:id/download", mcpHandler.DownloadServer)
-		api.DELETE("/mcp/:id", mcpHandler.DeleteServer)
+		// ServerHub API 路由
+		api.GET("/server", serverHandler.GetServers)
+		api.GET("/server/categories", serverHandler.GetCategories)
+		api.GET("/server/stats", serverHandler.GetStats)
+		api.GET("/server/:id", serverHandler.GetServerByID)
+		api.POST("/server/upload", serverHandler.UploadServer)
+		api.GET("/server/:id/download", serverHandler.DownloadServer)
+		api.DELETE("/server/:id", serverHandler.DeleteServer)
 
 		// AgentHub API 路由
 		api.GET("/agent", agentHandler.GetAgents)
@@ -246,11 +247,11 @@ func main() {
 		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
 	})
 
-	// MCPHub 界面
-	r.GET("/mcp", func(c *gin.Context) {
-		data, err := webFS.ReadFile("templates/mcp.html")
+	// ServerHub 界面
+	r.GET("/server", func(c *gin.Context) {
+		data, err := webFS.ReadFile("templates/server.html")
 		if err != nil {
-			c.String(http.StatusInternalServerError, "Failed to load mcp template")
+			c.String(http.StatusInternalServerError, "Failed to load server template")
 			return
 		}
 		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
@@ -316,6 +317,31 @@ func main() {
 		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
 	})
 
+	// TinyClaw 下载安装页面
+	r.GET("/tinyclaw", func(c *gin.Context) {
+		tmplData, err := webFS.ReadFile("templates/tinyclaw.html")
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to load tinyclaw template")
+			return
+		}
+		tmpl, err := template.New("tinyclaw").Parse(string(tmplData))
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to parse tinyclaw template")
+			return
+		}
+		c.Status(http.StatusOK)
+		c.Header("Content-Type", "text/html; charset=utf-8")
+		tmpl.Execute(c.Writer, gin.H{
+			"DownloadURL":       cfg.TinyClaw.DownloadURL,
+			"RPCServerWinURL":   cfg.TinyClaw.RPCServerWinURL,
+			"RPCServerLinuxURL": cfg.TinyClaw.RPCServerLinuxURL,
+			"TinyClawWinURL":    cfg.TinyClaw.TinyClawWinURL,
+			"TinyClawLinuxURL":  cfg.TinyClaw.TinyClawLinuxURL,
+			"SkillDownloadCmd":  cfg.TinyClaw.SkillDownloadCmd,
+		"SkillPrompt":       cfg.TinyClaw.SkillPrompt,
+		})
+	})
+
 	// 6. 启动服务器（优雅关闭）
 	addr := fmt.Sprintf(":%d", cfg.Server.Port)
 	srv := &http.Server{
@@ -336,10 +362,18 @@ func main() {
 		}
 	}()
 
-	// 启动后台数据刷新服务（每24小时刷新一次）
-	ctxRefresh, cancelRefresh := context.WithCancel(context.Background())
-	defer cancelRefresh()
-	refreshService.StartBackgroundRefresh(ctxRefresh, 24*time.Hour)
+	// 启动后台数据刷新服务
+	if cfg.Refresh.Enabled {
+		interval := time.Duration(cfg.Refresh.Interval) * time.Hour
+		if interval < time.Hour {
+			interval = 24 * time.Hour
+		}
+		ctxRefresh, cancelRefresh := context.WithCancel(context.Background())
+		defer cancelRefresh()
+		refreshService.StartBackgroundRefresh(ctxRefresh, interval)
+	} else {
+		log.Info("ClawHub 自动爬取已禁用 (refresh.enabled = false)")
+	}
 
 	// 等待中断信号
 	quit := make(chan os.Signal, 1)
@@ -382,10 +416,15 @@ func initDatabase(cfg *config.Config) (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to connect database: %w", err)
 	}
 
+	// 表名迁移: mcp_servers -> servers
+	if db.Migrator().HasTable("mcp_servers") && !db.Migrator().HasTable("servers") {
+		db.Exec("ALTER TABLE mcp_servers RENAME TO servers")
+	}
+
 	// 自动迁移
 	if err := db.AutoMigrate(
 		&models.Skill{},
-		&models.MCPServer{},
+		&models.Server{},
 		&models.Agent{},
 		&models.Session{},
 		&models.UserAPIKey{},
@@ -395,15 +434,9 @@ func initDatabase(cfg *config.Config) (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to migrate database: %w", err)
 	}
 
-	// 初始化种子数据
-	if err := seedData(db); err != nil {
-		return nil, fmt.Errorf("failed to seed data: %w", err)
-	}
+	// Skill 种子数据已禁用 — 不再从 ClawHub 自动导入
 
-	// 初始化 MCP 种子数据
-	if err := seedMCPData(db); err != nil {
-		return nil, fmt.Errorf("failed to seed MCP data: %w", err)
-	}
+	// Server 种子数据不自动加载
 
 	// 初始化 Agent 种子数据
 	if err := seedAgentData(db); err != nil {
@@ -583,30 +616,30 @@ func getWorkDir() string {
 	return "."
 }
 
-// seedMCPData 初始化 MCP 种子数据
-func seedMCPData(db *gorm.DB) error {
+// seedServerData 初始化 Server 种子数据
+func seedServerData(db *gorm.DB) error {
 	var count int64
-	db.Model(&models.MCPServer{}).Count(&count)
+	db.Model(&models.Server{}).Count(&count)
 	if count > 0 {
 		return nil // 已有数据，跳过
 	}
 
-	// 从 JSON 文件读取 MCP 数据
-	servers, err := loadMCPServersFromJSON()
+	// 从 JSON 文件读取 Server 数据
+	servers, err := loadServersFromJSON()
 	if err != nil {
 		// 如果文件不存在，使用默认数据
-		servers = getDefaultMCPServers()
+		servers = getDefaultServers()
 	}
 
 	return db.Create(&servers).Error
 }
 
-// loadMCPServersFromJSON 从 JSON 文件加载 MCP 数据
-func loadMCPServersFromJSON() ([]models.MCPServer, error) {
+// loadServersFromJSON 从 JSON 文件加载 Server 数据
+func loadServersFromJSON() ([]models.Server, error) {
 	paths := []string{
-		"internal/data/mcp_servers.json",
-		"./internal/data/mcp_servers.json",
-		filepath.Join(getWorkDir(), "internal/data/mcp_servers.json"),
+		"internal/data/servers.json",
+		"./internal/data/servers.json",
+		filepath.Join(getWorkDir(), "internal/data/servers.json"),
 	}
 
 	var data []byte
@@ -623,7 +656,7 @@ func loadMCPServersFromJSON() ([]models.MCPServer, error) {
 		return nil, err
 	}
 
-	var servers []models.MCPServer
+	var servers []models.Server
 	if err := json.Unmarshal(data, &servers); err != nil {
 		return nil, err
 	}
@@ -631,9 +664,9 @@ func loadMCPServersFromJSON() ([]models.MCPServer, error) {
 	return servers, nil
 }
 
-// getDefaultMCPServers 获取默认 MCP 服务器数据
-func getDefaultMCPServers() []models.MCPServer {
-	return []models.MCPServer{
+// getDefaultServers 获取默认 Server 数据
+func getDefaultServers() []models.Server {
+	return []models.Server{
 		{
 			Name:        "Filesystem MCP",
 			Slug:        "filesystem",
@@ -854,6 +887,7 @@ func seedAgentData(db *gorm.DB) error {
 			MaxTokens:   4096,
 			Verified:    true,
 			UsageCount:  0,
+			RedirectURL: "/analysis",
 		},
 		{
 			Name:        "漏洞补丁查询助手",
@@ -948,6 +982,7 @@ query_product_auth_db（版本检测规则查询）参数：product（必填，�
 			MaxTokens:   4096,
 			Verified:    true,
 			UsageCount:  0,
+			RedirectURL: "/ti",
 		},
 		{
 			Name:        "内核适配助手",
@@ -969,6 +1004,7 @@ query_product_auth_db（版本检测规则查询）参数：product（必填，�
 			MaxTokens:   4096,
 			Verified:    true,
 			UsageCount:  0,
+			RedirectURL: "/kernel",
 		},
 		{
 			Name:        "崩溃转储分析助手",

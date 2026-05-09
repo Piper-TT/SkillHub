@@ -506,9 +506,8 @@
             <div class="navbar-nav">
                 <a href="/">首页</a>
                 <a href="/skills">SkillHub</a>
-                <a href="/mcp">MCPHub</a>
+                <a href="/server">ServerHub</a>
                 <a href="/agent" class="active">AgentHub</a>
-                <a href="/kernel">内核适配</a>
                 <a href="https://github.com/Piper-TT/SkillHub" target="_blank">GitHub</a>
             </div>
         </div>
@@ -676,9 +675,9 @@
                         </div>
                         <p class="agent-desc">${agent.description || '暂无描述'}</p>
                         <div class="agent-stats">
-                            <span>💬 ${agent.usage_count || 0} 次对话</span>
+                            <span>💬 ${agent.usage_count || 0} 次使用</span>
                         </div>
-                        <button class="btn-chat" onclick="startChat(${agent.id}, '${agent.slug}')">开始对话</button>
+                        <button class="btn-chat" onclick="startChat(${agent.id}, '${agent.slug}', '${agent.redirect_url || ''}')">开始</button>
                     </div>
                 `;
             }).join('');
@@ -708,20 +707,9 @@
             loadAgents();
         }
 
-        function startChat(agentId, slug) {
-            // 恶意文件分析助手跳转到专用分析页面
-            if (slug === 'malware-analyzer') {
-                window.location.href = '/analysis';
-                return;
-            }
-            // 内核适配助手跳转到专用内核适配页面
-            if (slug === 'kernel-adapter') {
-                window.location.href = '/kernel';
-                return;
-            }
-            // 威胁情报分析助手跳转到专用威胁情报页面
-            if (slug === 'threat-intel-analyzer') {
-                window.location.href = '/ti';
+        function startChat(agentId, slug, redirectUrl) {
+            if (redirectUrl) {
+                window.location.href = redirectUrl;
                 return;
             }
             window.location.href = `/agent/${agentId}/chat`;
