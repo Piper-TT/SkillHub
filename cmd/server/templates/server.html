@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCPHub - 发现最强大的 MCP 服务器</title>
+    <title>ServerHub - 发现最强大的 Web 服务</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -606,6 +606,8 @@
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
+            text-decoration: none;
+            text-align: center;
             transition: all 0.2s ease;
         }
 
@@ -623,6 +625,8 @@
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
+            text-decoration: none;
+            text-align: center;
             transition: all 0.2s ease;
         }
 
@@ -698,41 +702,6 @@
             border-color: var(--brand-1);
         }
 
-        .upload-file-row {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-top: 16px;
-        }
-
-        .file-input-wrapper {
-            flex: 1;
-            position: relative;
-        }
-
-        .file-input-wrapper input[type="file"] {
-            width: 100%;
-            padding: 12px;
-            border: 2px dashed var(--border-soft);
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .file-input-wrapper input[type="file"]::file-selector-button {
-            padding: 8px 16px;
-            margin-right: 12px;
-            background: var(--gradient-1);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .file-label {
-            display: none;
-        }
 
         .btn-upload {
             padding: 12px 24px;
@@ -816,14 +785,15 @@
 <body>
     <nav class="navbar">
         <div class="navbar-inner">
-            <a href="/mcp" class="navbar-brand">
+            <a href="/server" class="navbar-brand">
                 <span>🔌</span>
-                <strong>MCPHub</strong>
+                <strong>ServerHub</strong>
             </a>
             <div class="navbar-nav">
                 <a href="/">首页</a>
                 <a href="/skills">SkillHub</a>
-                <a href="/mcp" class="active">MCPHub</a>
+                <a href="/server" class="active">ServerHub</a>
+                <a href="/agent">AgentHub</a>
                 <a href="https://github.com/Piper-TT/SkillHub" target="_blank">GitHub</a>
             </div>
         </div>
@@ -834,12 +804,12 @@
         <section class="hero-section">
             <div class="hero-badge">
                 <span>✨</span>
-                <span>MCP 服务器聚合平台</span>
+                <span>Web 服务聚合平台</span>
             </div>
-            <h1 class="hero-title">发现最强大的 MCP 服务器</h1>
-            <p class="hero-subtitle">收录优质 MCP 服务器，一键配置你的 AI 助手，连接无限可能</p>
+            <h1 class="hero-title">发现最强大的 Web 服务</h1>
+            <p class="hero-subtitle">收录优质 服务，一键配置你的 AI 助手，连接无限可能</p>
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="搜索 MCP 服务器..." onkeyup="handleSearch(event)">
+                <input type="text" id="searchInput" placeholder="搜索 服务..." onkeyup="handleSearch(event)">
             </div>
         </section>
 
@@ -852,7 +822,7 @@
 
         <!-- Server List -->
         <section class="section">
-            <h2 class="section-title">📦 MCP 服务器</h2>
+            <h2 class="section-title">📦 Web 服务</h2>
             <div class="server-grid" id="serverGrid">
                 <div class="loading">加载中...</div>
             </div>
@@ -861,12 +831,12 @@
 
         <!-- Upload Section -->
         <section class="section upload-section">
-            <h2 class="section-title">📤 上传 MCP 服务器</h2>
-            <form id="uploadForm" onsubmit="handleUpload(event)" enctype="multipart/form-data">
+            <h2 class="section-title">📤 上传 Web 服务</h2>
+            <form id="uploadForm" onsubmit="handleUpload(event)">
                 <div class="upload-grid">
                     <div class="form-group">
-                        <label>服务器名称 *</label>
-                        <input type="text" id="uploadName" name="name" required placeholder="例如：my-mcp-server">
+                        <label>服务名称 *</label>
+                        <input type="text" id="uploadName" name="name" required placeholder="例如：my-web-service">
                     </div>
                     <div class="form-group">
                         <label>分类 *</label>
@@ -886,14 +856,21 @@
                     </div>
                     <div class="form-group" style="grid-column: span 2;">
                         <label>描述</label>
-                        <input type="text" id="uploadDesc" name="description" placeholder="简要描述服务器功能">
+                        <input type="text" id="uploadDesc" name="description" placeholder="简要描述 Web 服务功能">
                     </div>
                 </div>
-                <div class="upload-file-row">
-                    <div class="file-input-wrapper">
-                        <input type="file" id="uploadFile" name="file" accept=".zip,.tar.gz,.tgz" required>
+                <div class="upload-grid">
+                    <div class="form-group">
+                        <label>服务地址 (URL) *</label>
+                        <input type="url" id="uploadUrl" name="url" required placeholder="例如：https://my-service.example.com">
                     </div>
-                    <button type="submit" class="btn-upload">上传服务器</button>
+                    <div class="form-group">
+                        <label>Git 仓库地址</label>
+                        <input type="url" id="uploadGithub" name="github_url" placeholder="例如：https://github.com/user/repo">
+                    </div>
+                </div>
+                <div style="margin-top: 16px;">
+                    <button type="submit" class="btn-upload">注册 Web 服务</button>
                 </div>
             </form>
         </section>
@@ -902,7 +879,7 @@
         <div class="stats-grid" id="statsGrid">
             <div class="stat-card">
                 <div class="stat-value" id="totalServers">-</div>
-                <div class="stat-label">MCP 服务器</div>
+                <div class="stat-label">Web 服务</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="totalStars">-</div>
@@ -926,17 +903,23 @@
             <div class="modal-header">
                 <div class="modal-icon" id="modalIcon">📦</div>
                 <div class="modal-title">
-                    <h2 id="modalTitle">服务器名称</h2>
+                    <h2 id="modalTitle">服务名称</h2>
                     <p id="modalCategory">分类</p>
                 </div>
                 <button class="modal-close" onclick="closeModal()">×</button>
             </div>
             <div class="modal-section">
                 <h3>描述</h3>
-                <p id="modalDesc">服务器描述</p>
+                <p id="modalDesc">服务描述</p>
             </div>
-            <div class="modal-section">
-                <h3>GitHub 地址</h3>
+            <div class="modal-section" id="modalUrlSection">
+                <h3>服务地址</h3>
+                <div class="config-box">
+                    <pre id="modalServiceUrl">https://...</pre>
+                </div>
+            </div>
+            <div class="modal-section" id="modalGithubSection">
+                <h3>Git 仓库</h3>
                 <div class="config-box">
                     <pre id="modalGithubUrl">https://github.com/...</pre>
                 </div>
@@ -944,13 +927,14 @@
             <div class="modal-section" id="downloadSection" style="display: none;">
                 <h3>下载命令</h3>
                 <div class="config-box">
-                    <pre id="modalDownloadCmd">curl -L "http://localhost:8081/api/mcp/1/download" -o server.zip</pre>
+                    <pre id="modalDownloadCmd">curl -L "http://localhost:8081/api/server/1/download" -o server.zip</pre>
                 </div>
             </div>
             <div class="modal-actions">
-                <a id="modalGithub" href="#" target="_blank" class="btn-primary">访问 GitHub</a>
+                <a id="modalServiceLink" href="#" target="_blank" class="btn-primary">访问服务</a>
+                <a id="modalGithub" href="#" target="_blank" class="btn-secondary">访问仓库</a>
                 <button class="btn-secondary" id="downloadBtn" style="display: none;" onclick="downloadServer()">下载文件</button>
-                <button class="btn-secondary" onclick="copyGithubUrl()">复制链接</button>
+                <button class="btn-secondary" onclick="copyServiceUrl()">复制 URL</button>
             </div>
         </div>
     </div>
@@ -1000,7 +984,7 @@
         // Load categories
         async function loadCategories() {
             try {
-                const response = await fetch('/api/mcp/categories');
+                const response = await fetch('/api/server/categories');
                 const data = await response.json();
                 const container = document.getElementById('categories');
 
@@ -1032,7 +1016,7 @@
                     search: state.search
                 });
 
-                const response = await fetch(`/api/mcp?${params}`);
+                const response = await fetch(`/api/server?${params}`);
                 const data = await response.json();
 
                 state.servers = data.servers || [];
@@ -1051,7 +1035,7 @@
             const grid = document.getElementById('serverGrid');
 
             if (state.servers.length === 0) {
-                grid.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><p>暂无数据</p></div>';
+                grid.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><p>暂无 Web 服务</p></div>';
                 return;
             }
 
@@ -1079,8 +1063,8 @@
                             <span>📥 ${formatNumber(server.downloads || 0)}</span>
                         </div>
                         <div class="server-install">
-                            <code>${server.github_url || '#'}</code>
-                            <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('${server.github_url || ''}')">复制</button>
+                            <code>${server.service_url || server.github_url || '#'}</code>
+                            <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('${(server.service_url || server.github_url || '').replace(/'/g, "\\'")}')">复制</button>
                         </div>
                     </div>
                 `;
@@ -1119,7 +1103,7 @@
         // Load stats
         async function loadStats() {
             try {
-                const response = await fetch('/api/mcp/stats');
+                const response = await fetch('/api/server/stats');
                 const data = await response.json();
 
                 animateValue('totalServers', data.total_servers || 0);
@@ -1173,8 +1157,28 @@
             document.getElementById('modalTitle').textContent = server.name;
             document.getElementById('modalCategory').textContent = server.category || 'Other';
             document.getElementById('modalDesc').textContent = server.description || '暂无描述';
-            document.getElementById('modalGithubUrl').textContent = server.github_url || '暂无链接';
-            document.getElementById('modalGithub').href = server.github_url || '#';
+
+            // 服务地址
+            document.getElementById('modalServiceUrl').textContent = server.service_url || '暂无';
+            const serviceLink = document.getElementById('modalServiceLink');
+            if (server.service_url) {
+                serviceLink.href = server.service_url;
+                serviceLink.style.display = '';
+                serviceLink.style.pointerEvents = '';
+                serviceLink.style.opacity = '';
+            } else {
+                serviceLink.style.display = 'none';
+            }
+
+            // Git 仓库
+            document.getElementById('modalGithubUrl').textContent = server.github_url || '暂无';
+            const ghLink = document.getElementById('modalGithub');
+            if (server.github_url) {
+                ghLink.href = server.github_url;
+                ghLink.style.display = '';
+            } else {
+                ghLink.style.display = 'none';
+            }
 
             // 显示/隐藏下载按钮和下载命令
             const downloadSection = document.getElementById('downloadSection');
@@ -1184,7 +1188,7 @@
             if (server.file_name) {
                 downloadSection.style.display = 'block';
                 downloadBtn.style.display = 'inline-block';
-                const downloadUrl = `${window.location.origin}/api/mcp/${server.id}/download`;
+                const downloadUrl = `${window.location.origin}/api/server/${server.id}/download`;
                 downloadCmd.textContent = `curl -L "${downloadUrl}" -o "${server.name}.zip"`;
             } else {
                 downloadSection.style.display = 'none';
@@ -1197,7 +1201,7 @@
         // Download server file
         function downloadServer() {
             if (state.currentServer && state.currentServer.file_name) {
-                window.location.href = `/api/mcp/${state.currentServer.id}/download`;
+                window.location.href = `/api/server/${state.currentServer.id}/download`;
             }
         }
 
@@ -1205,20 +1209,26 @@
         async function handleUpload(event) {
             event.preventDefault();
 
-            const form = document.getElementById('uploadForm');
-            const formData = new FormData(form);
+            const data = {
+                    name: document.getElementById('uploadName').value,
+                    category: document.getElementById('uploadCategory').value,
+                    description: document.getElementById('uploadDesc').value,
+                    url: document.getElementById('uploadUrl').value,
+                    github_url: document.getElementById('uploadGithub').value
+                };
 
             try {
-                const response = await fetch('/api/mcp/upload', {
+                const response = await fetch('/api/server/upload', {
                     method: 'POST',
-                    body: formData
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
                 });
 
                 const result = await response.json();
 
                 if (result.success) {
-                    showToast('上传成功！');
-                    form.reset();
+                    showToast('注册成功！');
+                    document.getElementById('uploadForm').reset();
                     loadServers();
                     loadCategories();
                     loadStats();
@@ -1237,10 +1247,11 @@
             }
         }
 
-        // Copy GitHub URL
-        function copyGithubUrl() {
-            if (state.currentServer && state.currentServer.github_url) {
-                copyToClipboard(state.currentServer.github_url);
+        // Copy service URL
+        function copyServiceUrl() {
+            if (state.currentServer) {
+                const url = state.currentServer.service_url || state.currentServer.github_url || '';
+                if (url) copyToClipboard(url);
             }
         }
 

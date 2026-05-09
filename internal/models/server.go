@@ -6,8 +6,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// MCPServer MCP 服务器模型
-type MCPServer struct {
+// Server 服务模型
+type Server struct {
 	ID          uint           `gorm:"primaryKey" json:"id"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
@@ -29,12 +29,12 @@ type MCPServer struct {
 	Stars     int `gorm:"default:0" json:"stars"`
 	Downloads int `gorm:"default:0" json:"downloads"`
 
-	// 本地上传文件
-	FileName string `gorm:"size:255" json:"file_name"`
+	// Web 服务地址
+	ServiceURL string `gorm:"size:500" json:"service_url"`
 
 	// 安装信息
 	InstallCmd string `gorm:"size:500" json:"install_cmd"`
-	Config     string `gorm:"size:2000" json:"config"` // JSON 配置示例
+	Config     string `gorm:"size:2000" json:"config"`
 
 	// 状态标记
 	Verified bool `gorm:"default:false" json:"verified"`
@@ -42,20 +42,20 @@ type MCPServer struct {
 }
 
 // TableName 指定表名
-func (MCPServer) TableName() string {
-	return "mcp_servers"
+func (Server) TableName() string {
+	return "servers"
 }
 
-// MCPServerListResponse 服务器列表响应
-type MCPServerListResponse struct {
-	Total   int64       `json:"total"`
-	Servers []MCPServer `json:"servers"`
-	Page    int         `json:"page"`
-	PerPage int         `json:"per_page"`
+// ServerListResponse 服务器列表响应
+type ServerListResponse struct {
+	Total   int64    `json:"total"`
+	Servers []Server `json:"servers"`
+	Page    int      `json:"page"`
+	PerPage int      `json:"per_page"`
 }
 
-// MCPStatsResponse 统计数据响应
-type MCPStatsResponse struct {
+// ServerStatsResponse 统计数据响应
+type ServerStatsResponse struct {
 	TotalServers int64 `json:"total_servers"`
 	TotalStars   int64 `json:"total_stars"`
 	Categories   int64 `json:"categories"`

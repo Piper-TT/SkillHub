@@ -8,72 +8,60 @@ import (
 	"gorm.io/gorm"
 )
 
-// MCPRepository MCP 数据访问接口
-type MCPRepository interface {
-	// Create 创建服务器
-	Create(ctx context.Context, server *models.MCPServer) error
-	// Update 更新服务器
-	Update(ctx context.Context, server *models.MCPServer) error
-	// Delete 软删除服务器
+// ServerRepository Server 数据访问接口
+type ServerRepository interface {
+	Create(ctx context.Context, server *models.Server) error
+	Update(ctx context.Context, server *models.Server) error
 	Delete(ctx context.Context, id uint) error
-	// FindByID 根据 ID 查找
-	FindByID(ctx context.Context, id uint) (*models.MCPServer, error)
-	// FindAll 获取所有服务器
-	FindAll(ctx context.Context) ([]models.MCPServer, error)
-	// FindWithFilter 带过滤条件的分页查询
-	FindWithFilter(ctx context.Context, filter *MCPFilter) ([]models.MCPServer, int64, error)
-	// GetCategories 获取所有分类及其计数
+	FindByID(ctx context.Context, id uint) (*models.Server, error)
+	FindAll(ctx context.Context) ([]models.Server, error)
+	FindWithFilter(ctx context.Context, filter *ServerFilter) ([]models.Server, int64, error)
 	GetCategories(ctx context.Context) (map[string]int64, error)
-	// GetStats 获取统计数据
-	GetStats(ctx context.Context) (*MCPStats, error)
-	// FindTopByStars 获取 Stars 最高的 N 个
-	FindTopByStars(ctx context.Context, limit int) ([]models.MCPServer, error)
-	// ReplaceAll 替换所有数据
-	ReplaceAll(ctx context.Context, servers []models.MCPServer) error
-	// IncrementDownloads 增加下载计数
+	GetStats(ctx context.Context) (*ServerStats, error)
+	FindTopByStars(ctx context.Context, limit int) ([]models.Server, error)
+	ReplaceAll(ctx context.Context, servers []models.Server) error
 	IncrementDownloads(ctx context.Context, id uint) error
 }
 
-// MCPFilter 过滤条件
-type MCPFilter struct {
+// ServerFilter 过滤条件
+type ServerFilter struct {
 	Page     int
 	PerPage  int
 	Category string
 	Search   string
-	SortBy   string // "stars", "downloads", "name"
+	SortBy   string
 }
 
-// MCPStats 统计数据
-type MCPStats struct {
+// ServerStats 统计数据
+type ServerStats struct {
 	TotalServers int64
 	TotalStars   int64
 	Categories   int64
 }
 
-// mcpRepo 实现
-type mcpRepo struct {
+type serverRepo struct {
 	db *gorm.DB
 }
 
-// NewMCPRepository 创建 Repository 实例
-func NewMCPRepository(db *gorm.DB) MCPRepository {
-	return &mcpRepo{db: db}
+// NewServerRepository 创建 Repository 实例
+func NewServerRepository(db *gorm.DB) ServerRepository {
+	return &serverRepo{db: db}
 }
 
-func (r *mcpRepo) Create(ctx context.Context, server *models.MCPServer) error {
+func (r *serverRepo) Create(ctx context.Context, server *models.Server) error {
 	return r.db.WithContext(ctx).Create(server).Error
 }
 
-func (r *mcpRepo) Update(ctx context.Context, server *models.MCPServer) error {
+func (r *serverRepo) Update(ctx context.Context, server *models.Server) error {
 	return r.db.WithContext(ctx).Save(server).Error
 }
 
-func (r *mcpRepo) Delete(ctx context.Context, id uint) error {
-	return r.db.WithContext(ctx).Delete(&models.MCPServer{}, id).Error
+func (r *serverRepo) Delete(ctx context.Context, id uint) error {
+	return r.db.WithContext(ctx).Delete(&models.Server{}, id).Error
 }
 
-func (r *mcpRepo) FindByID(ctx context.Context, id uint) (*models.MCPServer, error) {
-	var server models.MCPServer
+func (r *serverRepo) FindByID(ctx context.Context, id uint) (*models.Server, error) {
+	var server models.Server
 	err := r.db.WithContext(ctx).First(&server, id).Error
 	if err != nil {
 		return nil, err
@@ -81,24 +69,22 @@ func (r *mcpRepo) FindByID(ctx context.Context, id uint) (*models.MCPServer, err
 	return &server, nil
 }
 
-func (r *mcpRepo) FindAll(ctx context.Context) ([]models.MCPServer, error) {
-	var servers []models.MCPServer
+func (r *serverRepo) FindAll(ctx context.Context) ([]models.Server, error) {
+	var servers []models.Server
 	err := r.db.WithContext(ctx).Find(&servers).Error
 	return servers, err
 }
 
-func (r *mcpRepo) FindWithFilter(ctx context.Context, filter *MCPFilter) ([]models.MCPServer, int64, error) {
-	var servers []models.MCPServer
+func (r *serverRepo) FindWithFilter(ctx context.Context, filter *ServerFilter) ([]models.Server, int64, error) {
+	var servers []models.Server
 	var total int64
 
-	query := r.db.WithContext(ctx).Model(&models.MCPServer{})
+	query := r.db.WithContext(ctx).Model(&models.Server{})
 
-	// 分类过滤
 	if filter.Category != "" {
 		query = query.Where("category = ?", filter.Category)
 	}
 
-	// 搜索过滤
 	if filter.Search != "" {
 		search := "%" + strings.ToLower(filter.Search) + "%"
 		query = query.Where(
@@ -107,12 +93,10 @@ func (r *mcpRepo) FindWithFilter(ctx context.Context, filter *MCPFilter) ([]mode
 		)
 	}
 
-	// 获取总数
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	// 排序
 	orderBy := "stars DESC"
 	switch filter.SortBy {
 	case "downloads":
@@ -122,7 +106,6 @@ func (r *mcpRepo) FindWithFilter(ctx context.Context, filter *MCPFilter) ([]mode
 	}
 	query = query.Order(orderBy)
 
-	// 分页
 	offset := (filter.Page - 1) * filter.PerPage
 	if err := query.Offset(offset).Limit(filter.PerPage).Find(&servers).Error; err != nil {
 		return nil, 0, err
@@ -131,7 +114,7 @@ func (r *mcpRepo) FindWithFilter(ctx context.Context, filter *MCPFilter) ([]mode
 	return servers, total, nil
 }
 
-func (r *mcpRepo) GetCategories(ctx context.Context) (map[string]int64, error) {
+func (r *serverRepo) GetCategories(ctx context.Context) (map[string]int64, error) {
 	type categoryCount struct {
 		Category string
 		Count    int64
@@ -139,7 +122,7 @@ func (r *mcpRepo) GetCategories(ctx context.Context) (map[string]int64, error) {
 
 	var results []categoryCount
 	err := r.db.WithContext(ctx).
-		Model(&models.MCPServer{}).
+		Model(&models.Server{}).
 		Select("category, count(*) as count").
 		Group("category").
 		Find(&results).Error
@@ -156,23 +139,20 @@ func (r *mcpRepo) GetCategories(ctx context.Context) (map[string]int64, error) {
 	return categories, nil
 }
 
-func (r *mcpRepo) GetStats(ctx context.Context) (*MCPStats, error) {
-	var stats MCPStats
+func (r *serverRepo) GetStats(ctx context.Context) (*ServerStats, error) {
+	var stats ServerStats
 
-	// 总服务器数
-	if err := r.db.WithContext(ctx).Model(&models.MCPServer{}).Count(&stats.TotalServers).Error; err != nil {
+	if err := r.db.WithContext(ctx).Model(&models.Server{}).Count(&stats.TotalServers).Error; err != nil {
 		return nil, err
 	}
 
-	// 总 Stars
-	if err := r.db.WithContext(ctx).Model(&models.MCPServer{}).
+	if err := r.db.WithContext(ctx).Model(&models.Server{}).
 		Select("COALESCE(SUM(stars), 0)").
 		Scan(&stats.TotalStars).Error; err != nil {
 		return nil, err
 	}
 
-	// 分类数
-	if err := r.db.WithContext(ctx).Model(&models.MCPServer{}).
+	if err := r.db.WithContext(ctx).Model(&models.Server{}).
 		Distinct("category").
 		Count(&stats.Categories).Error; err != nil {
 		return nil, err
@@ -181,8 +161,8 @@ func (r *mcpRepo) GetStats(ctx context.Context) (*MCPStats, error) {
 	return &stats, nil
 }
 
-func (r *mcpRepo) FindTopByStars(ctx context.Context, limit int) ([]models.MCPServer, error) {
-	var servers []models.MCPServer
+func (r *serverRepo) FindTopByStars(ctx context.Context, limit int) ([]models.Server, error) {
+	var servers []models.Server
 	err := r.db.WithContext(ctx).
 		Order("stars DESC").
 		Limit(limit).
@@ -190,14 +170,12 @@ func (r *mcpRepo) FindTopByStars(ctx context.Context, limit int) ([]models.MCPSe
 	return servers, err
 }
 
-func (r *mcpRepo) ReplaceAll(ctx context.Context, servers []models.MCPServer) error {
+func (r *serverRepo) ReplaceAll(ctx context.Context, servers []models.Server) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		// 只删除外部导入的数据（FileName 为空），保留本地上传的 MCP Server
-		if err := tx.Exec("DELETE FROM mcp_servers WHERE file_name = '' OR file_name IS NULL").Error; err != nil {
+		if err := tx.Exec("DELETE FROM servers WHERE file_name = '' OR file_name IS NULL").Error; err != nil {
 			return err
 		}
 
-		// 批量插入
 		batchSize := 100
 		for i := 0; i < len(servers); i += batchSize {
 			end := i + batchSize
@@ -214,9 +192,9 @@ func (r *mcpRepo) ReplaceAll(ctx context.Context, servers []models.MCPServer) er
 	})
 }
 
-func (r *mcpRepo) IncrementDownloads(ctx context.Context, id uint) error {
+func (r *serverRepo) IncrementDownloads(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).
-		Model(&models.MCPServer{}).
+		Model(&models.Server{}).
 		Where("id = ?", id).
 		UpdateColumn("downloads", gorm.Expr("downloads + 1")).
 		Error

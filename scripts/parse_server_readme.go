@@ -17,8 +17,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// MCPServerInfo 解析后的服务器信息
-type MCPServerInfo struct {
+// ServerInfo 解析后的服务器信息
+type ServerInfo struct {
 	Name        string
 	Description string
 	URL         string
@@ -31,7 +31,7 @@ func main() {
 		panic("failed to connect database")
 	}
 
-	db.AutoMigrate(&models.MCPServer{})
+	db.AutoMigrate(&models.Server{})
 
 	fmt.Println("从 GitHub awesome-mcp-servers 获取数据...")
 
@@ -80,7 +80,7 @@ func main() {
 		url := "https://raw.githubusercontent.com/punkpeye/awesome-mcp-servers/main/README.md"
 
 		req, _ := http.NewRequest("GET", url, nil)
-		req.Header.Set("User-Agent", "MCPHub/1.0")
+		req.Header.Set("User-Agent", "ServerHub/1.0")
 
 		resp, e := client.Do(req)
 		if e != nil {
@@ -106,7 +106,7 @@ func main() {
 	fmt.Printf("解析到 %d 个 MCP 服务器\n", len(servers))
 
 	// 去重并转换为模型
-	serversMap := make(map[string]models.MCPServer)
+	serversMap := make(map[string]models.Server)
 	for _, s := range servers {
 		if s.Name == "" || s.URL == "" {
 			continue
@@ -129,7 +129,7 @@ func main() {
 				desc = generateDescription(s.Name, category)
 			}
 
-			serversMap[slug] = models.MCPServer{
+			serversMap[slug] = models.Server{
 				Name:        cleanName(s.Name),
 				Slug:        slug,
 				Icon:        icon,
@@ -159,7 +159,7 @@ func main() {
 	}
 
 	// 转换为切片并排序
-	serverList := make([]models.MCPServer, 0, len(serversMap))
+	serverList := make([]models.Server, 0, len(serversMap))
 	for _, server := range serversMap {
 		serverList = append(serverList, server)
 	}
@@ -170,7 +170,7 @@ func main() {
 
 	// 清空并插入
 	fmt.Println("清空现有数据...")
-	db.Exec("DELETE FROM mcp_servers")
+	db.Exec("DELETE FROM servers")
 
 	fmt.Println("插入新数据...")
 	batchSize := 100
@@ -189,11 +189,11 @@ func main() {
 
 	// 保存到 JSON
 	jsonData, _ := json.MarshalIndent(serverList, "", "  ")
-	os.WriteFile("internal/data/mcp_servers.json", jsonData, 0644)
+	os.WriteFile("internal/data/servers.json", jsonData, 0644)
 }
 
-func parseReadme(content string) []MCPServerInfo {
-	var servers []MCPServerInfo
+func parseReadme(content string) []ServerInfo {
+	var servers []ServerInfo
 
 	// 匹配 Markdown 链接格式: [name](url) - description
 	// 或: - [name](url) - description
@@ -242,7 +242,7 @@ func parseReadme(content string) []MCPServerInfo {
 					!strings.Contains(strings.ToLower(name), "badge") &&
 					!strings.Contains(strings.ToLower(name), "shield") &&
 					len(name) > 2 && len(name) < 100 {
-					servers = append(servers, MCPServerInfo{
+					servers = append(servers, ServerInfo{
 						Name:        name,
 						Description: desc,
 						URL:         url,
@@ -568,7 +568,7 @@ func truncate(s string, maxLen int) string {
 func importBackupData(db *gorm.DB) {
 	servers := getBackupServers()
 
-	serverList := make([]models.MCPServer, 0, len(servers))
+	serverList := make([]models.Server, 0, len(servers))
 	for _, server := range servers {
 		serverList = append(serverList, server)
 	}
@@ -577,14 +577,14 @@ func importBackupData(db *gorm.DB) {
 		return serverList[i].Stars > serverList[j].Stars
 	})
 
-	db.Exec("DELETE FROM mcp_servers")
+	db.Exec("DELETE FROM servers")
 	db.Create(&serverList)
 
 	fmt.Printf("导入 %d 个备用服务器\n", len(serverList))
 }
 
-func getBackupServers() map[string]models.MCPServer {
-	servers := []models.MCPServer{
+func getBackupServers() map[string]models.Server {
+	servers := []models.Server{
 		{Name: "Filesystem MCP", Slug: "filesystem", Icon: "📁", Category: "File System", Description: "安全文件系统操作，支持读写、搜索和管理文件", GitHubURL: "https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem", Stars: 8500, Downloads: 50000, InstallCmd: "npx @anthropic/mcp-server-filesystem", Config: `{"mcpServers": {"filesystem": {"command": "npx", "args": ["-y", "@anthropic/mcp-server-filesystem", "/path/to/dir"]}}}`, Verified: true, Official: true},
 		{Name: "PostgreSQL MCP", Slug: "postgresql", Icon: "🗄️", Category: "Database", Description: "只读 PostgreSQL 数据库访问，支持模式检查", GitHubURL: "https://github.com/modelcontextprotocol/servers/tree/main/src/postgres", Stars: 6200, Downloads: 35000, InstallCmd: "npx @anthropic/mcp-server-postgres", Config: `{"mcpServers": {"postgres": {"command": "npx", "args": ["-y", "@anthropic/mcp-server-postgres", "postgresql://localhost/db"]}}}`, Verified: true, Official: true},
 		{Name: "GitHub MCP", Slug: "github", Icon: "🛠️", Category: "Developer", Description: "GitHub API 集成，支持仓库、Issue、PR 等操作", GitHubURL: "https://github.com/modelcontextprotocol/servers/tree/main/src/github", Stars: 7800, Downloads: 42000, InstallCmd: "npx @anthropic/mcp-server-github", Config: `{"mcpServers": {"github": {"command": "npx", "args": ["-y", "@anthropic/mcp-server-github"], "env": {"GITHUB_TOKEN": "your-token"}}}}`, Verified: true, Official: true},
@@ -607,7 +607,7 @@ func getBackupServers() map[string]models.MCPServer {
 		{Name: "Elasticsearch MCP", Slug: "elasticsearch", Icon: "🔍", Category: "Database", Description: "Elasticsearch 搜索引擎集成", GitHubURL: "https://github.com/modelcontextprotocol/servers/tree/main/src/elasticsearch", Stars: 1800, Downloads: 9000, InstallCmd: "npx @anthropic/mcp-server-elasticsearch", Config: `{"mcpServers": {"elasticsearch": {"command": "npx", "args": ["-y", "@anthropic/mcp-server-elasticsearch"]}}}`, Verified: true, Official: false},
 	}
 
-	result := make(map[string]models.MCPServer)
+	result := make(map[string]models.Server)
 	for _, s := range servers {
 		result[s.Slug] = s
 	}

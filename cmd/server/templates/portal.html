@@ -591,14 +591,14 @@
                     </div>
                 </div>
 
-                <!-- MCPHub -->
-                <div class="hub-card" style="--hub-color: #10b981;" onclick="navigateTo('/mcp')">
+                <!-- ServerHub -->
+                <div class="hub-card" style="--hub-color: #10b981;" onclick="navigateTo('/server')">
                     <div class="hub-icon mcp">🔌</div>
-                    <h3 class="hub-title">MCPHub</h3>
-                    <p class="hub-subtitle">MCP 服务器/工具库</p>
+                    <h3 class="hub-title">ServerHub</h3>
+                    <p class="hub-subtitle">Web 服务</p>
                     <p class="hub-desc">发现和部署 MCP 服务器，连接 Claude 与外部工具、数据库、API，解锁更多可能。</p>
                     <div class="hub-tags">
-                        <span class="hub-tag primary" id="mcpCount">加载中...</span>
+                        <span class="hub-tag primary" id="serverCount">加载中...</span>
                         <span class="hub-tag success">官方精选</span>
                     </div>
                     <div class="hub-action">
@@ -694,12 +694,12 @@
 
             // 加载 MCP 统计数据
             try {
-                const mcpResponse = await fetch('/api/mcp/stats');
+                const mcpResponse = await fetch('/api/server/stats');
                 const mcpData = await mcpResponse.json();
-                document.getElementById('mcpCount').textContent = `${mcpData.total_servers || 0}+ MCP Servers`;
+                document.getElementById('serverCount').textContent = `${mcpData.total_servers || 0}+ Servers`;
             } catch (error) {
                 console.error('Failed to load MCP stats:', error);
-                document.getElementById('mcpCount').textContent = '12+ MCP Servers';
+                document.getElementById('serverCount').textContent = '12+ Servers';
             }
 
             // 加载 Agent 统计数据

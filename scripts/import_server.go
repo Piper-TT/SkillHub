@@ -18,7 +18,7 @@ import (
 )
 
 // MCP.so API 响应结构
-type MCPSearchResult struct {
+type ServerSearchResult struct {
 	ID          string  `json:"id"`
 	Name        string  `json:"name"`
 	Slug        string  `json:"slug"`
@@ -35,8 +35,8 @@ type MCPSearchResult struct {
 	Config      string  `json:"configExample"`
 }
 
-type MCPListResponse struct {
-	Data []MCPSearchResult `json:"data"`
+type ServerListResponse struct {
+	Data []ServerSearchResult `json:"data"`
 	Total int `json:"total"`
 }
 
@@ -74,10 +74,10 @@ func main() {
 		panic("failed to connect database")
 	}
 
-	db.AutoMigrate(&models.MCPServer{})
+	db.AutoMigrate(&models.Server{})
 
 	client := &http.Client{Timeout: 30 * time.Second}
-	serversMap := make(map[string]models.MCPServer)
+	serversMap := make(map[string]models.Server)
 
 	fmt.Println("开始从 mcp.so 爬取 MCP 服务器数据...")
 
@@ -101,13 +101,13 @@ func main() {
 			fmt.Sprintf("https://api.mcp.so/servers?search=%s&limit=100", keyword),
 		}
 
-		var results []MCPSearchResult
+		var results []ServerSearchResult
 		found := false
 
 		for _, url := range urls {
 			req, _ := http.NewRequest("GET", url, nil)
 			req.Header.Set("Accept", "application/json")
-			req.Header.Set("User-Agent", "MCPHub/1.0")
+			req.Header.Set("User-Agent", "ServerHub/1.0")
 
 			resp, err := client.Do(req)
 			if err != nil {
@@ -118,7 +118,7 @@ func main() {
 			resp.Body.Close()
 
 			// 尝试解析响应
-			var listResp MCPListResponse
+			var listResp ServerListResponse
 			if err := json.Unmarshal(body, &listResp); err == nil && len(listResp.Data) > 0 {
 				results = listResp.Data
 				found = true
@@ -126,7 +126,7 @@ func main() {
 			}
 
 			// 尝试直接解析为数组
-			var directResults []MCPSearchResult
+			var directResults []ServerSearchResult
 			if err := json.Unmarshal(body, &directResults); err == nil && len(directResults) > 0 {
 				results = directResults
 				found = true
@@ -161,7 +161,7 @@ func main() {
 					config = generateConfig(item.Slug, installCmd)
 				}
 
-				serversMap[item.Slug] = models.MCPServer{
+				serversMap[item.Slug] = models.Server{
 					Name:        item.Name,
 					Slug:        item.Slug,
 					Icon:        icon,
@@ -194,7 +194,7 @@ func main() {
 	fmt.Printf("\n爬取完成，共获取 %d 个 MCP 服务器\n", len(serversMap))
 
 	// 转换为切片
-	servers := make([]models.MCPServer, 0, len(serversMap))
+	servers := make([]models.Server, 0, len(serversMap))
 	for _, server := range serversMap {
 		servers = append(servers, server)
 	}
@@ -206,7 +206,7 @@ func main() {
 
 	// 清空现有数据
 	fmt.Println("清空现有数据...")
-	db.Exec("DELETE FROM mcp_servers")
+	db.Exec("DELETE FROM servers")
 
 	// 批量插入
 	fmt.Println("插入新数据...")
@@ -226,7 +226,7 @@ func main() {
 
 	// 保存到 JSON 文件
 	jsonData, _ := json.MarshalIndent(servers, "", "  ")
-	os.WriteFile("internal/data/mcp_servers.json", jsonData, 0644)
+	os.WriteFile("internal/data/servers.json", jsonData, 0644)
 	fmt.Println("数据已保存到 internal/data/mcp_servers.json")
 }
 
@@ -308,8 +308,8 @@ func truncate(s string, maxLen int) string {
 	return s[:maxLen] + "..."
 }
 
-func getBackupServers() map[string]models.MCPServer {
-	servers := []models.MCPServer{
+func getBackupServers() map[string]models.Server {
+	servers := []models.Server{
 		{
 			Name:        "Filesystem MCP",
 			Slug:        "filesystem",
@@ -592,7 +592,7 @@ func getBackupServers() map[string]models.MCPServer {
 		},
 	}
 
-	result := make(map[string]models.MCPServer)
+	result := make(map[string]models.Server)
 	for _, s := range servers {
 		result[s.Slug] = s
 	}

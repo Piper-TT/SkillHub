@@ -14,7 +14,7 @@ func main() {
 	}
 
 	// 尝试读取各表数据
-	tables := []string{"agents", "skills", "mcp_servers", "sessions", "user_api_keys", "analysis_tasks"}
+	tables := []string{"agents", "skills", "servers", "sessions", "user_api_keys", "analysis_tasks"}
 	for _, table := range tables {
 		var count int64
 		db.Table(table).Count(&count)

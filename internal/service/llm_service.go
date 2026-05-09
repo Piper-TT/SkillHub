@@ -248,6 +248,8 @@ func (s *LLMService) GetSupportedModels(provider string) []string {
 		}
 	case "deepseek":
 		return []string{
+			"deepseek-v4-flash",
+			"deepseek-v4-pro",
 			"deepseek-chat",
 			"deepseek-coder",
 		}

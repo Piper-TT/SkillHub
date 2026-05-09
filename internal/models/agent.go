@@ -27,8 +27,9 @@ type Agent struct {
 	MaxTokens    int     `gorm:"default:4096" json:"max_tokens"` // 最大输出 tokens
 
 	// 状态标记
-	Verified   bool `gorm:"default:false" json:"verified"`
-	UsageCount int  `gorm:"default:0" json:"usage_count"` // 使用次数
+	Verified    bool   `gorm:"default:false" json:"verified"`
+	UsageCount  int    `gorm:"default:0" json:"usage_count"` // 使用次数
+	RedirectURL string `gorm:"size:255" json:"redirect_url"` // 自定义跳转地址，为空则走默认聊天页
 }
 
 // TableName 指定表名

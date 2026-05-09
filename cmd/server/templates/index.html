@@ -39,30 +39,40 @@
 
         /* Navbar */
         .navbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 32px;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
             position: sticky;
             top: 0;
             z-index: 100;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 0 24px;
+        }
+
+        .navbar-inner {
+            max-width: 1180px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
         }
 
         .navbar-brand {
-            font-size: 20px;
-            font-weight: 700;
-            color: #0f172a;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             text-decoration: none;
+            color: #0f172a;
         }
 
-        .navbar-brand img {
-            height: 28px;
+        .navbar-brand span:first-child { font-size: 24px; }
+        .navbar-brand strong {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .navbar-nav {
@@ -1914,14 +1924,18 @@
 </head>
 <body>
     <nav class="navbar">
-        <a href="/skills" class="navbar-brand">
-            <span style="font-size: 24px;">🚀</span> SkillHub
-        </a>
-        <div class="navbar-nav">
-            <a href="/">首页</a>
-            <a href="/skills" class="active">SkillHub</a>
-            <a href="#explore">探索 Skills</a>
-            <a href="https://github.com/Piper-TT/SkillHub" target="_blank">GitHub</a>
+        <div class="navbar-inner">
+            <a href="/skills" class="navbar-brand">
+                <span>🚀</span>
+                <strong>SkillHub</strong>
+            </a>
+            <div class="navbar-nav">
+                <a href="/">首页</a>
+                <a href="/skills" class="active">SkillHub</a>
+                <a href="/server">ServerHub</a>
+                <a href="/agent">AgentHub</a>
+                <a href="https://github.com/Piper-TT/SkillHub" target="_blank">GitHub</a>
+            </div>
         </div>
     </nav>
     <div class="container">

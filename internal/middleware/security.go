@@ -81,8 +81,8 @@ func NoCache() gin.HandlerFunc {
 // UploadSecurity 上传安全中间件
 func UploadSecurity() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 只对上传接口应用额外检查
-		if !strings.HasSuffix(c.Request.URL.Path, "/upload") {
+		// 只对文件上传接口应用额外检查（排除 JSON 注册接口）
+		if !strings.HasSuffix(c.Request.URL.Path, "/upload") || strings.HasPrefix(c.Request.URL.Path, "/api/server/") {
 			c.Next()
 			return
 		}
