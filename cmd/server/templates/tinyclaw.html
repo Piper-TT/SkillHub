@@ -167,8 +167,8 @@
             animation: fadeInUp .8s ease-out .15s both;
         }
         .description {
-            font-size: 1.1rem; color: var(--text-secondary);
-            max-width: 620px; margin: 0 auto; line-height: 1.7;
+            font-size: .9rem; color: var(--text-secondary);
+            max-width: 780px; margin: 0 auto; line-height: 1.7;
             animation: fadeInUp .8s ease-out .3s both;
         }
 
@@ -321,15 +321,6 @@
             font-family: var(--font-display);
             font-size: 1.05rem; font-weight: 600;
         }
-        .step-badge {
-            display: inline-flex; align-items: center;
-            padding: 2px 10px; border-radius: 999px;
-            border: 1px solid var(--border-subtle);
-            background: var(--surface-overlay);
-            color: var(--text-muted);
-            font-size: .7rem; font-weight: 600;
-            letter-spacing: .04em; text-transform: uppercase;
-        }
         .step-desc {
             font-size: .9rem; color: var(--text-secondary);
             line-height: 1.6; margin-bottom: 14px;
@@ -383,6 +374,9 @@
         }
         .code-line.comment { color: var(--text-muted); font-style: italic; }
         .code-line.cmd { color: var(--cyan-bright); }
+        .code-line.cmd span:not(.code-prompt) {
+            flex: 1; min-width: 0; word-break: break-all;
+        }
         .code-line .code-prompt { color: var(--coral-bright); user-select: none; }
         .copy-btn {
             opacity: 0; margin-left: auto;
@@ -397,6 +391,25 @@
         .code-line:hover .copy-btn { opacity: 1; }
         .copy-btn:hover { background: var(--surface-interactive-hover); color: var(--text-primary); }
         .copy-btn.copied { opacity: 1; background: var(--surface-cyan-soft); color: var(--cyan-bright); }
+
+        .install-hint {
+            font-size: .85rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            font-family: var(--font-body);
+            line-height: 1.6;
+        }
+        .copy-text-btn {
+            color: var(--coral-bright);
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 1px dashed rgba(0, 229, 204, .5);
+            transition: all .2s ease;
+        }
+        .copy-text-btn:hover {
+            color: var(--coral-bright);
+            border-color: var(--coral-bright);
+        }
 
         /* ===== Features ===== */
         .features {
@@ -507,16 +520,135 @@
             <h1 class="title"><span class="title-main">TinyClaw</span></h1>
             <p class="tagline">轻量级终端安全代理</p>
             <p class="description">
-                三步完成部署：安装 RPCServer → 安装 TinyClaw → 安装 TinyClawCLI 技能<br>
-                即可接入 OpenClaw 及任何支持技能的 AI-IDE
+                使用自然语言搭配智能体完成批量主机管控：查看在线主机、远程执行命令、文件上传下载等。<br>可接入 OpenClaw 及任意支持 Skills 的智能体；也可通过钉钉、飞书、微信等做消息触达与指令下发。
             </p>
         </header>
+
+
+
+        <!-- Steps Detail -->
+        <section class="steps">
+            <div class="section-header">
+                <h2 class="section-title"><span class="claw-accent">快速</span>开始</h2>
+            </div>
+
+            <!-- Step 1 -->
+            <div class="step-card">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    <div class="step-head">
+                        <span class="step-title">安装 RPC 服务器组件</span>
+                    </div>
+                    <p class="step-desc">可自行部署或使用公共 RPC；配置 Token 鉴权，并确保 Agent 与 Skills 侧均能出站连通该 RPC。</p>
+                    <div class="code-block" id="step1-code">
+                        <div class="code-header">
+                            <span class="code-title" id="step1-title">打开CMD命令行，<span class="copy-text-btn" onclick="copyStepHint('step1')">复制</span> 以下命令进行安装</span>
+                            <div class="os-switch">
+                                <button class="os-btn active" onclick="switchOS('step1','win',this)"><i class="fab fa-windows"></i> Windows</button>
+                                <button class="os-btn" onclick="switchOS('step1','linux',this)"><i class="fab fa-linux"></i> Linux</button>
+                            </div>
+                        </div>
+                        <div class="code-content" id="step1-win">
+                            <div class="code-line cmd">
+                                <span class="code-prompt">&gt; </span><span>{{.RPCServerWinURL}}</span>
+                                <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+                            </div>
+                        </div>
+                        <div class="code-content" id="step1-linux" style="display:none">
+                            <div class="code-line cmd">
+                                <span class="code-prompt">$ </span><span>{{.RPCServerLinuxURL}}</span>
+                                <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="step-card">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    <div class="step-head">
+                        <span class="step-title">安装 TinyClaw 代理</span>
+                    </div>
+                    <p class="step-desc">在需管控的主机上安装，安装时指定 RPC 服务器地址；Skills 侧经 RPC 与目标机建立远控通道。</p>
+                    <div class="code-block" id="step2-code">
+                        <div class="code-header">
+                            <span class="code-title" id="step2-title">打开CMD命令行，<span class="copy-text-btn" onclick="copyStepHint('step2')">复制</span> 以下命令进行安装</span>
+                            <div class="os-switch">
+                                <button class="os-btn active" onclick="switchOS('step2','win',this)"><i class="fab fa-windows"></i> Windows</button>
+                                <button class="os-btn" onclick="switchOS('step2','linux',this)"><i class="fab fa-linux"></i> Linux</button>
+                            </div>
+                        </div>
+                        <div class="code-content" id="step2-win">
+                            <div class="code-line cmd">
+                                <span class="code-prompt">&gt; </span><span>{{.TinyClawWinURL}}</span>
+                                <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+                            </div>
+                        </div>
+                        <div class="code-content" id="step2-linux" style="display:none">
+                            <div class="code-line cmd">
+                                <span class="code-prompt">$ </span><span>{{.TinyClawLinuxURL}}</span>
+                                <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="step-card">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                    <div class="step-head">
+                        <span class="step-title">安装 Skills（OpenClaw / 任意支持 Skills 的智能体）</span>
+                    </div>
+                    <p class="step-desc">复制下方文字发送给智能体，由其自动完成 Skills 安装。</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-title"><span class="copy-text-btn" onclick="copyStepHint('step3')">复制</span> 以下文字发送给 AI 助手</span>
+                        </div>
+                        <div class="code-content">
+                            <div class="code-line cmd">
+                                <span>{{.SkillPrompt}}</span>
+                                <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section class="features">
+            <div class="section-header">
+                <h2 class="section-title">核心<span class="claw-accent">特性</span></h2>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-satellite-dish"></i></div>
+                    <div class="feature-title">星型管控，主动出网</div>
+                    <div class="feature-desc">控制端与 Agent 同连一个 RPC；RPC 服务端维护通道并路由。Agent 主动连 RPC，支持 NAT 与单向出网</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-tools"></i></div>
+                    <div class="feature-title">内置运维与安全能力</div>
+                    <div class="feature-desc">系统信息、进程执行；文件创建/列举/读写/删除/哈希；HTTP 探测与下载；TCP/UDP/DNS；文件上传/下载</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-puzzle-piece"></i></div>
+                    <div class="feature-title">自定义扩展能力</div>
+                    <div class="feature-desc">内置未命中时走 SkillRunner，支持 exe / python / ps1</div>
+                </div>
+            </div>
+        </section>
 
         <!-- Architecture Flow -->
         <section class="arch-flow">
             <div class="section-header">
-                <h2 class="section-title"><span class="claw-accent">架构</span>流程</h2>
+                <h2 class="section-title"><span class="claw-accent">调用</span>流程</h2>
             </div>
+            <p style="text-align:center;color:var(--text-muted);font-size:.85rem;margin-bottom:20px;line-height:1.6;">大模型技能侧与每台 Agent 无需点对点直连；二者连接同一 RPC，由 RPC 服务端完成与会话及 TinyClaw 调用相关的路由。</p>
             <div class="flow-diagram">
                 <!-- 钉钉/飞书 -->
                 <div class="flow-node">
@@ -614,139 +746,6 @@
             </div>
         </section>
 
-        <!-- Steps Detail -->
-        <section class="steps">
-            <div class="section-header">
-                <h2 class="section-title"><span class="claw-accent">快速</span>开始</h2>
-            </div>
-
-            <!-- Step 1 -->
-            <div class="step-card">
-                <div class="step-num">1</div>
-                <div class="step-body">
-                    <div class="step-head">
-                        <span class="step-title">安装 RPCServer</span>
-                        <span class="step-badge">必需</span>
-                    </div>
-                    <p class="step-desc">在目标主机上安装 RPC 服务端组件，提供安全能力 RPC 接口。</p>
-                    <div class="code-block" id="step1-code">
-                        <div class="code-header">
-                            <div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div>
-                            <span class="code-title">Terminal</span>
-                            <div class="os-switch">
-                                <button class="os-btn active" onclick="switchOS('step1','win',this)"><i class="fab fa-windows"></i> Windows</button>
-                                <button class="os-btn" onclick="switchOS('step1','linux',this)"><i class="fab fa-linux"></i> Linux</button>
-                            </div>
-                        </div>
-                        <div class="code-content" id="step1-win">
-                            <div class="code-line comment"><span>REM 一键安装 RPCServer</span></div>
-                            <div class="code-line cmd">
-                                <span class="code-prompt">&gt; </span><span>{{.RPCServerWinURL}}</span>
-                                <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
-                            </div>
-                        </div>
-                        <div class="code-content" id="step1-linux" style="display:none">
-                            <div class="code-line comment"><span># 一键安装</span></div>
-                            <div class="code-line cmd">
-                                <span class="code-prompt">$ </span><span>{{.RPCServerLinuxURL}}</span>
-                                <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 2 -->
-            <div class="step-card">
-                <div class="step-num">2</div>
-                <div class="step-body">
-                    <div class="step-head">
-                        <span class="step-title">安装 TinyClaw</span>
-                        <span class="step-badge">必需</span>
-                    </div>
-                    <p class="step-desc">安装 TinyClaw 代理本体，自动连接 RPCServer。</p>
-                    <div class="code-block" id="step2-code">
-                        <div class="code-header">
-                            <div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div>
-                            <span class="code-title">Terminal</span>
-                            <div class="os-switch">
-                                <button class="os-btn active" onclick="switchOS('step2','win',this)"><i class="fab fa-windows"></i> Windows</button>
-                                <button class="os-btn" onclick="switchOS('step2','linux',this)"><i class="fab fa-linux"></i> Linux</button>
-                            </div>
-                        </div>
-                        <div class="code-content" id="step2-win">
-                            <div class="code-line comment"><span>REM 一键安装 TinyClaw</span></div>
-                            <div class="code-line cmd">
-                                <span class="code-prompt">&gt; </span><span>{{.TinyClawWinURL}}</span>
-                                <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
-                            </div>
-                        </div>
-                        <div class="code-content" id="step2-linux" style="display:none">
-                            <div class="code-line comment"><span># 一键安装</span></div>
-                            <div class="code-line cmd">
-                                <span class="code-prompt">$ </span><span>{{.TinyClawLinuxURL}}</span>
-                                <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 3 -->
-            <div class="step-card">
-                <div class="step-num">3</div>
-                <div class="step-body">
-                    <div class="step-head">
-                        <span class="step-title">安装 TinyClawCLI 技能</span>
-                        <span class="step-badge">技能</span>
-                    </div>
-                    <p class="step-desc">下载 TinyClawCLI 技能包，解压后安装到 AI-IDE 的技能目录中，即可通过自然语言调用安全能力。</p>
-                    <div class="code-block">
-                        <div class="code-header">
-                            <div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div>
-                            <span class="code-title">Terminal</span>
-                        </div>
-                        <div class="code-content">
-                            <div class="code-line comment"><span># 下载 TinyClawCLI 技能包</span></div>
-                            <div class="code-line cmd">
-                                <span class="code-prompt">$ </span><span>{{.SkillDownloadCmd}}</span>
-                                <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
-                            </div>
-                            <div class="code-line comment"><span># 或直接发送安装指令给 AI 助手</span></div>
-                            <div class="code-line cmd">
-                                <span class="code-prompt">&gt; </span><span>{{.SkillPrompt}}</span>
-                                <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Features -->
-        <section class="features">
-            <div class="section-header">
-                <h2 class="section-title">核心<span class="claw-accent">特性</span></h2>
-            </div>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-feather"></i></div>
-                    <div class="feature-title">轻量无感</div>
-                    <div class="feature-desc">极低资源占用，静默运行，不影响主机正常使用</div>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-bolt"></i></div>
-                    <div class="feature-title">快速部署</div>
-                    <div class="feature-desc">三步完成安装，支持批量下发，分钟级覆盖全量主机</div>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-plug"></i></div>
-                    <div class="feature-title">AI 原生</div>
-                    <div class="feature-desc">技能化接口，通过自然语言驱动，接入任意 AI-IDE</div>
-                </div>
-            </div>
-        </section>
-
         <footer class="footer">
             TinyClaw &copy; 2026 &middot; <a href="/agent">SkillHub</a>
         </footer>
@@ -764,13 +763,47 @@
             btn.classList.add('active');
             document.getElementById(step + '-win').style.display = os === 'win' ? '' : 'none';
             document.getElementById(step + '-linux').style.display = os === 'linux' ? '' : 'none';
+            const title = document.getElementById(step + '-title');
+            if (title) {
+                if (os === 'win') {
+                    title.innerHTML = '打开CMD命令行， <span class="copy-text-btn" onclick="copyStepHint(\'' + step + '\')">复制</span> 以下命令进行安装';
+                } else {
+                    title.innerHTML = '<span class="copy-text-btn" onclick="copyStepHint(\'' + step + '\')">复制</span> 以下命令进行安装';
+                }
+            }
+        }
+
+        function copyStepHint(step) {
+            const winEl = document.getElementById(step + '-win');
+            const linuxEl = document.getElementById(step + '-linux');
+            let visible;
+            if (winEl && linuxEl) {
+                visible = winEl.style.display !== 'none' ? winEl : linuxEl;
+            } else if (winEl) {
+                visible = winEl;
+            } else {
+                visible = document.querySelector('.code-content');
+            }
+            const cmdSpan = visible.querySelector('.code-line.cmd span:not(.code-prompt)');
+            const text = cmdSpan ? cmdSpan.textContent.trim() : '';
+            const doCopy = () => toast('已复制到剪贴板', 'success');
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(doCopy);
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+                document.body.appendChild(ta); ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                doCopy();
+            }
         }
 
         function copyCmd(btn) {
             const line = btn.parentElement;
             const spans = line.querySelectorAll('span:not(.code-prompt)');
             const text = Array.from(spans).map(s => s.textContent).join('').trim();
-            navigator.clipboard.writeText(text).then(() => {
+            const onCopy = () => {
                 btn.classList.add('copied');
                 btn.innerHTML = CHECK_SVG;
                 toast('已复制到剪贴板', 'success');
@@ -778,7 +811,17 @@
                     btn.classList.remove('copied');
                     btn.innerHTML = COPY_SVG;
                 }, 2000);
-            });
+            };
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(onCopy);
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+                document.body.appendChild(ta); ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                onCopy();
+            }
         }
 
         function toast(msg, type) {
