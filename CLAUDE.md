@@ -6,309 +6,92 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 SkillHub is a Go-based Skill and MCP Server management and distribution platform with a Web UI and REST API. It integrates **12000+ ClawHub skills** and **3400+ MCP servers**, supports local upload for team sharing.
 
-**Seven main pages**:
-- **Portal** (`/`): Unified entry page with 24-hour auto-refresh
-- **SkillHub** (`/skills`): Skill management and browsing
-- **MCPHub** (`/mcp`): MCP server management and browsing
-- **AgentHub** (`/agent`): AI Agent chat platform with multi-LLM support
-- **Analysis** (`/analysis`): Malware file analysis platform
-- **Kernel** (`/kernel`): Linux kernel adaptation service (reverse proxy)
-- **TI** (`/ti`): Threat intelligence query service (reverse proxy)
+**Pages**: Portal (`/`), SkillHub (`/skills`), ServerHub (`/server`), AgentHub (`/agent`), Analysis (`/analysis`), Crash Dump (`/crash-dump`), Kernel (`/kernel`), TI (`/ti`), TinyClaw (`/tinyclaw`).
 
-**Page navigation pattern**:
-- Portal, SkillHub, MCPHub, AgentHub are standalone pages with full nav bars
-- Analysis, Kernel, TI, Chat are AgentHub sub-pages with simple header ("← 返回" → `/agent`)
+**Page navigation pattern**: Portal, SkillHub, ServerHub, AgentHub are standalone pages with full nav bars. Analysis, Crash Dump, Kernel, TI, Chat are AgentHub sub-pages with simple header ("← 返回" → `/agent`). TinyClaw uses Go template rendering with config-driven content.
+
+**Naming note**: MCP was renamed to "Server" throughout — the DB table `mcp_servers` auto-migrates to `servers` on startup. API routes use `/server` not `/mcp`.
 
 ## Build & Run Commands
 
 ```bash
-# Install dependencies
-go mod tidy
+go mod tidy                                          # Install dependencies
+go run ./cmd/server/main.go                          # Dev server (default http://localhost:18089)
+go build -a -o bin/server.exe ./cmd/server/main.go   # Build (use -a when templates change)
 
-# Run development server
-go run ./cmd/server/main.go
-
-# Build executable (force rebuild for embedded templates)
-go build -a -o bin/server.exe ./cmd/server/main.go
-
-# Import skills from ClawHub
-go run ./scripts/import_clawhub.go
-
-# Import MCP servers from mcp.so API
-go run ./scripts/import_mcp.go
-
-# Parse MCP servers from GitHub README
-go run ./scripts/parse_mcp_readme.go
+# Data import scripts
+go run ./scripts/import_clawhub.go                   # Crawl ClawHub skills
+go run ./scripts/import_server.go                    # Crawl MCP servers (mcp.so API)
+go run ./scripts/parse_server_readme.go              # Parse MCP servers (GitHub README)
 ```
 
-Server starts on `http://localhost:8081` by default.
+No test suite exists. All Go source is in module `skillhub` (Go 1.23.0).
 
 ## Architecture
 
-Layered architecture with dependency injection:
+Layered architecture: **Handler** → **Service** → **Repository** → **Database**. Dependencies are wired manually in `cmd/server/main.go`.
 
 ```
-cmd/server/main.go     # Entry point, wire dependencies, setup Gin routes
+cmd/server/main.go           # Entry point: config, DB, DI, Gin routes, graceful shutdown
 internal/
-├── handlers/          # HTTP handlers (Gin context, request/response)
-│   ├── skill.go       # Skill CRUD handlers
-│   ├── mcp.go         # MCP server handlers
-│   ├── agent.go       # Agent chat handlers (SSE streaming + tool call support)
-│   ├── analysis.go    # Malware analysis handlers
-│   ├── kernel.go      # Kernel adaptation reverse proxy
-│   ├── ti.go          # Threat intelligence reverse proxy
-│   └── vuln.go        # Vulnerability database import handlers
-├── service/           # Business logic layer
-│   ├── skill_service.go
-│   ├── mcp_service.go
-│   ├── agent_service.go
-│   ├── llm_service.go       # Multi-provider LLM integration (Anthropic/OpenAI/DeepSeek/GLM)
-│   ├── llm_tool_service.go  # LLM Tool Call support with multi-turn execution
-│   ├── tool_registry.go     # Tool registry pattern for managing callable tools
-│   ├── mcp_client.go        # MCP client with session management
-│   ├── mcp_tool_adapter.go  # Adapts MCP tools to ToolExecutor interface
-│   ├── analysis_agent.go    # LLM-powered malware analysis agent
-│   ├── analysis_service.go  # Analysis service orchestration
-│   ├── vuln_tool.go         # Vulnerability DB SQL query tools (ToolExecutor implementations)
-│   ├── vuln_service.go      # Vulnerability data import service (SQLite/CSV/JSON)
-│   └── refresh_service.go
-├── repository/        # Data access layer (GORM)
-│   ├── skill_repo.go
-│   ├── mcp_repo.go
-│   ├── agent_repo.go
-│   ├── session_repo.go
-│   ├── api_key_repo.go
-│   └── analysis_repo.go
-├── models/            # GORM models and DTOs
-│   ├── skill.go
-│   ├── mcp_server.go
-│   ├── agent.go
-│   ├── session.go
-│   ├── api_key.go
-│   └── analysis.go
-├── middleware/        # Gin middleware (logger, security, recovery)
-├── config/            # Viper config loading
-└── utils/             # Validators, response helpers, encryption
-    └── pdf.go         # PDF report generation (gofpdf)
-scripts/
-├── import_clawhub.go       # ClawHub data crawler
-├── import_mcp.go           # MCP server crawler (mcp.so API)
-├── parse_mcp_readme.go     # MCP server parser (GitHub README)
-├── check_db.go             # Database inspection tool
-├── check_apikeys.go        # API key validation tool
-├── check_analysis.go       # Analysis task checker
-├── check_task.go           # Single task inspector
-├── check_tasks.go          # Batch task inspector
-├── test_analysis_agent.go  # Analysis agent test script
-└── migrate_to_single_user.go # User migration utility
+├── handlers/                # HTTP handlers (Gin context)
+├── service/                 # Business logic
+├── repository/              # Data access (GORM)
+├── models/                  # GORM models and DTOs
+├── middleware/               # Gin middleware (logger, security, recovery, size limit)
+├── config/                  # Viper config loading
+└── utils/                   # Validators, response helpers, encryption, PDF generation
+scripts/                     # Standalone data import/inspection tools
 ```
 
-**Data flow**: Handler → Service → Repository → Database
+### Key Architectural Patterns
 
-## Key Dependencies
+**ToolExecutor interface** (`service/tool_registry.go`): Abstracts callable tools for LLM Tool Call. Implementations: `VulnTool` (vulnerability DB queries), `MCPToolAdapter` (adapts MCP protocol tools). Registered in `ToolRegistry` which handles definition retrieval and batch execution.
 
-- **Gin**: HTTP framework
-- **GORM + SQLite** (`github.com/glebarez/sqlite`): ORM with pure-Go SQLite
-- **Viper**: Configuration management
-- **Zap**: Structured logging
-- **gofpdf**: PDF report generation
+**LLM Service** (`service/llm_service.go`): Unified OpenAI-compatible client supporting 5 providers: anthropic, openai, deepseek, glm, openai-compatible. All use `sashabaranov/go-openai` with provider-specific base URLs. SSE streaming via `StreamChat()`.
 
-## API Routes
+**LLM Tool Call loop** (`service/llm_tool_service.go`): Multi-turn tool execution — LLM response may contain tool calls → execute via registry → feed results back → repeat until LLM returns final text.
 
-All routes under `/api`:
+**MCP Client** (`service/mcp_client.go`): JSON-RPC MCP protocol client with session ID management. `MCPToolAdapter` wraps MCP tools as `ToolExecutor` instances.
 
-### Skills
-- `GET /health`, `/top50`, `/skills`, `/categories`, `/stats`
-- `GET /skills/:id`, `/skills/:id/download`
-- `POST /skills/upload` (multipart form: name, category, file required)
-- `PUT /skills/:id`, `DELETE /skills/:id`
+**Malware Analysis flow** (`service/analysis_agent.go`, `analysis_service.go`): Upload → start `idalib-mcp.exe` subprocess → LLM agent calls MCP tools → generate report (MD + PDF via gofpdf).
 
-### MCP Servers
-- `GET /mcp`, `/mcp/:id` - List servers, get server details
-- `GET /mcp/categories`, `/mcp/stats` - Categories and statistics
-- `GET /mcp/:id/download` - Download server file
-- `POST /mcp/upload` - Upload server file (multipart form: name, category, file required)
+**Crash Dump Analysis** (`handlers/crash_dump.go`): Separate handler for analyzing Windows/Linux crash dump files, similar pattern to malware analysis.
 
-### AgentHub
-- `GET /agent`, `/agent/:id` - List agents, get agent details
-- `GET /agent/categories`, `/agent/stats` - Categories and statistics
-- `GET /agent/models` - Get supported models for a provider
-- `POST /agent/:id/chat` - Chat with agent (SSE streaming)
-- `GET /agent/:id/sessions` - Get user's chat sessions
-- `GET /session/:id`, `DELETE /session/:id` - Session management
+**API Key encryption**: AES-GCM with per-key nonce. Keys stored in `user_api_keys` table.
 
-### API Key Management
-- `POST /user/apikey` - Save API key (encrypted storage)
-- `POST /user/apikey/validate` - Validate API key with provider
-- `GET /user/apikey` - List user's configured providers
-- `DELETE /user/apikey/:provider` - Delete API key
+### Database
 
-### Malware Analysis
-- `POST /analysis/upload` - Upload file for analysis
-- `GET /analysis/tasks` - List analysis tasks
-- `GET /analysis/:id`, `/analysis/:id/result`, `/analysis/:id/report`
-- `GET /analysis/:id/download` - Download analysis report (ZIP: PDF + MD)
-- `DELETE /analysis/:id` - Cancel task
+SQLite (`skills.db`) via `glebarez/sqlite` (pure-Go). Auto-migrates on startup. Models use soft deletes (`gorm.DeletedAt`). Agent seed data is auto-created when the agents table is empty.
 
-### IDA Server Management
-- `GET /ida/servers` - List registered IDA servers
-- `POST /ida/servers` - Register IDA server
-- `DELETE /ida/servers/:id` - Remove server
-- `POST /ida/servers/:id/heartbeat` - Server heartbeat
-
-### Kernel Adaptation (Reverse Proxy)
-- `ANY /api/kernel/*` - Proxy to kernel-build service
-
-### Threat Intelligence (Reverse Proxy)
-- `ANY /api/ti/*` - Proxy to tiserver service
-
-### Vulnerability Database
-- `GET /api/vuln/status` - Get vulnerability database status
-- `POST /api/vuln/import` - Import vulnerability data (SQLite/CSV/JSON file upload)
-
-## Key Features
-
-### AgentHub (AI Agent Chat)
-- Multi-provider support: Anthropic, OpenAI, DeepSeek, GLM
-- SSE streaming chat responses
-- Session management with history
-- Encrypted API key storage (AES-GCM)
-- Customizable agents with system prompts
-- **Tool Call support**: Agents can use registered tools (e.g., CVE agent queries vulnerability DB via SQL)
-
-### Vulnerability Patch Query Agent (CVE Agent)
-- Agent slug: `cve-patch-analyzer`
-- **Data-driven analysis**: LLM queries vulnerability databases (policys + products_auth) via Tool Call
-- **2 registered tools**:
-  - `query_policys_db`: Query vulnerability policy database
-    - By CVE ID (`cve_id`): Returns full vuln info (CVSS, CNNVD, vendor, etc.) + affected products from both `single` and `double` tables + auto-attached detection commands from products_auth
-    - By product name (`product`): Fuzzy search across name/name_en/vendor fields, returns matching vuln list (up to 50)
-  - `query_product_auth_db`: Query version detection rules (cmd, filepath, registrypath) by product name with keyword extraction and alias mapping
-- **Database structure**:
-  - `policys.db` (in `data/vul-center/vul/`): Main vuln DB with CVE-to-product mapping, version conditions, affected packages
-  - `products_auth.db` (in `data/vul-agent/vul/`): Detection rules per OS (Linux cmd, Windows filepath/registrypath)
-  - `single` table: Single version conditions (e.g., version < X)
-  - `double` table: Range conditions (e.g., X ≤ version < Y)
-  - Product name format: `os-version#package` (e.g., `debian-12.0#tomcat10`, `centos-7#kernel`)
-- **Auto detection**: CVE query automatically extracts OS names from affected products and queries products_auth for detection commands
-- **Data import**: Upload SQLite (.db/.sqlite), CSV, or JSON files via `POST /api/vuln/import`
-- **Flow**: User asks question → LLM calls tools → tools query policys (single+double) + products_auth → LLM generates professional analysis report
-
-### Malware Analysis (LLM + MCP Integration)
-- **IDA-Pro-MCP Integration**: Auto-start MCP server for each analysis task
-- **LLM Tool Call**: LLM decides which analysis tools to call
-- **Tool Registry Pattern**: Unified interface for MCP tools and custom tools
-- **Analysis Flow**:
-  1. User uploads file → creates analysis task
-  2. System starts `idalib-mcp.exe` with target file
-  3. LLM Agent calls MCP tools (analyze_binary, get_functions, get_strings, etc.)
-  4. Agent generates professional malware analysis report
-- **Key Files**:
-  - `tool_registry.go`: `ToolExecutor` interface for tool abstraction
-  - `llm_tool_service.go`: Multi-turn tool execution loop
-  - `mcp_client.go`: MCP protocol with session ID handling
-  - `mcp_tool_adapter.go`: Adapts MCP tools to `ToolExecutor`
-  - `analysis_agent.go`: Malware analysis prompt and report generation
-
-### Category Selector
-- Custom dropdown component with preset categories
-- Supports custom category input
-- Located in `cmd/server/templates/index.html`
-
-### Skill Detail Modal
-- **Local uploaded skills**: Show local download button (curl command + direct download)
-- **ClawHub skills**: Show ClawHub install command + AI assistant install prompt
-- The install prompt can be copied and sent to Claude/ChatGPT/Cursor for automatic installation
-
-### Upload Handler
-- Located in `internal/handlers/skill.go`
-- Fixed: Uses `uploadWithContent()` directly instead of nil reader
+External vulnerability databases (read-only, opened per-query to avoid file lock issues):
+- `data/vul-center/vul/policys.db` — vulnerability policies
+- `data/vul-agent/vul/products_auth.db` — product detection rules
 
 ## Configuration
 
-`config.yaml` controls server port, upload directory, database path, allowed file extensions, logging, reverse proxy targets, and analysis tool paths. Uploads are stored in `./uploads` and served via `/uploads` static route.
-
-**Analysis config**:
-- `analysis.idalib_path`: Path to `idalib-mcp.exe` for malware analysis (required for analysis feature)
-
-**Logging config**:
-- `logging.log_file`: Log file path (default: `server.log`), stdout is redirected via pipe + MultiWriter
-
-**Vulnerability DB paths** (auto-loaded from `./data/`):
-- `data/vul-center/vul/policys.db`: Vulnerability policy database
-- `data/vul-agent/vul/products_auth.db`: Product version detection rules
-
-## Database
-
-SQLite database (`skills.db`) auto-migrates on startup. Models use soft deletes (`gorm.DeletedAt`).
-
-**Skill model fields**:
-- `Name`, `Slug`, `Icon`, `Category`, `Description`
-- `Downloads`, `Rating`, `Verified`, `Safe`
-- `FileName` (for local uploaded files)
-
-**MCPServer model fields**:
-- `Name`, `Slug`, `Icon`, `Category`, `Description`
-- `GitHubURL`, `NPMPackage`, `PyPIPkg`
-- `Stars`, `Downloads`, `InstallCmd`, `Config`
-- `Verified`, `Official`
-
-**Agent model fields**:
-- `Name`, `Slug`, `Icon`, `Category`, `Description`
-- `SystemPrompt`, `Model`, `Temperature`, `MaxTokens`
-- `Verified`, `UsageCount`
-
-**Session model fields**:
-- `UserID`, `AgentID`, `Title`
-- Messages stored as JSON in `Messages` field
-
-**UserAPIKey model fields**:
-- `UserID`, `Provider`, `EncryptedKey`, `CustomEndpoint`
-- AES-GCM encryption for API keys
-
-**AnalysisTask model fields**:
-- `UserID`, `AgentID`, `FileName`, `FilePath`, `FileHash`
-- `FileType`, `FileSize`, `Status`, `Progress`
-- `ResultJSON`, `ReportMD`, `ReportPDF`, `ErrorMessage`
-
-## Embeds
-
-Templates and static files are embedded via `//go:embed` directive in `main.go`. Use `go build -a` to force rebuild when templates change.
+`config.yaml` (loaded by Viper with defaults in `internal/config/config.go`):
+- `server.port` (default 8081, overridden to 18089 in config)
+- `server.upload_dir`, `server.max_upload_size`
+- `analysis.idalib_path` — path to `idalib-mcp.exe` (required for analysis feature)
+- `kernel.service_url`, `ti.service_url` — reverse proxy targets
+- `tinyclaw.*` — download URLs, install commands, showcase content (template-injected)
+- `refresh.enabled`, `refresh.interval` — background ClawHub data crawl
 
 ## Frontend
 
-Single-page apps in `cmd/server/templates/`:
+Single-page HTML apps in `cmd/server/templates/`, embedded via `//go:embed`. No build step — pure HTML/CSS/JS served directly. Templates must use `go build -a` to pick up changes.
 
-### Portal (`portal.html`)
-- Unified entry page with links to all modules
-- 24-hour auto-refresh meta tag
+## API Routes
 
-### SkillHub (`index.html`)
-- Top 50 ranking with pagination
-- Category filtering with custom dropdown
-- Skill search and upload
-- Skill detail modal with download options
-
-### MCPHub (`mcp.html`)
-- Server grid with pagination
-- Category filtering and search
-- Upload form for MCP server files
-- Server detail modal with GitHub link and config
-
-### AgentHub (`agent.html`)
-- Agent grid with categories
-- API key configuration modal
-- Links to chat interface
-
-### Chat (`chat.html`)
-- Real-time SSE streaming chat
-- Message history display
-- Session management
-
-### Analysis (`analysis.html`)
-- File upload interface for PE/ELF binaries
-- Real-time task status polling
-- Analysis progress indicator
-- Markdown report viewer
-- Report download (ZIP containing PDF + MD)
-- Task history list
+All under `/api`. Key route groups:
+- `/api/skills/*` — Skill CRUD + upload/download
+- `/api/server/*` — Server CRUD + upload/download
+- `/api/agent/*` — Agent listing, chat (SSE), sessions, models
+- `/api/user/apikey/*` — Encrypted API key management
+- `/api/analysis/*` — Malware file analysis (upload, tasks, report download)
+- `/api/crash-dump/*` — Crash dump analysis
+- `/api/ida/servers/*` — IDA server registration + heartbeat
+- `/api/vuln/*` — Vulnerability DB status + import
+- `/api/kernel/*` — Reverse proxy to kernel-build service
+- `/api/ti/*` — Reverse proxy to tiserver service
