@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"skillhub/internal/models"
 	"skillhub/internal/service"
@@ -229,7 +231,8 @@ func (h *AnalysisHandler) DownloadReport(c *gin.Context) {
 		return
 	}
 
-	fileName := fmt.Sprintf("analysis_report_%d.pdf", taskID)
+	baseName := strings.TrimSuffix(task.FileName, filepath.Ext(task.FileName))
+	fileName := fmt.Sprintf("%s-分析报告.pdf", baseName)
 	c.Header("Content-Type", "application/pdf")
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
 	c.Data(http.StatusOK, "application/pdf", pdfData)

@@ -29,9 +29,18 @@ analysis:
 
 tinyclaw:
   download_url: "http://10.50.6.49/edr/tinyclaw"
-  rpcserver_win_url: "iwr -useb http://10.50.6.49/edr/tinyclaw/install_rpc.ps1 | iex"
+  rpcserver_win_url: "powershell -ep bypass -c \"$f=Join-Path $env:Temp install_rpc.ps1;(New-Object Net.WebClient).DownloadFile('http://10.50.6.49/edr/tinyclaw/install_rpc.ps1',$f);&$f\""
   rpcserver_linux_url: "curl -fsSL http://10.50.6.49/edr/tinyclaw/install_rpc.sh | sudo bash"
-  tinyclaw_win_url: "iwr -useb http://10.50.6.49/edr/tinyclaw/install.ps1 | iex"
+  tinyclaw_win_url: "powershell -ep bypass -c \"$f=Join-Path $env:Temp install.ps1;(New-Object Net.WebClient).DownloadFile('http://10.50.6.49/edr/tinyclaw/install.ps1',$f);&$f\""
   tinyclaw_linux_url: "curl -fsSL http://10.50.6.49/edr/tinyclaw/install.sh | sudo bash"
   skill_download_cmd: "curl -L -o tinyclawskill.zip http://10.50.6.49/edr/tinyclaw/tinyclawskill.zip"
-  skill_prompt: "安装 TinyClawCLI 安全技能，连接本地 TinyClaw 服务"
+  skill_prompt: "请帮我安装一个技能，下载地址是：http://10.50.6.49/edr/tinyclaw/tinyclawskill.zip，安装完成后进行总结。"
+  showcase1_icon: "fas fa-shield-alt"
+  showcase1_title: "批量合规巡检"
+  showcase1_desc: "通过飞书给 TinyClaw 下发指令，3 分钟完成 200 台主机的补丁合规检查，自动生成差异报告"
+  showcase2_icon: "fas fa-bolt"
+  showcase2_title: "秒级应急响应"
+  showcase2_desc: '收到告警后直接在钉钉说"隔离主机并抓取进程列表"，TinyClaw 几秒执行完毕，响应速度从小时级缩短到秒级'
+  showcase3_icon: "fas fa-crosshairs"
+  showcase3_title: "全网威胁狩猎"
+  showcase3_desc: "AI 分析恶意样本后自动通过 TinyClaw 在全网检索同源 IOC，文件哈希、可疑进程、注册表键值，几分钟完成全网溯源"

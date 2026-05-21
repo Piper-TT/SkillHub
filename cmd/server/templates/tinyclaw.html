@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <title>TinyClaw - Lightweight Security Agent</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -447,11 +448,22 @@
             font-size: .85rem; color: var(--text-muted); line-height: 1.5;
         }
 
+        /* ===== Building ===== */
+        .building {
+            margin-bottom: 56px;
+            animation: fadeInUp .8s ease-out .7s both;
+        }
+            font-size: .7rem; font-weight: 600;
+            background: var(--surface-cyan-soft);
+            color: var(--cyan-bright);
+            margin-left: auto;
+        }
+
         /* Footer */
         .footer {
             margin-top: auto; padding-top: 40px;
             text-align: center; font-size: .9rem; color: var(--text-muted);
-            animation: fadeInUp .8s ease-out .75s both;
+            animation: fadeInUp .8s ease-out .8s both;
         }
         .footer a { color: var(--coral-bright); text-decoration: none; transition: color .2s ease; }
         .footer a:hover { color: var(--cyan-bright); }
@@ -550,13 +562,13 @@
                         </div>
                         <div class="code-content" id="step1-win">
                             <div class="code-line cmd">
-                                <span class="code-prompt">&gt; </span><span>{{.RPCServerWinURL}}</span>
+                                <span>{{.RPCServerWinURL}}</span>
                                 <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
                             </div>
                         </div>
                         <div class="code-content" id="step1-linux" style="display:none">
                             <div class="code-line cmd">
-                                <span class="code-prompt">$ </span><span>{{.RPCServerLinuxURL}}</span>
+                                <span>{{.RPCServerLinuxURL}}</span>
                                 <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
                             </div>
                         </div>
@@ -582,13 +594,13 @@
                         </div>
                         <div class="code-content" id="step2-win">
                             <div class="code-line cmd">
-                                <span class="code-prompt">&gt; </span><span>{{.TinyClawWinURL}}</span>
+                                <span>{{.TinyClawWinURL}}</span>
                                 <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
                             </div>
                         </div>
                         <div class="code-content" id="step2-linux" style="display:none">
                             <div class="code-line cmd">
-                                <span class="code-prompt">$ </span><span>{{.TinyClawLinuxURL}}</span>
+                                <span>{{.TinyClawLinuxURL}}</span>
                                 <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
                             </div>
                         </div>
@@ -608,13 +620,37 @@
                         <div class="code-header">
                             <span class="code-title"><span class="copy-text-btn" onclick="copyStepHint('step3')">复制</span> 以下文字发送给 AI 助手</span>
                         </div>
-                        <div class="code-content">
+                        <div class="code-content" id="step3-content">
                             <div class="code-line cmd">
                                 <span>{{.SkillPrompt}}</span>
                                 <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- What People Are Building -->
+        <section class="building">
+            <div class="section-header">
+                <h2 class="section-title"><span class="claw-accent">用户</span>实践</h2>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="{{.Showcase1Icon}}"></i></div>
+                    <div class="feature-title">{{.Showcase1Title}}</div>
+                    <div class="feature-desc">{{.Showcase1Desc}}</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="{{.Showcase2Icon}}"></i></div>
+                    <div class="feature-title">{{.Showcase2Title}}</div>
+                    <div class="feature-desc">{{.Showcase2Desc}}</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="{{.Showcase3Icon}}"></i></div>
+                    <div class="feature-title">{{.Showcase3Title}}</div>
+                    <div class="feature-desc">{{.Showcase3Desc}}</div>
                 </div>
             </div>
         </section>
@@ -776,9 +812,12 @@
         function copyStepHint(step) {
             const winEl = document.getElementById(step + '-win');
             const linuxEl = document.getElementById(step + '-linux');
+            const contentEl = document.getElementById(step + '-content');
             let visible;
             if (winEl && linuxEl) {
                 visible = winEl.style.display !== 'none' ? winEl : linuxEl;
+            } else if (contentEl) {
+                visible = contentEl;
             } else if (winEl) {
                 visible = winEl;
             } else {

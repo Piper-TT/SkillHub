@@ -129,6 +129,16 @@ func main() {
 	staticFS, _ := fs.Sub(webFS, "static")
 	r.StaticFS("/static", http.FS(staticFS))
 
+	// favicon
+	r.GET("/favicon.ico", func(c *gin.Context) {
+		data, _ := webFS.ReadFile("static/favicon.svg")
+		c.Data(http.StatusOK, "image/svg+xml", data)
+	})
+	r.GET("/favicon.svg", func(c *gin.Context) {
+		data, _ := webFS.ReadFile("static/favicon.svg")
+		c.Data(http.StatusOK, "image/svg+xml", data)
+	})
+
 	// 上传文件目录（用于下载）
 	r.Static("/uploads", cfg.Server.UploadDir)
 
@@ -338,7 +348,16 @@ func main() {
 			"TinyClawWinURL":    cfg.TinyClaw.TinyClawWinURL,
 			"TinyClawLinuxURL":  cfg.TinyClaw.TinyClawLinuxURL,
 			"SkillDownloadCmd":  cfg.TinyClaw.SkillDownloadCmd,
-		"SkillPrompt":       cfg.TinyClaw.SkillPrompt,
+			"SkillPrompt":       cfg.TinyClaw.SkillPrompt,
+			"Showcase1Icon":     cfg.TinyClaw.Showcase1Icon,
+			"Showcase1Title":    cfg.TinyClaw.Showcase1Title,
+			"Showcase1Desc":     cfg.TinyClaw.Showcase1Desc,
+			"Showcase2Icon":     cfg.TinyClaw.Showcase2Icon,
+			"Showcase2Title":    cfg.TinyClaw.Showcase2Title,
+			"Showcase2Desc":     cfg.TinyClaw.Showcase2Desc,
+			"Showcase3Icon":     cfg.TinyClaw.Showcase3Icon,
+			"Showcase3Title":    cfg.TinyClaw.Showcase3Title,
+			"Showcase3Desc":     cfg.TinyClaw.Showcase3Desc,
 		})
 	})
 
@@ -1037,6 +1056,7 @@ query_product_auth_db（版本检测规则查询）参数：product（必填，�
 			MaxTokens:   4096,
 			Verified:    true,
 			UsageCount:  0,
+			RedirectURL: "http://10.50.6.49:9090/",
 		},
 	}
 

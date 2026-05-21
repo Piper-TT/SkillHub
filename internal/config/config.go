@@ -27,6 +27,15 @@ type TinyClawConfig struct {
 	TinyClawLinuxURL  string `mapstructure:"tinyclaw_linux_url"`
 	SkillDownloadCmd  string `mapstructure:"skill_download_cmd"`
 	SkillPrompt       string `mapstructure:"skill_prompt"`
+	Showcase1Icon     string `mapstructure:"showcase1_icon"`
+	Showcase1Title    string `mapstructure:"showcase1_title"`
+	Showcase1Desc     string `mapstructure:"showcase1_desc"`
+	Showcase2Icon     string `mapstructure:"showcase2_icon"`
+	Showcase2Title    string `mapstructure:"showcase2_title"`
+	Showcase2Desc     string `mapstructure:"showcase2_desc"`
+	Showcase3Icon     string `mapstructure:"showcase3_icon"`
+	Showcase3Title    string `mapstructure:"showcase3_title"`
+	Showcase3Desc     string `mapstructure:"showcase3_desc"`
 }
 
 type AnalysisConfig struct {
@@ -121,9 +130,9 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("refresh.enabled", false)
 	v.SetDefault("refresh.interval", 24)
 	v.SetDefault("tinyclaw.download_url", "https://tinyclaw.example.com")
-	v.SetDefault("tinyclaw.rpcserver_win_url", "iwr -useb http://10.50.6.49/edr/tinyclaw/install_rpc.ps1 | iex")
+	v.SetDefault("tinyclaw.rpcserver_win_url", "powershell -ExecutionPolicy Bypass -Command \"IEX (New-Object Net.WebClient).DownloadString('http://10.50.6.49/edr/tinyclaw/install_rpc.ps1')\"")
 	v.SetDefault("tinyclaw.rpcserver_linux_url", "curl -fsSL http://10.50.6.49/edr/tinyclaw/install_rpc.sh | sudo bash")
-	v.SetDefault("tinyclaw.tinyclaw_win_url", "iwr -useb http://10.50.6.49/edr/tinyclaw/install.ps1 | iex")
+	v.SetDefault("tinyclaw.tinyclaw_win_url", "powershell -ExecutionPolicy Bypass -Command \"IEX (New-Object Net.WebClient).DownloadString('http://10.50.6.49/edr/tinyclaw/install.ps1')\"")
 	v.SetDefault("tinyclaw.tinyclaw_linux_url", "curl -fsSL http://10.50.6.49/edr/tinyclaw/install.sh | sudo bash")
 	v.SetDefault("tinyclaw.skill_download_cmd", "curl -L -o tinyclawskill.zip http://10.50.6.49/edr/tinyclaw/tinyclawskill.zip")
 	v.SetDefault("tinyclaw.skill_prompt", "安装 TinyClawCLI 安全技能，连接本地 TinyClaw 服务")
