@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # SkillHub
 
 SkillHub 是一个基于 Go 的 Skill 与 MCP 服务器管理与分发平台，提供 Web 界面和 REST API。已集成 **12000+ ClawHub 技能** 和 **3400+ MCP 服务器**，支持本地上传和团队共享。
