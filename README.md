@@ -1,353 +1,117 @@
-<<<<<<< HEAD
 # SkillHub
 
-SkillHub 是一个基于 Go 的 Skill 与 MCP 服务器管理与分发平台，提供 Web 界面和 REST API。已集成 **12000+ ClawHub 技能** 和 **3400+ MCP 服务器**，支持本地上传和团队共享。
+基于 Go 的 Skill 与 MCP Server 管理与分发平台，集成 **12000+ ClawHub 技能** 和 **3400+ MCP 服务器**，支持本地上传和团队共享。
 
-## 功能特性
+## 页面
 
-### 核心模块
+| 页面 | 路径 | 说明 |
+|------|------|------|
+| Portal | `/` | 统一入口 |
+| SkillHub | `/skills` | 技能浏览与管理 |
+| ServerHub | `/server` | MCP 服务器浏览与管理 |
+| AgentHub | `/agent` | 智能体聊天平台 |
+| Analysis | `/analysis` | 恶意文件分析 |
+| Crash Dump | `/crash-dump` | 崩溃转储分析 |
+| Kernel | `/kernel` | 内核适配服务（反向代理） |
+| TI | `/ti` | 威胁情报查询（反向代理） |
+| TinyClaw | `/tinyclaw` | TinyClaw 安装引导 |
 
-- **SkillHub** - 12000+ 技能数据，含名称、描述、分类，支持本地上传
-- **MCPHub** - 3400+ MCP 服务器，支持配置一键复制
-- **AgentHub** - 智能体聊天平台，支持多 LLM Provider（Anthropic/OpenAI/DeepSeek/GLM）
-- **恶意文件分析** - 上传可疑文件进行自动化安全分析，支持报告导出（ZIP: PDF + MD）
-- **漏洞补丁查询** - 基于 LLM Tool Call 的漏洞数据库查询助手，支持导入 SQLite/CSV/JSON 漏洞数据，通过自然语言查询
-- **内核适配服务** - Linux 内核版本适配查询与文件收集（反向代理）
-- **威胁情报查询** - 威胁情报数据查询服务（反向代理）
+Portal、SkillHub、ServerHub、AgentHub 为独立页面（完整导航栏）。Analysis、Crash Dump、Kernel、TI、Chat 为 AgentHub 子页面。TinyClaw 使用 Go 模板渲染。
 
-### 页面导航
+## 功能
 
-- Portal、SkillHub、MCPHub、AgentHub 为独立页面，各自有完整导航栏
-- Analysis、Kernel、TI、Chat 为 AgentHub 子页面，使用简洁页眉（"← 返回"按钮），返回 AgentHub
-
-### 通用功能
-
-- **Portal 入口** - 统一入口页面，24 小时定时刷新
-- **TOP50 排行** - 精选热门技能/服务器展示
-- **团队共享** - 部署到内网服务器，团队共享技能资源
-- **安装提示** - 一键复制安装提示，发送给 AI 助手安装技能
-- **分类浏览** - 10+ 技能分类（AI智能、开发工具、浏览器自动化等）
-- **技能搜索** - 支持名称和描述搜索
-- **SQLite 持久化** - 轻量级数据存储
-
-## 技术栈
-
-- Go 1.21+
-- Gin (HTTP 框架)
-- GORM + SQLite (`github.com/glebarez/sqlite`)
-- Viper (配置管理)
-- Zap (日志)
-- gofpdf (PDF 报告生成)
-
-## 目录结构
-
-```text
-.
-├── cmd/server/             # 服务入口、页面模板与静态资源
-│   ├── main.go
-│   ├── static/             # 静态资源 (FontAwesome)
-│   └── templates/
-│       ├── portal.html     # Portal 入口页面
-│       ├── index.html      # SkillHub 页面
-│       ├── mcp.html        # MCPHub 页面
-│       ├── agent.html      # AgentHub 页面
-│       ├── chat.html       # Agent 聊天页面
-│       ├── analysis.html   # 恶意文件分析页面
-│       ├── kernel.html     # 内核适配服务页面
-│       └── ti.html         # 威胁情报查询页面
-├── internal/
-│   ├── config/             # 配置加载
-│   ├── handlers/           # HTTP 处理器
-│   ├── middleware/         # 中间件
-│   ├── models/             # 数据模型
-│   ├── repository/         # 数据访问层
-│   ├── service/            # 业务逻辑层
-│   │   ├── llm_service.go        # 多 Provider LLM 集成
-│   │   ├── llm_tool_service.go   # LLM Tool Call 支持
-│   │   ├── tool_registry.go      # 工具注册中心
-│   │   ├── mcp_client.go         # MCP 客户端
-│   │   ├── mcp_tool_adapter.go   # MCP 工具适配器
-│   │   ├── analysis_agent.go     # 恶意文件分析 Agent
-│   │   ├── analysis_service.go   # 分析服务
-│   │   ├── vuln_tool.go          # 漏洞数据库 SQL 查询工具
-│   │   └── vuln_service.go       # 漏洞数据导入服务
-│   ├── utils/              # 工具与校验
-│   │   └── pdf.go               # PDF 报告生成 (gofpdf)
-│   └── data/               # 技能数据
-├── skills/                 # 本地技能包存储目录
-├── uploads/                # 上传文件目录
-├── scripts/                # 工具脚本
-│   ├── import_clawhub.go       # ClawHub 数据爬取脚本
-│   ├── import_mcp.go           # MCP 服务器爬取脚本 (mcp.so API)
-│   ├── parse_mcp_readme.go     # MCP 服务器解析脚本 (GitHub README)
-│   ├── check_db.go             # 数据库检查工具
-│   ├── check_apikeys.go        # API Key 检查工具
-│   ├── check_analysis.go       # 分析任务检查工具
-│   ├── check_task.go           # 单任务检查工具
-│   ├── check_tasks.go          # 批量任务检查工具
-│   ├── test_analysis_agent.go  # 分析 Agent 测试脚本
-│   └── migrate_to_single_user.go # 用户迁移脚本
-├── config.yaml             # 运行配置
-├── skills.db               # SQLite 数据库
-└── go.mod
-```
+- **技能管理** — 12000+ ClawHub 技能数据，支持本地上传、分类浏览、搜索
+- **服务器管理** — 3400+ MCP 服务器，配置一键复制
+- **智能体聊天** — 多 LLM Provider（Anthropic/OpenAI/DeepSeek/GLM），SSE 流式响应，支持创建/编辑/删除自定义智能体
+- **漏洞补丁查询** — LLM Tool Call 驱动，通过 REST API 查询漏洞数据库
+- **恶意文件分析** — IDA-Pro-MCP + LLM Agent 自动化二进制分析，PDF 报告导出
+- **崩溃转储分析** — Windows/Linux crash dump 分析
+- **TinyClaw** — 轻量级主机管控代理安装引导，支持 x86_64/aarch64/mips64el/loongarch64
 
 ## 快速开始
 
-### 1. 环境要求
-
-- Go >= 1.21
-
-### 2. 安装依赖
-
 ```bash
 go mod tidy
+go run ./cmd/server/main.go          # 开发模式
+go build -a -o bin/server.exe ./cmd/server/main.go  # 构建（模板变更需 -a）
 ```
 
-### 3. 启动服务
+默认端口 `18089`，通过 `config.yaml` 配置。
 
-```bash
-go run ./cmd/server/main.go
+## 架构
+
+分层架构：**Handler → Service → Repository → Database**
+
+```
+cmd/server/main.go           # 入口：配置、DI、Gin 路由
+internal/
+├── config/                  # Viper 配置加载
+├── handlers/                # HTTP 处理器（Gin）
+├── service/                 # 业务逻辑
+├── repository/              # 数据访问（GORM）
+├── models/                  # 数据模型与 DTO
+├── middleware/               # 日志、安全、恢复、大小限制
+└── utils/                   # 校验、响应、加密、PDF
+cmd/server/templates/        # 前端页面（纯 HTML/CSS/JS，go:embed 嵌入）
+scripts/                     # 数据导入与工具脚本
 ```
 
-启动后默认访问：
+### 核心组件
 
-- Portal 入口: `http://localhost:8081/`
-- SkillHub: `http://localhost:8081/skills`
-- MCPHub: `http://localhost:8081/mcp`
-- AgentHub: `http://localhost:8081/agent`
-- 恶意文件分析: `http://localhost:8081/analysis`
-- 内核适配服务: `http://localhost:8081/kernel`
-- 威胁情报查询: `http://localhost:8081/ti`
-- 健康检查: `http://localhost:8081/api/health`
+- **LLM Service** — 统一 OpenAI 兼容客户端，支持 5 个 Provider
+- **ToolExecutor 接口** — LLM Tool Call 抽象，实现：VulnAPIClient（漏洞查询）、MCPToolAdapter（恶意文件分析）
+- **LLM Tool Call 循环** — 多轮工具执行：LLM 返回 tool_call → 执行 → 结果回传 → 重复直到最终回答
+- **VulnAPIClient** — 漏洞查询 REST API 客户端，替代本地 SQLite 直查
+- **API Key 加密** — AES-GCM 加密存储
 
-## 使用说明
+## 配置
 
-### 上传技能
-
-1. 访问 SkillHub 页面 `/skills` 上传区域
-2. 填写技能名称、选择或输入自定义分类
-3. 上传 .zip 技能包
-4. 提交保存
-
-### 上传 MCP 服务器
-
-1. 访问 MCPHub 页面 `/mcp` 上传区域
-2. 填写服务器名称、GitHub 地址、描述等
-3. 上传 .zip 或 .tar.gz 服务器文件
-4. 提交保存
-
-### 使用 AgentHub
-
-1. 访问 AgentHub 页面 `/agent`
-2. 点击设置按钮配置 LLM API Key
-   - 支持 Anthropic、OpenAI、DeepSeek、GLM（智谱）
-   - API Key 使用 AES-GCM 加密存储
-3. 选择一个智能体开始聊天
-4. 支持会话历史、多轮对话、SSE 流式响应
-
-### 漏洞补丁查询
-
-1. 导入漏洞数据库：`POST /api/vuln/import` 上传 SQLite (.db/.sqlite)、CSV 或 JSON 文件
-2. 访问 AgentHub 页面 `/agent`，选择「漏洞补丁查询助手」
-3. 用自然语言提问，如「查询 2024 年的高危漏洞」「CVE-2024-1234 详情」
-4. LLM 自动调用工具查询数据库，返回结构化分析报告
-
-**查询特性**:
-- 支持导入 SQLite、CSV、JSON 三种格式的漏洞数据
-- LLM 自动发现数据库结构，构建 SQL 查询
-- 只读查询，安全防护（禁止写入操作）
-- 自动生成漏洞影响评估和修复建议
-
-### 恶意文件分析
-
-1. 访问分析页面 `/analysis`
-2. 上传可疑文件（支持 PE/ELF 可执行文件）
-3. 系统自动启动 IDA-Pro-MCP 进行二进制分析
-4. LLM Agent 智能调用分析工具（函数列表、字符串、导入导出表等）
-5. 生成专业的恶意软件分析报告
-6. 支持导出分析报告（ZIP 包含 PDF 和 MD 文件）
-
-**分析特性**:
-- 集成 IDA-Pro-MCP 进行深度二进制分析
-- LLM Agent 智能编排分析流程
-- 自动识别威胁等级和恶意行为
-- 提取 IOC 指标（IP、URL、可疑函数等）
-
-### 安装技能
-
-**本地上传的技能**:
-- 点击技能详情，使用"本地下载"按钮直接下载
-
-**ClawHub 技能**:
-- 点击技能详情，复制安装提示
-- 将提示发送给 AI 助手（Claude、ChatGPT、Cursor 等）自动安装
-
-### 配置 MCP 服务器
-
-1. 浏览 MCPHub 页面查找需要的服务器
-2. 点击服务器卡片查看详情
-3. 复制 GitHub 地址或下载本地文件
-4. 按照服务器文档进行配置
-
-## 配置说明
-
-配置文件：`config.yaml`
+`config.yaml`：
 
 ```yaml
 server:
-  port: 8081
+  port: 18089
   upload_dir: ./uploads
-  max_upload_size: 104857600
-
-database:
-  type: sqlite
-  path: ./skills.db
-
-security:
-  allowed_extensions:
-    - .zip
-    - .tar.gz
-    - .tgz
-  max_filename_length: 255
-
-logging:
-  level: info
-  format: console
+  max_upload_size: 104857600   # 100MB
 
 analysis:
-  idalib_path: "C:\\path\\to\\idalib-mcp.exe"  # IDA Pro MCP 工具路径
+  idalib_path: "path/to/idalib-mcp.exe"
 
 kernel:
-  service_url: "http://localhost:8081"  # 内核适配服务地址
+  service_url: "http://localhost:8081"
 
 ti:
-  service_url: "http://localhost:8080"  # 威胁情报服务地址
+  service_url: "http://localhost:8080"
+
+vuln:
+  api_base: "http://localhost:8903/api/v1"  # 漏洞查询服务
+  token: "your-token"
+
+tinyclaw:
+  tinyclaw_linux_url: "curl -fsSL http://10.50.6.49/edr/tinyclaw/install.sh | sudo bash"
+  tinyclaw_linux_wget_url: "wget -qO- http://10.50.6.49/edr/tinyclaw/install.sh | sudo bash"
 ```
 
-## API 概览
+## API 路由
 
-基础路径：`/api`
+所有接口在 `/api` 下。
 
-### 技能 API
+| 路由组 | 路径 | 说明 |
+|--------|------|------|
+| Skills | `/api/skills/*` | 技能 CRUD + 上传下载 |
+| Servers | `/api/server/*` | 服务器 CRUD + 上传下载 |
+| Agents | `/api/agent/*` | 智能体 CRUD、聊天（SSE）、会话 |
+| API Key | `/api/user/apikey/*` | 加密 API Key 管理 |
+| Analysis | `/api/analysis/*` | 恶意文件分析 |
+| Crash Dump | `/api/crash-dump/*` | 崩溃转储分析 |
+| Vuln | `/api/vuln/*` | 漏洞数据库状态 + 导入 |
+| IDA | `/api/ida/servers/*` | IDA 服务器注册 + 心跳 |
+| Kernel | `/api/kernel/*` | 反向代理 |
+| TI | `/api/ti/*` | 反向代理 |
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/health` | 健康检查 |
-| GET | `/top50` | TOP50 列表 |
-| GET | `/skills` | 分页查询技能 |
-| GET | `/skills/:id` | 技能详情 |
-| GET | `/skills/:id/download` | 下载技能包 |
-| GET | `/categories` | 分类统计 |
-| GET | `/stats` | 全局统计 |
-| POST | `/skills/upload` | 上传技能包 |
-| PUT | `/skills/:id` | 更新技能 |
-| DELETE | `/skills/:id` | 删除技能 |
+## 技术栈
 
-### MCP 服务器 API
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/mcp` | 分页查询 MCP 服务器 |
-| GET | `/mcp/:id` | MCP 服务器详情 |
-| GET | `/mcp/categories` | MCP 分类统计 |
-| GET | `/mcp/stats` | MCP 统计 |
-| GET | `/mcp/:id/download` | 下载 MCP 服务器文件 |
-| POST | `/mcp/upload` | 上传 MCP 服务器文件 |
-
-### AgentHub API
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/agent` | 分页查询智能体 |
-| GET | `/agent/:id` | 智能体详情 |
-| GET | `/agent/categories` | 分类统计 |
-| GET | `/agent/stats` | 统计信息 |
-| GET | `/agent/models` | 支持的模型列表 |
-| POST | `/agent/:id/chat` | 与智能体聊天 (SSE 流式) |
-| GET | `/agent/:id/sessions` | 获取会话列表 |
-| GET | `/session/:id` | 获取会话详情 |
-| DELETE | `/session/:id` | 删除会话 |
-
-### API Key 管理 API
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/user/apikey` | 保存 API Key |
-| POST | `/user/apikey/validate` | 验证 API Key |
-| GET | `/user/apikey` | 获取已配置的 API Key 列表 |
-| DELETE | `/user/apikey/:provider` | 删除 API Key |
-
-### 恶意文件分析 API
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/analysis/upload` | 上传文件分析 |
-| GET | `/analysis/tasks` | 获取任务列表 |
-| GET | `/analysis/:id` | 获取任务详情 |
-| GET | `/analysis/:id/result` | 获取分析结果 |
-| GET | `/analysis/:id/report` | 获取分析报告 |
-| GET | `/analysis/:id/download` | 下载分析报告 (ZIP: PDF+MD) |
-| DELETE | `/analysis/:id` | 取消任务 |
-
-### IDA 服务器管理 API
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/ida/servers` | 获取 IDA 服务器列表 |
-| POST | `/ida/servers` | 注册 IDA 服务器 |
-| DELETE | `/ida/servers/:id` | 移除 IDA 服务器 |
-| POST | `/ida/servers/:id/heartbeat` | 服务器心跳 |
-
-### 漏洞数据库 API
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/vuln/status` | 获取漏洞数据库状态 |
-| POST | `/vuln/import` | 导入漏洞数据（SQLite/CSV/JSON） |
-
-### 内核适配 API（反向代理）
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| ANY | `/kernel/*` | 代理到 kernel-build 服务 |
-
-### 威胁情报 API（反向代理）
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| ANY | `/ti/*` | 代理到 tiserver 服务 |
-
-## 构建
-
-```bash
-# 构建（模板嵌入，修改模板后需 -a 强制重建）
-go build -a -o bin/server.exe ./cmd/server/main.go
-```
-
-运行：
-
-```bash
-./bin/server.exe
-```
-
-## 数据来源
-
-- **技能数据**: 来自 [ClawHub](https://clawhub.ai)，通过 `scripts/import_clawhub.go` 脚本从 API 爬取，已扩展关键词覆盖 12000+ 技能
-- **MCP 服务器**: 来自 [mcp.so](https://mcp.so) API 和 [awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers)，通过 `scripts/import_mcp.go` 和 `scripts/parse_mcp_readme.go` 爬取
-
-### 爬取数据
-
-```bash
-# 爬取 ClawHub 技能
-go run ./scripts/import_clawhub.go
-
-# 爬取 MCP 服务器 (mcp.so API)
-go run ./scripts/import_mcp.go
-
-# 解析 MCP 服务器 (GitHub README)
-go run ./scripts/parse_mcp_readme.go
-```
+Go 1.23 · Gin · GORM + SQLite (pure-Go) · Viper · gofpdf · go-openai
 
 ## License
 
