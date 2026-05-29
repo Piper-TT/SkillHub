@@ -183,6 +183,8 @@ func (s *LLMToolService) ChatWithTools(ctx context.Context, req *ChatWithToolsRe
 
 		choice := resp.Choices[0]
 		response.TokensUsed += resp.Usage.TotalTokens
+		fmt.Printf("[LLM] Response finish_reason=%s tool_calls=%d content_len=%d\n",
+			choice.FinishReason, len(choice.Message.ToolCalls), len(choice.Message.Content))
 
 		// 检查是否有工具调用
 		if len(choice.Message.ToolCalls) > 0 {

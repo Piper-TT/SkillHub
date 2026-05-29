@@ -86,6 +86,9 @@ func main() {
 	if cfg.Vuln.APIBase != "" {
 		vulnClient := service.NewVulnAPIClient(cfg.Vuln.APIBase, cfg.Vuln.Token)
 		agentHandler.SetVulnAPIClient(vulnClient)
+		fmt.Printf("VulnAPIClient initialized: %s\n", cfg.Vuln.APIBase)
+	} else {
+		fmt.Println("WARNING: vuln.api_base not configured, vuln tools disabled")
 	}
 
 	// 初始化恶意文件分析依赖
