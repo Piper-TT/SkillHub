@@ -24,6 +24,10 @@ kernel:
 ti:
   service_url: "http://localhost:8080"  # tiserver 威胁情报服务地址
 
+vuln:
+  api_base: "http://10.50.6.227:8903/api/v1"  # 漏洞查询服务地址
+  token: "edr-vul-server"
+
 analysis:
   idalib_path: "C:\\Users\\tt\\AppData\\Local\\Programs\\Python\\Python314\\Scripts\\idalib-mcp.exe"  # idalib-mcp.exe 路径
 
@@ -33,6 +37,7 @@ tinyclaw:
   rpcserver_linux_url: "curl -fsSL http://10.50.6.49/edr/tinyclaw/install_rpc.sh | sudo bash"
   tinyclaw_win_url: "powershell -ep bypass -c \"$f=Join-Path $env:Temp install.ps1;(New-Object Net.WebClient).DownloadFile('http://10.50.6.49/edr/tinyclaw/install.ps1',$f);&$f\""
   tinyclaw_linux_url: "curl -fsSL http://10.50.6.49/edr/tinyclaw/install.sh | sudo bash"
+  tinyclaw_linux_wget_url: "wget -qO- http://10.50.6.49/edr/tinyclaw/install.sh | sudo bash"
   skill_download_cmd: "curl -L -o tinyclawskill.zip http://10.50.6.49/edr/tinyclaw/tinyclawskill.zip"
   skill_prompt: "请帮我安装一个技能，下载地址是：http://10.50.6.49/edr/tinyclaw/tinyclawskill.zip，安装完成后进行总结。"
   showcase1_icon: "fas fa-shield-alt"

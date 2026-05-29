@@ -601,7 +601,12 @@
                         <div class="code-content" id="step2-linux" style="display:none">
                             <div class="code-line cmd">
                                 <span>{{.TinyClawLinuxURL}}</span>
-                                <button class="copy-btn" onclick="copyCmd(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+                                <button class="copy-text-btn" onclick="copyStepHint('step2')" style="opacity:1;margin-left:auto;background:none;border:none;cursor:pointer;font-size:13px;flex-shrink:0;">复制</button>
+                            </div>
+                            <div class="code-line comment"><span># 没有 curl？用 wget：</span></div>
+                            <div class="code-line cmd">
+                                <span>{{.TinyClawLinuxWgetURL}}</span>
+                                <button class="copy-text-btn" onclick="copyCmdText(this)" style="opacity:1;margin-left:auto;background:none;border:none;cursor:pointer;font-size:13px;flex-shrink:0;">复制</button>
                             </div>
                         </div>
                     </div>
@@ -802,7 +807,9 @@
             const title = document.getElementById(step + '-title');
             if (title) {
                 if (os === 'win') {
-                    title.innerHTML = '打开CMD命令行， <span class="copy-text-btn" onclick="copyStepHint(\'' + step + '\')">复制</span> 以下命令进行安装';
+                    title.innerHTML = '打开CMD命令行，<span class="copy-text-btn" onclick="copyStepHint(\'' + step + '\')">复制</span> 以下命令进行安装';
+                } else if (step === 'step2') {
+                    title.innerHTML = '支持 x86_64、aarch64、mips64el、loongarch64 架构，脚本自适应安装';
                 } else {
                     title.innerHTML = '<span class="copy-text-btn" onclick="copyStepHint(\'' + step + '\')">复制</span> 以下命令进行安装';
                 }
@@ -863,6 +870,22 @@
             }
         }
 
+        function copyCmdText(btn) {
+            const line = btn.parentElement;
+            const span = line.querySelector('span');
+            const text = span ? span.textContent.trim() : '';
+            const doCopy = () => toast('已复制到剪贴板', 'success');
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(doCopy);
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+                document.body.appendChild(ta); ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                doCopy();
+            }
+        }
         function toast(msg, type) {
             const el = document.createElement('div');
             el.className = 'toast';

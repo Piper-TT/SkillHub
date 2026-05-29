@@ -155,6 +155,26 @@
             color: var(--brand-1);
         }
 
+        .btn-create {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: var(--gradient-1);
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-create:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 92, 24, 0.3);
+        }
+
         .section {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -473,6 +493,80 @@
 
         .loading { text-align: center; padding: 40px; color: var(--text-muted); }
 
+        .modal-wide { max-width: 640px; }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 0;
+        }
+
+        .form-row .form-group { flex: 1; }
+
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-soft);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.2s ease;
+        }
+
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--brand-1);
+        }
+
+        .form-group input[type="range"] {
+            padding: 0;
+            border: none;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(139, 92, 246, 0.2);
+            border-radius: 3px;
+        }
+
+        .form-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--brand-1);
+            cursor: pointer;
+        }
+
+        .agent-actions {
+            display: none;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            gap: 4px;
+            z-index: 2;
+        }
+
+        .agent-card:hover .agent-actions { display: flex; }
+
+        .agent-action-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .agent-action-btn:hover { background: rgba(0, 0, 0, 0.1); }
+        .agent-action-btn.delete:hover { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+
         @media (max-width: 1024px) {
             .agent-grid { grid-template-columns: repeat(2, 1fr); }
         }
@@ -480,6 +574,8 @@
         @media (max-width: 768px) {
             .hero-title { font-size: 32px; }
             .agent-grid { grid-template-columns: 1fr; }
+            .form-row { flex-direction: column; }
+            .modal-wide { max-width: 95%; }
         }
     </style>
 </head>
@@ -511,6 +607,7 @@
         </section>
 
         <div class="header-actions">
+            <button class="btn-create" onclick="showCreateAgentModal()">✨ 创建智能体</button>
             <button class="btn-key" onclick="showAPIKeyModal()">⚙️ 配置 API Key</button>
         </div>
 
@@ -575,6 +672,59 @@
                 <button type="submit" class="btn-primary">保存</button>
             </form>
             <div id="configuredKeys" style="margin-top: 16px;"></div>
+        </div>
+    </div>
+
+    <!-- Create Agent Modal -->
+    <div class="modal-overlay" id="createAgentModal" onclick="closeCreateAgentModal(event)">
+        <div class="modal modal-wide" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 class="modal-title" id="agentModalTitle">✨ 创建智能体</h3>
+                <button class="modal-close" onclick="closeCreateAgentModal()">×</button>
+            </div>
+            <form id="agentForm" onsubmit="submitAgentForm(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>名称 *</label>
+                        <input type="text" id="agentName" required placeholder="My Agent">
+                    </div>
+                    <div class="form-group" style="max-width: 80px;">
+                        <label>图标</label>
+                        <input type="text" id="agentIcon" placeholder="🤖" maxlength="4">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>分类</label>
+                        <input type="text" id="agentCategory" list="categoryList" placeholder="安全分析">
+                        <datalist id="categoryList"></datalist>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <input type="text" id="agentDescription" placeholder="简短描述这个智能体的功能..." maxlength="500">
+                </div>
+                <div class="form-group">
+                    <label>系统提示词</label>
+                    <textarea id="agentSystemPrompt" rows="4" placeholder="你是一个..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Temperature: <span id="tempValue">0.7</span></label>
+                        <input type="range" id="agentTemperature" min="0" max="1" step="0.1" value="0.3"
+                            oninput="document.getElementById('tempValue').textContent=this.value">
+                    </div>
+                    <div class="form-group">
+                        <label>Max Tokens</label>
+                        <input type="number" id="agentMaxTokens" value="4096" min="256" max="32768" step="256">
+                    </div>
+                    <div class="form-group">
+                        <label>跳转地址</label>
+                        <input type="text" id="agentRedirectURL" placeholder="可选，如 /analysis">
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary" id="agentSubmitBtn">创建</button>
+            </form>
         </div>
     </div>
 
@@ -650,6 +800,12 @@
 
                 return `
                     <div class="agent-card">
+                        ${!agent.verified ? `
+                            <div class="agent-actions">
+                                <button class="agent-action-btn" onclick="event.stopPropagation(); editAgent(${agent.id})" title="编辑">✏️</button>
+                                <button class="agent-action-btn delete" onclick="event.stopPropagation(); deleteAgent(${agent.id})" title="删除">🗑️</button>
+                            </div>
+                        ` : ''}
                         <div class="agent-header">
                             <div class="agent-icon" style="background: ${iconColor};">${agent.icon || '🤖'}</div>
                             <div class="agent-info">
@@ -796,6 +952,114 @@
             } catch (error) {
                 showToast('删除失败');
             }
+        }
+
+        // ============== Agent CRUD ==============
+
+        let editingAgentId = null;
+
+        function showCreateAgentModal() {
+            editingAgentId = null;
+            document.getElementById('agentModalTitle').textContent = '✨ 创建智能体';
+            document.getElementById('agentSubmitBtn').textContent = '创建';
+            document.getElementById('agentForm').reset();
+            document.getElementById('tempValue').textContent = '0.3';
+            document.getElementById('agentTemperature').value = 0.3;
+            document.getElementById('agentMaxTokens').value = 4096;
+            document.getElementById('createAgentModal').classList.add('show');
+            populateCategoryDatalist();
+        }
+
+        function closeCreateAgentModal(event) {
+            if (!event || event.target === event.currentTarget) {
+                document.getElementById('createAgentModal').classList.remove('show');
+            }
+        }
+
+
+        async function populateCategoryDatalist() {
+            try {
+                const response = await fetch('/api/agent/categories');
+                const data = await response.json();
+                const datalist = document.getElementById('categoryList');
+                datalist.innerHTML = Object.keys(data.categories || {}).map(cat =>
+                    `<option value="${cat}">`
+                ).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        async function submitAgentForm(event) {
+            event.preventDefault();
+
+            const body = {
+                name:          document.getElementById('agentName').value.trim(),
+                icon:          document.getElementById('agentIcon').value || '🤖',
+                category:      document.getElementById('agentCategory').value,
+                description:   document.getElementById('agentDescription').value,
+                system_prompt: document.getElementById('agentSystemPrompt').value,
+                temperature:   parseFloat(document.getElementById('agentTemperature').value),
+                max_tokens:    parseInt(document.getElementById('agentMaxTokens').value),
+                redirect_url:  document.getElementById('agentRedirectURL').value,
+            };
+
+            try {
+                const url = editingAgentId ? `/api/agent/${editingAgentId}` : '/api/agent';
+                const method = editingAgentId ? 'PUT' : 'POST';
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast(editingAgentId ? '已更新' : '创建成功');
+                    closeCreateAgentModal({target: document.getElementById('createAgentModal')});
+                    loadAgents();
+                    loadCategories();
+                    loadStats();
+                } else {
+                    showToast(result.message || '操作失败');
+                }
+            } catch (e) {
+                showToast('操作失败: ' + e.message);
+            }
+        }
+
+        function editAgent(id) {
+            const agent = state.agents.find(a => a.id === id);
+            if (!agent) return;
+
+            editingAgentId = id;
+            document.getElementById('agentModalTitle').textContent = '✏️ 编辑智能体';
+            document.getElementById('agentSubmitBtn').textContent = '更新';
+            document.getElementById('agentName').value = agent.name;
+            document.getElementById('agentIcon').value = agent.icon;
+            document.getElementById('agentCategory').value = agent.category;
+            document.getElementById('agentDescription').value = agent.description;
+            document.getElementById('agentSystemPrompt').value = agent.system_prompt;
+            document.getElementById('agentTemperature').value = agent.temperature;
+            document.getElementById('tempValue').textContent = agent.temperature;
+            document.getElementById('agentMaxTokens').value = agent.max_tokens;
+            document.getElementById('agentRedirectURL').value = agent.redirect_url || '';
+
+            document.getElementById('createAgentModal').classList.add('show');
+            populateCategoryDatalist();
+        }
+
+        async function deleteAgent(id) {
+            const agent = state.agents.find(a => a.id === id);
+            const name = agent ? agent.name : '该智能体';
+            if (!confirm(`确定要删除「${name}」吗？此操作不可恢复。`)) return;
+            try {
+                const response = await fetch(`/api/agent/${id}`, { method: 'DELETE' });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('已删除');
+                    loadAgents();
+                    loadCategories();
+                    loadStats();
+                }
+            } catch (e) { showToast('删除失败'); }
         }
 
         function showToast(message) {

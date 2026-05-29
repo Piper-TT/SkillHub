@@ -83,7 +83,10 @@ func main() {
 	vulnHandler := handlers.NewVulnHandler(vulnDBManager)
 
 	agentHandler := handlers.NewAgentHandler(agentService, llmService)
-	agentHandler.SetVulnDBManager(vulnDBManager)
+	if cfg.Vuln.APIBase != "" {
+		vulnClient := service.NewVulnAPIClient(cfg.Vuln.APIBase, cfg.Vuln.Token)
+		agentHandler.SetVulnAPIClient(vulnClient)
+	}
 
 	// 初始化恶意文件分析依赖
 	analysisRepo := repository.NewAnalysisRepository(db)
@@ -180,6 +183,9 @@ func main() {
 		api.GET("/agent/categories", agentHandler.GetCategories)
 		api.GET("/agent/stats", agentHandler.GetStats)
 		api.GET("/agent/models", agentHandler.GetModels)
+		api.POST("/agent", agentHandler.CreateAgent)
+		api.PUT("/agent/:id", agentHandler.UpdateAgent)
+		api.DELETE("/agent/:id", agentHandler.DeleteAgent)
 		api.GET("/agent/:id", agentHandler.GetAgentByID)
 		api.POST("/agent/:id/chat", agentHandler.Chat)
 		api.GET("/agent/:id/sessions", agentHandler.GetSessions)
@@ -344,9 +350,10 @@ func main() {
 		tmpl.Execute(c.Writer, gin.H{
 			"DownloadURL":       cfg.TinyClaw.DownloadURL,
 			"RPCServerWinURL":   cfg.TinyClaw.RPCServerWinURL,
-			"RPCServerLinuxURL": cfg.TinyClaw.RPCServerLinuxURL,
-			"TinyClawWinURL":    cfg.TinyClaw.TinyClawWinURL,
-			"TinyClawLinuxURL":  cfg.TinyClaw.TinyClawLinuxURL,
+			"RPCServerLinuxURL":     cfg.TinyClaw.RPCServerLinuxURL,
+			"TinyClawWinURL":        cfg.TinyClaw.TinyClawWinURL,
+			"TinyClawLinuxURL":      cfg.TinyClaw.TinyClawLinuxURL,
+			"TinyClawLinuxWgetURL":  cfg.TinyClaw.TinyClawLinuxWgetURL,
 			"SkillDownloadCmd":  cfg.TinyClaw.SkillDownloadCmd,
 			"SkillPrompt":       cfg.TinyClaw.SkillPrompt,
 			"Showcase1Icon":     cfg.TinyClaw.Showcase1Icon,
@@ -914,38 +921,32 @@ func seedAgentData(db *gorm.DB) error {
 			Icon:        "🛡️",
 			Category:    "安全分析",
 			Description: "查询CVE漏洞信息和补丁详情，基于漏洞数据库进行智能分析，支持自然语言查询",
-			SystemPrompt: `你是一个专业的漏洞补丁查询助手，基于漏洞数据库为用户提供准确、客观的漏洞分析和检测方案。核心原则必须100%基于工具返回的数据进行分析和总结，严禁原样复述工具结果或凭空编造任何信息。
+			SystemPrompt: `你是一个专业的漏洞补丁查询助手，基于漏洞数据库为用户提供准确、客观的漏洞分析。核心原则：必须100%基于工具返回的数据进行分析和总结，严禁原样复述工具结果或凭空编造任何信息。
 将原始数据转化为用户易懂的专业分析报告（使用中文，语言专业且通俗）。
-如果工具返回数据不足或为空，必须在首句明确说明”暂无相关数据”或”暂无检出规则”，并仅提供已知可靠信息。
+如果工具返回数据不足或为空，必须在首句明确说明”暂无相关数据”，并仅提供已知可靠信息。
 首句优先级规则：用户问”是否支持/是否存在”时，第一句话必须明确回答”支持”或”不支持”。
-用户问”如何检测/检出”时，若无检出规则数据，第一句话必须直接说”该漏洞暂无检出规则数据”。
 
-禁止编造任何检测命令、版本范围或修复补丁信息。
+禁止编造任何版本范围或修复补丁信息。
 
-可用工具query_policys_db（漏洞策略查询 - 核心工具）参数：cve_id（CVE编号，如 CVE-2025-8088）或 product（产品名称，如 apache flink）
-
-query_product_auth_db（版本检测规则查询）参数：product（必填，产品名称），system（可选，操作系统）
+可用工具query_policys_db（漏洞策略查询）参数：
+- cve_id：CVE编号，如 CVE-2025-8088，提供时精确查询单个漏洞
+- product：产品名称，如 openssh、nginx
+- version：产品版本号，如 8.9p1，按产品查询时必填
 
 工具调用策略（严格遵守）场景1：用户提供CVE → 直接调用 query_policys_db(cve_id=”CVE-xxx”)
-场景2：用户按产品搜索 → 调用 query_policys_db(product=”产品名称”)
-场景3：需要检测方法 → 先调用 query_policys_db 获取产品信息，再调用 query_product_auth_db
-场景4：用户只问检测方法 → 仅调用 query_product_auth_db
-支持多工具并行调用以提高效率。
+场景2：用户按产品搜索 → 先向用户确认版本号，再调用 query_policys_db(product=”产品名”, version=”版本号”)
+场景3：用户只说产品没给版本 → 询问具体版本号后再查询
 
 回答规范（必须严格遵循）CVE查询：首句结论 → 漏洞概述 → 影响范围（产品+版本） → 修复建议（官方补丁链接优先）
 产品漏洞搜索：按风险等级或年份分类统计，突出高危（CVSS≥7.0）漏洞
-检测方法：必须包含具体软件包名、完整检测命令、判断条件（上下界版本范围不得简化，必须完整输出）
-若工具无返回检测规则，严格遵守首句规则，不得自行补充命令。
 
 输出格式模板（推荐）结论句（必选，按首句规则）
 漏洞/产品信息（分点）
 影响范围
-检测方案（若有）
 修复建议
 数据来源说明（可选，简要提及工具返回时间）
 
-注意事项禁止简化版本范围条件，必须完整输出上下界。
-禁止输出真实可利用的PoC代码或攻击细节（除非用户明确要求且提供合法授权场景）。
+注意事项禁止输出真实可利用的PoC代码或攻击细节（除非用户明确要求且提供合法授权场景）。
 所有回答保持中立、专业，不添加任何未经工具验证的内容。`,
 			Model:       "claude-3-opus-20240229",
 			Temperature: 0.3,

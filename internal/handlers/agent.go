@@ -15,9 +15,9 @@ import (
 
 // AgentHandler 智能体处理器
 type AgentHandler struct {
-	agentSvc *service.AgentService
-	llmSvc   *service.LLMService
-	vulnMgr  *service.MultiVulnDBManager // 漏洞数据库管理器（可选）
+	agentSvc   *service.AgentService
+	llmSvc     *service.LLMService
+	vulnClient *service.VulnAPIClient // 漏洞查询 REST API 客户端
 }
 
 // NewAgentHandler 创建处理器
@@ -28,9 +28,9 @@ func NewAgentHandler(agentSvc *service.AgentService, llmSvc *service.LLMService)
 	}
 }
 
-// SetVulnDBManager 设置漏洞数据库管理器
-func (h *AgentHandler) SetVulnDBManager(mgr *service.MultiVulnDBManager) {
-	h.vulnMgr = mgr
+// SetVulnAPIClient 设置漏洞查询 API 客户端
+func (h *AgentHandler) SetVulnAPIClient(client *service.VulnAPIClient) {
+	h.vulnClient = client
 }
 
 // GetAgents 获取智能体列表
@@ -80,6 +80,84 @@ func (h *AgentHandler) GetCategories(c *gin.Context) {
 func (h *AgentHandler) GetStats(c *gin.Context) {
 	stats := h.agentSvc.GetStats()
 	c.JSON(http.StatusOK, stats)
+}
+
+// CreateAgent 创建智能体
+func (h *AgentHandler) CreateAgent(c *gin.Context) {
+	var req models.CreateAgentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.BadRequest(c, "invalid request: "+err.Error())
+		return
+	}
+
+	agent := &models.Agent{
+		Name:         req.Name,
+		Icon:         req.Icon,
+		Category:     req.Category,
+		Description:  req.Description,
+		SystemPrompt: req.SystemPrompt,
+		Model:        req.Model,
+		Temperature:  req.Temperature,
+		MaxTokens:    req.MaxTokens,
+		RedirectURL:  req.RedirectURL,
+	}
+
+	if err := h.agentSvc.CreateAgent(agent); err != nil {
+		utils.InternalError(c, "Failed to create agent: "+err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Agent created successfully",
+		"agent":   agent,
+	})
+}
+
+// UpdateAgent 更新智能体
+func (h *AgentHandler) UpdateAgent(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		utils.BadRequest(c, "invalid id")
+		return
+	}
+
+	var req models.UpdateAgentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.BadRequest(c, "invalid request: "+err.Error())
+		return
+	}
+
+	agent, err := h.agentSvc.UpdateAgent(uint(id), &req)
+	if err != nil {
+		utils.NotFound(c, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Agent updated successfully",
+		"agent":   agent,
+	})
+}
+
+// DeleteAgent 删除智能体
+func (h *AgentHandler) DeleteAgent(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		utils.BadRequest(c, "invalid id")
+		return
+	}
+
+	if err := h.agentSvc.DeleteAgent(uint(id)); err != nil {
+		utils.NotFound(c, "agent not found")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Agent deleted successfully",
+	})
 }
 
 // Chat 与智能体聊天 (SSE 流式响应)
@@ -162,8 +240,8 @@ func (h *AgentHandler) Chat(c *gin.Context) {
 	}
 
 	// 检查是否需要工具调用（CVE 漏洞查询助手）
-	useTools := h.shouldUseTools(agent.Slug) && h.vulnMgr != nil && h.vulnMgr.AnyAvailable()
-	fmt.Printf("[Chat] slug=%s useTools=%v vulnMgr=%v anyAvail=%v\n", agent.Slug, useTools, h.vulnMgr != nil, h.vulnMgr != nil && h.vulnMgr.AnyAvailable())
+	useTools := h.shouldUseTools(agent.Slug) && h.vulnClient != nil
+	fmt.Printf("[Chat] slug=%s useTools=%v vulnClient=%v\n", agent.Slug, useTools, h.vulnClient != nil)
 	if useTools {
 		h.chatWithTools(c, flusher, session, agent, provider, apiKey, messages, uint(agentID))
 		return
@@ -228,8 +306,7 @@ func (h *AgentHandler) chatNormal(c *gin.Context, flusher http.Flusher, session 
 func (h *AgentHandler) chatWithTools(c *gin.Context, flusher http.Flusher, session *models.Session, agent *models.Agent, provider, apiKey string, messages []models.ChatMessage, agentID uint) {
 	// 构建工具注册中心
 	registry := service.NewToolRegistry()
-	registry.Register(service.NewPolicysQueryTool(h.vulnMgr))
-	registry.Register(service.NewProductAuthQueryTool(h.vulnMgr))
+	registry.Register(service.NewPolicysQueryTool(h.vulnClient))
 
 	// 创建带工具的 LLM 服务
 	toolSvc := service.NewLLMToolService(registry)

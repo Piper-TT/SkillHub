@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -234,7 +235,8 @@ func (h *AnalysisHandler) DownloadReport(c *gin.Context) {
 	baseName := strings.TrimSuffix(task.FileName, filepath.Ext(task.FileName))
 	fileName := fmt.Sprintf("%s-分析报告.pdf", baseName)
 	c.Header("Content-Type", "application/pdf")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
+	encoded := url.QueryEscape(fileName)
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s; filename*=UTF-8''%s", "report.pdf", encoded))
 	c.Data(http.StatusOK, "application/pdf", pdfData)
 }
 

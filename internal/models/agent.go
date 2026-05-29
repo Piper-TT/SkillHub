@@ -64,3 +64,29 @@ type ChatMessage struct {
 	Content   string    `json:"content"`
 	Timestamp time.Time `json:"timestamp"`
 }
+
+// CreateAgentRequest 创建智能体请求
+type CreateAgentRequest struct {
+	Name         string  `json:"name" binding:"required"`
+	Icon         string  `json:"icon"`
+	Category     string  `json:"category"`
+	Description  string  `json:"description"`
+	SystemPrompt string  `json:"system_prompt"`
+	Model        string  `json:"model"`
+	Temperature  float64 `json:"temperature"`
+	MaxTokens    int     `json:"max_tokens"`
+	RedirectURL  string  `json:"redirect_url"`
+}
+
+// UpdateAgentRequest 更新智能体请求
+type UpdateAgentRequest struct {
+	Name         string  `json:"name"`
+	Icon         string  `json:"icon"`
+	Category     string  `json:"category"`
+	Description  string  `json:"description"`
+	SystemPrompt string  `json:"system_prompt"`
+	Model        string  `json:"model"`
+	Temperature  float64 `json:"temperature"`
+	MaxTokens    int     `json:"max_tokens"`
+	RedirectURL  string  `json:"redirect_url"`
+}

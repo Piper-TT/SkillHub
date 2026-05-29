@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"regexp"
 	"skillhub/internal/models"
 	"skillhub/internal/repository"
 	"skillhub/internal/utils"
+	"strings"
 	"time"
 )
 
@@ -84,8 +87,12 @@ func (s *AgentService) CreateAgent(agent *models.Agent) error {
 	if agent.Name == "" {
 		return errors.New("name is required")
 	}
+	agent.Slug = s.generateSlug(agent.Name)
 	if agent.Category == "" {
 		agent.Category = "Other"
+	}
+	if agent.Icon == "" {
+		agent.Icon = "🤖"
 	}
 	if agent.Model == "" {
 		agent.Model = "claude-3-opus-20240229"
@@ -97,6 +104,75 @@ func (s *AgentService) CreateAgent(agent *models.Agent) error {
 		agent.MaxTokens = 4096
 	}
 	return s.agentRepo.Create(context.Background(), agent)
+}
+
+// UpdateAgent 更新智能体
+func (s *AgentService) UpdateAgent(id uint, req *models.UpdateAgentRequest) (*models.Agent, error) {
+	agent, err := s.agentRepo.FindByID(context.Background(), id)
+	if err != nil {
+		return nil, errors.New("agent not found")
+	}
+
+	if req.Name != "" {
+		agent.Name = req.Name
+		agent.Slug = s.generateSlug(req.Name)
+	}
+	if req.Icon != "" {
+		agent.Icon = req.Icon
+	}
+	if req.Category != "" {
+		agent.Category = req.Category
+	}
+	if req.Description != "" {
+		agent.Description = req.Description
+	}
+	if req.SystemPrompt != "" {
+		agent.SystemPrompt = req.SystemPrompt
+	}
+	if req.Model != "" {
+		agent.Model = req.Model
+	}
+	if req.Temperature > 0 {
+		agent.Temperature = req.Temperature
+	}
+	if req.MaxTokens > 0 {
+		agent.MaxTokens = req.MaxTokens
+	}
+	agent.RedirectURL = req.RedirectURL
+
+	if err := s.agentRepo.Update(context.Background(), agent); err != nil {
+		return nil, err
+	}
+	return agent, nil
+}
+
+// DeleteAgent 删除智能体
+func (s *AgentService) DeleteAgent(id uint) error {
+	return s.agentRepo.Delete(context.Background(), id)
+}
+
+// generateSlug 从名称生成唯一 slug
+func (s *AgentService) generateSlug(name string) string {
+	slug := strings.ToLower(name)
+	re := regexp.MustCompile(`[^a-z0-9]+`)
+	slug = re.ReplaceAllString(slug, "-")
+	slug = strings.Trim(slug, "-")
+
+	if slug == "" {
+		slug = "agent"
+	}
+
+	base := slug
+	counter := 1
+	for {
+		existing, err := s.agentRepo.FindBySlug(context.Background(), slug)
+		if err != nil || existing == nil {
+			break
+		}
+		counter++
+		slug = fmt.Sprintf("%s-%d", base, counter)
+	}
+	return slug
 }
 
 // SaveAPIKey 保存用户 API Key

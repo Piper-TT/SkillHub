@@ -17,6 +17,7 @@ type Config struct {
 	Analysis AnalysisConfig `mapstructure:"analysis"`
 	Refresh  RefreshConfig  `mapstructure:"refresh"`
 	TinyClaw TinyClawConfig `mapstructure:"tinyclaw"`
+	Vuln     VulnConfig     `mapstructure:"vuln"`
 }
 
 type TinyClawConfig struct {
@@ -25,6 +26,7 @@ type TinyClawConfig struct {
 	RPCServerLinuxURL string `mapstructure:"rpcserver_linux_url"`
 	TinyClawWinURL    string `mapstructure:"tinyclaw_win_url"`
 	TinyClawLinuxURL  string `mapstructure:"tinyclaw_linux_url"`
+	TinyClawLinuxWgetURL string `mapstructure:"tinyclaw_linux_wget_url"`
 	SkillDownloadCmd  string `mapstructure:"skill_download_cmd"`
 	SkillPrompt       string `mapstructure:"skill_prompt"`
 	Showcase1Icon     string `mapstructure:"showcase1_icon"`
@@ -53,6 +55,11 @@ type KernelConfig struct {
 
 type TIConfig struct {
 	ServiceURL string `mapstructure:"service_url"`
+}
+
+type VulnConfig struct {
+	APIBase string `mapstructure:"api_base"`
+	Token   string `mapstructure:"token"`
 }
 
 type ServerConfig struct {
@@ -134,6 +141,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("tinyclaw.rpcserver_linux_url", "curl -fsSL http://10.50.6.49/edr/tinyclaw/install_rpc.sh | sudo bash")
 	v.SetDefault("tinyclaw.tinyclaw_win_url", "powershell -ExecutionPolicy Bypass -Command \"IEX (New-Object Net.WebClient).DownloadString('http://10.50.6.49/edr/tinyclaw/install.ps1')\"")
 	v.SetDefault("tinyclaw.tinyclaw_linux_url", "curl -fsSL http://10.50.6.49/edr/tinyclaw/install.sh | sudo bash")
+	v.SetDefault("tinyclaw.tinyclaw_linux_wget_url", "wget -qO- http://10.50.6.49/edr/tinyclaw/install.sh | sudo bash")
 	v.SetDefault("tinyclaw.skill_download_cmd", "curl -L -o tinyclawskill.zip http://10.50.6.49/edr/tinyclaw/tinyclawskill.zip")
 	v.SetDefault("tinyclaw.skill_prompt", "安装 TinyClawCLI 安全技能，连接本地 TinyClaw 服务")
 }

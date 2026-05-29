@@ -586,14 +586,20 @@
                         throw new Error('下载失败: ' + response.status + ' - ' + text);
                     });
                 }
-                return response.blob();
+                const disposition = response.headers.get('Content-Disposition') || '';
+                const starMatch = disposition.match(/filename\*=UTF-8''(.+)/);
+                const plainMatch = disposition.match(/filename=([^;]+)/);
+                let fileName = `analysis_report_${taskId}.pdf`;
+                if (starMatch) fileName = decodeURIComponent(starMatch[1]);
+                else if (plainMatch) fileName = plainMatch[1];
+                return response.blob().then(blob => ({ blob, fileName }));
             })
-            .then(blob => {
+            .then(({ blob, fileName }) => {
                 if (blob.size === 0) throw new Error('文件内容为空');
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `analysis_report_${taskId}.pdf`;
+                a.download = fileName;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
